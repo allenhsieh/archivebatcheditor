@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react'
-import axios from 'axios'
 import { ArchiveItem, UpdateRequest, ApiResponse, LogEntry } from '../types'
 
 export const useArchive = () => {
@@ -20,19 +19,21 @@ export const useArchive = () => {
 
     setLoading(true)
     try {
-      const response = await axios.get(`/api/search`, {
-        params: { q: query }
-      })
-      setItems(response.data.items || [])
+      const response = await fetch(`/api/search?${new URLSearchParams({ q: query })}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setItems(data.items || [])
       addLog({
         type: 'info',
-        message: `Found ${response.data.items?.length || 0} items for query: ${query}`
+        message: `Found ${data.items?.length || 0} items for query: ${query}`
       })
     } catch (error) {
       console.error('Search error:', error)
       addLog({
         type: 'error',
-        message: `Search failed: ${axios.isAxiosError(error) ? error.message : 'Unknown error'}`
+        message: `Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       })
       setItems([])
     } finally {
@@ -44,18 +45,22 @@ export const useArchive = () => {
     setLoading(true)
     try {
       const url = refresh ? '/api/user-items?refresh=true' : '/api/user-items'
-      const response = await axios.get(url)
-      setItems(response.data.items || [])
-      const cacheStatus = response.data.cached ? ' (cached)' : ' (fresh)'
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setItems(data.items || [])
+      const cacheStatus = data.cached ? ' (cached)' : ' (fresh)'
       addLog({
         type: 'info',
-        message: `Loaded ${response.data.items?.length || 0} items from your account${cacheStatus}`
+        message: `Loaded ${data.items?.length || 0} items from your account${cacheStatus}`
       })
     } catch (error) {
       console.error('Load items error:', error)
       addLog({
         type: 'error',
-        message: `Failed to load items: ${axios.isAxiosError(error) ? error.message : 'Unknown error'}`
+        message: `Failed to load items: ${error instanceof Error ? error.message : 'Unknown error'}`
       })
       setItems([])
     } finally {
@@ -73,8 +78,18 @@ export const useArchive = () => {
     })
 
     try {
-      const response = await axios.post('/api/update-metadata', updateData)
-      const results: ApiResponse[] = response.data.results || []
+      const response = await fetch('/api/update-metadata', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      })
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      const results: ApiResponse[] = data.results || []
       
       results.forEach(result => {
         addLog({
@@ -96,7 +111,7 @@ export const useArchive = () => {
       console.error('Update error:', error)
       addLog({
         type: 'error',
-        message: `Batch update failed: ${axios.isAxiosError(error) ? error.message : 'Unknown error'}`
+        message: `Batch update failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       })
     } finally {
       setLoading(false)

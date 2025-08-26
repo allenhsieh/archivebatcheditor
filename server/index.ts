@@ -1,11 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
-import dotenv from 'dotenv'
 import { z } from 'zod'
-import axios from 'axios'
-
-dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -114,14 +110,18 @@ async function searchYouTubeForMatch(title: string, date?: string) {
       
       console.log(`[${i+1}/${searchQueries.length}] YouTube search query: "${searchQuery}"`)
       
-      const response = await axios.get(`${YOUTUBE_API_BASE}/search?${searchParams}`)
+      const response = await fetch(`${YOUTUBE_API_BASE}/search?${searchParams}`)
+      if (!response.ok) {
+        throw new Error(`YouTube API error: ${response.status} ${response.statusText}`)
+      }
+      const data = await response.json()
       
-      console.log(`YouTube API response: ${response.data.items?.length || 0} items found`)
-      if (response.data.items?.length > 0) {
+      console.log(`YouTube API response: ${data.items?.length || 0} items found`)
+      if (data.items?.length > 0) {
         
         // Look through all results to find the best match
-        for (let j = 0; j < response.data.items.length; j++) {
-          const item = response.data.items[j]
+        for (let j = 0; j < data.items.length; j++) {
+          const item = data.items[j]
           const videoTitle = item.snippet.title
           console.log(`Result ${j+1}: ${videoTitle}`)
           
@@ -154,7 +154,7 @@ async function searchYouTubeForMatch(title: string, date?: string) {
         }
         
         // If no good scored match, fall back to first result
-        const bestMatch = response.data.items[0]
+        const bestMatch = data.items[0]
         console.log(`No high-scoring match, using first result: ${bestMatch.snippet.title}`)
         return {
           videoId: bestMatch.id.videoId,
@@ -175,9 +175,8 @@ async function searchYouTubeForMatch(title: string, date?: string) {
     return null
   } catch (error) {
     console.error('YouTube search error:', error)
-    if (axios.isAxiosError(error)) {
-      console.error('YouTube API error response:', error.response?.data)
-      console.error('YouTube API error status:', error.response?.status)
+    if (error instanceof Error) {
+      console.error('YouTube API error message:', error.message)
     }
     return null
   }
@@ -283,11 +282,15 @@ app.get('/search', async (req, res) => {
       output: 'json'
     })
     
-    const response = await axios.get(`${ARCHIVE_LEGACY_SEARCH_API}?${searchParams}`)
+    const response = await fetch(`${ARCHIVE_LEGACY_SEARCH_API}?${searchParams}`)
+    if (!response.ok) {
+      throw new Error(`Archive.org search error: ${response.status} ${response.statusText}`)
+    }
+    const data = await response.json()
     
     res.json({
-      items: response.data.response?.docs || [],
-      total: response.data.response?.numFound || 0
+      items: data.response?.docs || [],
+      total: data.response?.numFound || 0
     })
   } catch (error) {
     console.error('Search error:', error)
@@ -330,22 +333,26 @@ app.get('/user-items', async (req, res) => {
       console.log(`Trying authenticated scrape API: ${ARCHIVE_SEARCH_API}?${searchParams}`)
       
       // Make authenticated request using S3 credentials
-      const response = await axios.get(`${ARCHIVE_SEARCH_API}?${searchParams}`, {
-        auth: {
-          username: accessKey,
-          password: secretKey
+      const auth = btoa(`${accessKey}:${secretKey}`)
+      const response = await fetch(`${ARCHIVE_SEARCH_API}?${searchParams}`, {
+        headers: {
+          'Authorization': `Basic ${auth}`
         }
       })
+      if (!response.ok) {
+        throw new Error(`Archive.org scrape API error: ${response.status} ${response.statusText}`)
+      }
+      const data = await response.json()
       
       // The scrape API returns data in different formats
       let items = []
       let totalFound = 0
       
-      if (response.data.items && Array.isArray(response.data.items)) {
-        items = response.data.items
-        totalFound = response.data.total || items.length
-      } else if (Array.isArray(response.data)) {
-        items = response.data
+      if (data.items && Array.isArray(data.items)) {
+        items = data.items
+        totalFound = data.total || items.length
+      } else if (Array.isArray(data)) {
+        items = data
         totalFound = items.length
       }
       
@@ -376,15 +383,19 @@ app.get('/user-items', async (req, res) => {
         output: 'json'
       })
       
-      const legacyResponse = await axios.get(`${ARCHIVE_LEGACY_SEARCH_API}?${legacyParams}`, {
-        auth: {
-          username: accessKey,
-          password: secretKey
+      const legacyAuth = btoa(`${accessKey}:${secretKey}`)
+      const legacyResponse = await fetch(`${ARCHIVE_LEGACY_SEARCH_API}?${legacyParams}`, {
+        headers: {
+          'Authorization': `Basic ${legacyAuth}`
         }
       })
+      if (!legacyResponse.ok) {
+        throw new Error(`Archive.org legacy API error: ${legacyResponse.status} ${legacyResponse.statusText}`)
+      }
+      const legacyData = await legacyResponse.json()
       
-      const legacyItems = legacyResponse.data.response?.docs || []
-      const legacyFound = legacyResponse.data.response?.numFound || 0
+      const legacyItems = legacyData.response?.docs || []
+      const legacyFound = legacyData.response?.numFound || 0
       
       console.log(`Legacy authenticated API found ${legacyFound} items`)
       
@@ -455,24 +466,28 @@ app.post('/update-metadata', async (req, res) => {
         console.log('Request data:', requestData)
         console.log('Request URL:', `${ARCHIVE_API_BASE}/metadata/${identifier}`)
         
-        const response = await axios.post(`${ARCHIVE_API_BASE}/metadata/${identifier}`, requestData, {
+        const formData = Object.keys(requestData)
+          .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(requestData[key as keyof typeof requestData])}`)
+          .join('&')
+        console.log('Form data being sent:', formData)
+        
+        const response = await fetch(`${ARCHIVE_API_BASE}/metadata/${identifier}`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          transformRequest: [(data) => {
-            const formData = Object.keys(data)
-              .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`)
-              .join('&')
-            console.log('Form data being sent:', formData)
-            return formData
-          }]
+          body: formData
         })
+        if (!response.ok) {
+          throw new Error(`Archive.org metadata API error: ${response.status} ${response.statusText}`)
+        }
+        const data = await response.json()
         
         return {
-          success: response.data.success === true,
+          success: data.success === true,
           identifier,
-          message: response.data.log || 'Updated successfully',
-          error: response.data.error
+          message: data.log || 'Updated successfully',
+          error: data.error
         }
       })
     )
@@ -483,13 +498,12 @@ app.post('/update-metadata', async (req, res) => {
       } else {
         const identifier = items[results.indexOf(result)]
         console.error(`Update failed for ${identifier}:`, result.reason)
-        if (result.reason?.response?.data) {
-          console.error('Archive.org error response:', result.reason.response.data)
-        }
+        const error = result.reason instanceof Error ? result.reason : new Error('Unknown error')
+        console.error('Archive.org error message:', error.message)
         return {
           success: false,
           identifier,
-          error: result.reason?.message || 'Unknown error'
+          error: error.message
         }
       }
     })
@@ -500,7 +514,7 @@ app.post('/update-metadata', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid update request' })
     }
-    if (error.message.includes('credentials')) {
+    if (error instanceof Error && error.message.includes('credentials')) {
       return res.status(401).json({ error: error.message })
     }
     res.status(500).json({ error: 'Metadata update failed' })
@@ -509,7 +523,7 @@ app.post('/update-metadata', async (req, res) => {
 
 app.post('/youtube-suggest', async (req, res) => {
   try {
-    const { identifier, title, date } = req.body
+    const { title, date } = req.body
     
     if (!title) {
       return res.status(400).json({ error: 'Title is required' })
@@ -536,7 +550,8 @@ app.post('/youtube-suggest', async (req, res) => {
     }
   } catch (error) {
     console.error('YouTube suggest error:', error)
-    res.status(500).json({ error: 'Failed to search YouTube' })
+    const errorMessage = error instanceof Error ? error.message : 'Failed to search YouTube'
+    res.status(500).json({ error: errorMessage })
   }
 })
 
@@ -551,7 +566,8 @@ app.listen(PORT, () => {
     getArchiveCredentials()
     console.log('Archive.org credentials loaded successfully')
   } catch (error) {
-    console.warn('Warning:', error.message)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.warn('Warning:', errorMessage)
     console.warn('Please configure your Archive.org credentials in the .env file')
   }
   
