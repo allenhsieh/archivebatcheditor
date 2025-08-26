@@ -261,8 +261,8 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
             Get YouTube video matches and auto-extract metadata for selected items:
           </p>
           
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
-            {selectedItems.slice(0, 3).map(identifier => {
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+            {selectedItems.map(identifier => {
               const item = items.find(i => i.identifier === identifier)
               const suggestion = youtubeSuggestions[identifier]
               const isLoading = loadingYoutube[identifier]
@@ -310,7 +310,15 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                           </div>
                           
                           {suggestion.suggestions.youtube && (
-                            <div style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ 
+                              marginBottom: '8px', 
+                              padding: '8px', 
+                              background: 'rgba(255, 255, 255, 0.05)', 
+                              borderRadius: '4px',
+                              display: 'flex', 
+                              alignItems: 'flex-start', 
+                              gap: '10px' 
+                            }}>
                               <input
                                 type="checkbox"
                                 checked={selectedFields[identifier]?.youtube || false}
@@ -318,9 +326,21 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                                   ...prev,
                                   [identifier]: { ...prev[identifier], youtube: e.target.checked }
                                 }))}
+                                style={{ marginTop: '2px' }}
                               />
-                              <div style={{ flex: 1 }}>
-                                <strong>YouTube:</strong> <a href={suggestion.suggestions.youtube} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', textDecoration: 'none' }}>
+                              <div style={{ flex: 1, lineHeight: '1.4' }}>
+                                <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>YouTube URL:</div>
+                                <a 
+                                  href={suggestion.suggestions.youtube} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  style={{ 
+                                    color: '#007bff', 
+                                    textDecoration: 'none',
+                                    fontSize: '12px',
+                                    wordBreak: 'break-all'
+                                  }}
+                                >
                                   {suggestion.suggestions.youtube} 🔗
                                 </a>
                               </div>
@@ -328,7 +348,15 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                           )}
                           
                           {suggestion.suggestions.band && (
-                            <div style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ 
+                              marginBottom: '8px', 
+                              padding: '8px', 
+                              background: 'rgba(255, 255, 255, 0.05)', 
+                              borderRadius: '4px',
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '10px' 
+                            }}>
                               <input
                                 type="checkbox"
                                 checked={selectedFields[identifier]?.band || false}
@@ -337,12 +365,22 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                                   [identifier]: { ...prev[identifier], band: e.target.checked }
                                 }))}
                               />
-                              <div><strong>Band:</strong> {suggestion.suggestions.band}</div>
+                              <div>
+                                <strong>Band:</strong> {suggestion.suggestions.band}
+                              </div>
                             </div>
                           )}
                           
                           {suggestion.suggestions.venue && (
-                            <div style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ 
+                              marginBottom: '8px', 
+                              padding: '8px', 
+                              background: 'rgba(255, 255, 255, 0.05)', 
+                              borderRadius: '4px',
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '10px' 
+                            }}>
                               <input
                                 type="checkbox"
                                 checked={selectedFields[identifier]?.venue || false}
@@ -351,12 +389,22 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                                   [identifier]: { ...prev[identifier], venue: e.target.checked }
                                 }))}
                               />
-                              <div><strong>Venue:</strong> {suggestion.suggestions.venue}</div>
+                              <div>
+                                <strong>Venue:</strong> {suggestion.suggestions.venue}
+                              </div>
                             </div>
                           )}
                           
                           {suggestion.suggestions.date && (
-                            <div style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ 
+                              marginBottom: '8px', 
+                              padding: '8px', 
+                              background: 'rgba(255, 255, 255, 0.05)', 
+                              borderRadius: '4px',
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '10px' 
+                            }}>
                               <input
                                 type="checkbox"
                                 checked={selectedFields[identifier]?.date || false}
@@ -365,7 +413,9 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                                   [identifier]: { ...prev[identifier], date: e.target.checked }
                                 }))}
                               />
-                              <div><strong>Date:</strong> {suggestion.suggestions.date}</div>
+                              <div>
+                                <strong>Date:</strong> {suggestion.suggestions.date}
+                              </div>
                             </div>
                           )}
                           
@@ -390,11 +440,119 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
             })}
           </div>
           
-          {selectedItems.length > 3 && (
-            <div style={{ fontSize: '14px', opacity: 0.8 }}>
-              Showing first 3 items. Select fewer items to see all suggestions.
-            </div>
-          )}
+          <div style={{ marginTop: '20px', textAlign: 'center', display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="button secondary"
+              onClick={async () => {
+                // Add delays between requests to avoid rate limiting
+                for (let i = 0; i < selectedItems.length; i++) {
+                  const identifier = selectedItems[i]
+                  if (!youtubeSuggestions[identifier] && !loadingYoutube[identifier]) {
+                    getYoutubeSuggestion(identifier)
+                    // Add 1 second delay between requests to respect rate limits
+                    if (i < selectedItems.length - 1) {
+                      await new Promise(resolve => setTimeout(resolve, 1000))
+                    }
+                  }
+                }
+              }}
+              style={{ padding: '10px 20px' }}
+            >
+              🔍 Get YouTube Matches for All
+            </button>
+            
+            <button
+              type="button"
+              className="button"
+              onClick={() => {
+                // Build YouTube-only updates
+                const youtubeUpdates: any[] = []
+                let addedCount = 0
+                
+                selectedItems.forEach(identifier => {
+                  const suggestion = youtubeSuggestions[identifier]
+                  if (suggestion?.success && suggestion.suggestions?.youtube) {
+                    youtubeUpdates.push({
+                      field: 'youtube',
+                      value: suggestion.suggestions.youtube,
+                      operation: 'replace'
+                    })
+                    addedCount++
+                  }
+                })
+                
+                if (addedCount > 0) {
+                  // Immediately execute the YouTube updates
+                  onUpdate({
+                    items: selectedItems,
+                    updates: youtubeUpdates
+                  })
+                } else {
+                  alert('❌ No YouTube matches found. Click "Get YouTube Matches for All" first.')
+                }
+              }}
+              style={{ padding: '10px 20px' }}
+              disabled={!Object.values(youtubeSuggestions).some(s => s?.success)}
+            >
+              🔗 Add YouTube Links
+            </button>
+            
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => {
+                // Apply ALL selected metadata for items that have matches
+                const newUpdates = [...updates]
+                
+                selectedItems.forEach(identifier => {
+                  const suggestion = youtubeSuggestions[identifier]
+                  if (suggestion?.success && suggestion.suggestions?.youtube) {
+                    // Check if fields are selected (default to true for YouTube)
+                    const fields = selectedFields[identifier] || { youtube: true }
+                    
+                    if (fields.youtube) {
+                      newUpdates.push({
+                        field: 'youtube',
+                        value: suggestion.suggestions.youtube,
+                        operation: 'replace'
+                      })
+                    }
+                    
+                    if (fields.band && suggestion.suggestions.band) {
+                      newUpdates.push({
+                        field: 'band',
+                        value: suggestion.suggestions.band,
+                        operation: 'replace'
+                      })
+                    }
+                    
+                    if (fields.venue && suggestion.suggestions.venue) {
+                      newUpdates.push({
+                        field: 'venue',
+                        value: suggestion.suggestions.venue,
+                        operation: 'replace'
+                      })
+                    }
+                    
+                    if (fields.date && suggestion.suggestions.date) {
+                      newUpdates.push({
+                        field: 'date',
+                        value: suggestion.suggestions.date,
+                        operation: 'replace'
+                      })
+                    }
+                  }
+                })
+                
+                setUpdates(newUpdates)
+              }}
+              style={{ padding: '10px 20px' }}
+              disabled={!Object.values(youtubeSuggestions).some(s => s?.success)}
+            >
+              ✅ Apply All Selected Fields
+            </button>
+          </div>
         </div>
       )}
 

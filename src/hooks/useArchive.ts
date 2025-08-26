@@ -23,7 +23,7 @@ export const useArchive = () => {
     setLogs(prev => [...prev, { ...entry, timestamp: new Date() }])
   }, [])  // Empty dependency array = this function never changes
 
-  // FUNCTION: Search for Archive.org items publicly (anyone can use this)
+  // FUNCTION: Search within your own uploaded Archive.org items 
   const searchItems = useCallback(async (query: string) => {
     // If user didn't enter anything, clear the results
     if (!query.trim()) {
@@ -45,10 +45,12 @@ export const useArchive = () => {
       // Convert the response from JSON text to a JavaScript object
       const data = await response.json()
       setItems(data.items || [])  // Update our items state with the results
-      // Add a success message to the activity log
+      // Add a success message to the activity log with debug info
+      const totalFound = data.total || 0
+      const returned = data.returned || data.items?.length || 0
       addLog({
         type: 'info',  // This is an informational message (not error or success)
-        message: `Found ${data.items?.length || 0} items for query: ${query}`
+        message: `Found ${totalFound} total items matching: ${query} (showing ${returned} items)`
       })
     } catch (error) {
       // If anything went wrong, log it and show user an error message
@@ -107,8 +109,8 @@ export const useArchive = () => {
   // This is just a shortcut for getUserItems(true)
   const refreshUserItems = useCallback(() => getUserItems(true), [getUserItems])
 
-  // FUNCTION: Update metadata for selected Archive.org items  
-  // This is the main feature - batch editing metadata fields
+  // FUNCTION: Update metadata for selected Archive.org items with real-time progress
+  // This is the main feature - batch editing metadata fields with streaming updates
   const updateMetadata = useCallback(async (updateData: UpdateRequest) => {
     setLoading(true)  // Show loading spinner
     
@@ -126,83 +128,173 @@ export const useArchive = () => {
     })
 
     try {
-      // Send the update request to our backend API
-      const response = await fetch('/api/update-metadata', {
-        method: 'POST',                               // POST request (we're sending data)
+      // Use Server-Sent Events for real-time progress updates
+      const response = await fetch('/api/update-metadata-stream', {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',         // Tell server we're sending JSON
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updateData),             // Convert our data to JSON string
+        body: JSON.stringify(updateData),
       })
       
-      // Check if the request was successful
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
-      // Parse the response to get results for each item
-      const data = await response.json()
-      const results: ApiResponse[] = data.results || []  // Array of results (one per item updated)
+      // Check if the browser supports streaming responses
+      if (!response.body) {
+        throw new Error('Streaming not supported, falling back to standard endpoint')
+      }
       
-      // Log the result for each individual item and update their visual status
-      results.forEach((result, index) => {
-        const progress = result.progress || `${index + 1}/${results.length}`
+      // Set up streaming data reader
+      // This allows us to process data as it arrives instead of waiting for everything
+      const reader = response.body.getReader()  // Browser API to read streaming data
+      const decoder = new TextDecoder()         // Converts bytes to text
+      let buffer = ''                           // Stores incomplete messages
+      
+      // Process the real-time streaming response
+      // This loop runs continuously while the server sends us updates
+      while (true) {
+        const { done, value } = await reader.read()  // Read next chunk of data
+        if (done) break                              // Stop when server closes connection
         
-        // Determine the visual status based on the result
-        let status: ItemStatus = 'error'
-        if (result.success) {
-          if (result.updated === 0 && result.skipped && result.skipped > 0) {
-            status = 'skipped'  // All fields were skipped
-          } else {
-            status = 'success'  // At least some fields were updated
+        // Convert raw bytes to text and add to our buffer
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')            // Split by newlines to find complete messages
+        buffer = lines.pop() || ''                  // Keep the incomplete line for next iteration
+        
+        // Process each complete line we received
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            // Skip event type lines (SSE format - we parse based on data content instead)
+            continue
+          }
+          
+          if (line.startsWith('data: ')) {
+            try {
+              // Parse the JSON data sent from server
+              const data = JSON.parse(line.substring(6))  // Remove 'data: ' prefix
+              
+              // Handle different event types
+              if (data.identifier) {
+                // This is a progress update for a specific item
+                if (data.error) {
+                  // Error for this item
+                  setItemStatuses(prev => ({ ...prev, [data.identifier]: 'error' }))
+                  addLog({
+                    type: 'error',
+                    message: `[${data.progress}/${data.total}] ❌ Failed ${data.identifier}: ${data.error}`,
+                    identifier: data.identifier
+                  })
+                } else if (data.message?.includes('Processing')) {
+                  // Item is being processed
+                  setItemStatuses(prev => ({ ...prev, [data.identifier]: 'processing' }))
+                } else if (data.message) {
+                  // Success for this item
+                  const status: ItemStatus = data.updated === 0 ? 'skipped' : 'success'
+                  setItemStatuses(prev => ({ ...prev, [data.identifier]: status }))
+                  addLog({
+                    type: 'success',
+                    message: `[${data.progress}/${data.total}] ✅ Updated ${data.identifier}: ${data.message}`,
+                    identifier: data.identifier
+                  })
+                }
+              } else if (data.summary) {
+                // Final completion summary
+                const { successCount, totalItems, successRate } = data.summary
+                addLog({
+                  type: successCount === totalItems ? 'success' : 'info',
+                  message: data.message || `🎉 Batch update completed! ${successCount}/${totalItems} items successful (${successRate}%)`
+                })
+                
+                if (successCount < totalItems) {
+                  const failureCount = totalItems - successCount
+                  addLog({
+                    type: 'info',
+                    message: `📋 ${failureCount} item(s) failed - check individual results above for details`
+                  })
+                }
+              } else if (data.fatal) {
+                // Fatal error
+                throw new Error(data.message)
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse SSE data:', line)
+            }
           }
         }
-        
-        // Update the visual status for this item
-        if (result.identifier) {
-          setItemStatuses(prev => ({ ...prev, [result.identifier!]: status }))
-        }
-        
-        addLog({
-          type: result.success ? 'success' : 'error',  // Green for success, red for error
-          message: result.success 
-            ? `[${progress}] ✅ Updated ${result.identifier}: ${result.message || 'Success'}`
-            : `[${progress}] ❌ Failed ${result.identifier}: ${result.error || 'Unknown error'}`,
-          identifier: result.identifier  // Include the item ID for reference
-        })
-      })
-
-      // Count how many items were successfully updated
-      const successCount = results.filter(r => r.success).length
-      
-      // Add a comprehensive summary message
-      const successRate = Math.round((successCount / results.length) * 100)
-      addLog({
-        type: successCount === results.length ? 'success' : 'info',  // Success if all worked, info if some failed
-        message: `🎉 Batch update completed! ${successCount}/${results.length} items successful (${successRate}%)`
-      })
-      
-      // If there were failures, add a note about them
-      if (successCount < results.length) {
-        const failureCount = results.length - successCount
-        addLog({
-          type: 'info',
-          message: `📋 ${failureCount} item(s) failed - check individual results above for details`
-        })
       }
 
     } catch (error) {
-      // Handle any errors during the update process
-      console.error('Update error:', error)
-      addLog({
-        type: 'error',
-        message: `Batch update failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      })
+      console.error('Streaming update error, falling back to standard endpoint:', error)
+      
+      // Fallback to the original non-streaming endpoint
+      try {
+        const response = await fetch('/api/update-metadata', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updateData),
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        const results: ApiResponse[] = data.results || []
+        
+        // Process results the old way
+        results.forEach((result, index) => {
+          const progress = result.progress || `${index + 1}/${results.length}`
+          
+          let status: ItemStatus = 'error'
+          if (result.success) {
+            if (result.updated === 0 && result.skipped && result.skipped > 0) {
+              status = 'skipped'
+            } else {
+              status = 'success'
+            }
+          }
+          
+          if (result.identifier) {
+            setItemStatuses(prev => ({ ...prev, [result.identifier!]: status }))
+          }
+          
+          addLog({
+            type: result.success ? 'success' : 'error',
+            message: result.success 
+              ? `[${progress}] ✅ Updated ${result.identifier}: ${result.message || 'Success'}`
+              : `[${progress}] ❌ Failed ${result.identifier}: ${result.error || 'Unknown error'}`,
+            identifier: result.identifier
+          })
+        })
+        
+        const successCount = results.filter(r => r.success).length
+        const successRate = Math.round((successCount / results.length) * 100)
+        addLog({
+          type: successCount === results.length ? 'success' : 'info',
+          message: `🎉 Batch update completed! ${successCount}/${results.length} items successful (${successRate}%)`
+        })
+        
+        if (successCount < results.length) {
+          const failureCount = results.length - successCount
+          addLog({
+            type: 'info',
+            message: `📋 ${failureCount} item(s) failed - check individual results above for details`
+          })
+        }
+      } catch (fallbackError) {
+        addLog({
+          type: 'error',
+          message: `Batch update failed: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`
+        })
+      }
     } finally {
-      // Always hide loading spinner when done
       setLoading(false)
     }
-  }, [addLog])  // Recreate this function if addLog changes
+  }, [addLog])
 
   // HELPER FUNCTION: Toggle whether an item is selected
   // Used when user clicks checkboxes next to items

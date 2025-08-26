@@ -3,11 +3,177 @@ import express from 'express'  // Express.js - makes it easy to build web server
 import cors from 'cors'        // CORS - allows our web app to talk to our server (different ports)
 import helmet from 'helmet'    // Helmet - adds security headers to protect against common attacks
 import { z } from 'zod'        // Zod - validates that data sent to our API has the right format
+import Database from 'better-sqlite3'  // SQLite database for caching
+import path from 'path'        // Path utilities for cache directory
 
 // Create our Express server app
 const app = express()
 // Get the port number from environment variables, or use 3001 as default
 const PORT = process.env.PORT || 3001
+
+// SQLite Cache configuration
+// This caching system helps us avoid hitting API limits by storing previous results locally
+const CACHE_DB_PATH = path.join(process.cwd(), 'cache.db')  // Database file in project root
+const CACHE_EXPIRY_DAYS = 30 // Cache entries expire after 30 days to keep data fresh
+
+// Initialize SQLite database
+let db: Database.Database
+
+const initializeDatabase = () => {
+  try {
+    // Create a new SQLite database file (or connect to existing one)
+    db = new Database(CACHE_DB_PATH)
+    
+    // Create tables for storing cached data
+    // YouTube cache: stores search results to avoid repeated API calls (saves quota)
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS youtube_cache (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Unique row identifier
+        cache_key TEXT UNIQUE NOT NULL,        -- Hash of search parameters
+        title TEXT NOT NULL,                   -- Video title searched
+        date TEXT,                            -- Date from Archive.org item
+        channel_id TEXT,                      -- YouTube channel ID
+        result TEXT,                          -- JSON string of the YouTube match result
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP  -- When this was cached
+      )
+    `)
+    
+    // Metadata cache: stores Archive.org item metadata to speed up loading
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS metadata_cache (
+        identifier TEXT PRIMARY KEY,          -- Archive.org item identifier (unique)
+        metadata TEXT,                        -- JSON string of Archive.org metadata
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP  -- When this was cached
+      )
+    `)
+    
+    // Create indexes for faster database lookups (like adding bookmarks to a book)
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_youtube_cache_key ON youtube_cache(cache_key)`)
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_youtube_created ON youtube_cache(created_at)`)
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_metadata_identifier ON metadata_cache(identifier)`)
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_metadata_created ON metadata_cache(created_at)`)
+    
+    console.log('📁 SQLite cache database initialized')
+    
+  } catch (error) {
+    console.warn('Failed to initialize cache database:', error)
+  }
+}
+
+// Generate cache key from search parameters
+// This creates a unique string from search data so we can find cached results later
+const generateCacheKey = (data: any): string => {
+  // Convert the search data to JSON, then to base64, then make it filename-safe
+  return Buffer.from(JSON.stringify(data)).toString('base64').replace(/[/+=]/g, '_')
+}
+
+// Clean up expired cache entries
+// This runs automatically to remove old cached data and keep the database small
+const cleanupExpiredCache = () => {
+  try {
+    if (!db) return
+    
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - CACHE_EXPIRY_DAYS)
+    
+    const youtubeDeleted = db.prepare(`DELETE FROM youtube_cache WHERE created_at < ?`).run(cutoffDate.toISOString()).changes
+    const metadataDeleted = db.prepare(`DELETE FROM metadata_cache WHERE created_at < ?`).run(cutoffDate.toISOString()).changes
+    
+    if (youtubeDeleted > 0 || metadataDeleted > 0) {
+      console.log(`🗑️  Cleaned up ${youtubeDeleted} YouTube + ${metadataDeleted} metadata expired cache entries`)
+    }
+  } catch (error) {
+    console.warn('Failed to cleanup expired cache:', error)
+  }
+}
+
+// Get YouTube result from cache
+const getYouTubeFromCache = (title: string, date: string | undefined, channelId: string): any => {
+  try {
+    if (!db) return null
+    
+    const cacheKey = generateCacheKey({ title, date, channelId })
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - CACHE_EXPIRY_DAYS)
+    
+    const row = db.prepare(`
+      SELECT result FROM youtube_cache 
+      WHERE cache_key = ? AND created_at > ?
+    `).get(cacheKey, cutoffDate.toISOString()) as { result: string } | undefined
+    
+    return row ? JSON.parse(row.result) : null
+  } catch (error) {
+    console.warn('Failed to get YouTube cache:', error)
+    return null
+  }
+}
+
+// Save YouTube result to cache
+const saveYouTubeToCache = (title: string, date: string | undefined, channelId: string, result: any): void => {
+  try {
+    if (!db) return
+    
+    const cacheKey = generateCacheKey({ title, date, channelId })
+    
+    db.prepare(`
+      INSERT OR REPLACE INTO youtube_cache (cache_key, title, date, channel_id, result)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(cacheKey, title, date || null, channelId, JSON.stringify(result))
+    
+  } catch (error) {
+    console.warn('Failed to save YouTube cache:', error)
+  }
+}
+
+// Get metadata from cache
+const getMetadataFromCache = (identifier: string): any => {
+  try {
+    if (!db) return null
+    
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - CACHE_EXPIRY_DAYS)
+    
+    const row = db.prepare(`
+      SELECT metadata FROM metadata_cache 
+      WHERE identifier = ? AND created_at > ?
+    `).get(identifier, cutoffDate.toISOString()) as { metadata: string } | undefined
+    
+    return row ? JSON.parse(row.metadata) : null
+  } catch (error) {
+    console.warn('Failed to get metadata cache:', error)
+    return null
+  }
+}
+
+// Save metadata to cache
+const saveMetadataToCache = (identifier: string, metadata: any): void => {
+  try {
+    if (!db) return
+    
+    db.prepare(`
+      INSERT OR REPLACE INTO metadata_cache (identifier, metadata)
+      VALUES (?, ?)
+    `).run(identifier, JSON.stringify(metadata))
+    
+  } catch (error) {
+    console.warn('Failed to save metadata cache:', error)
+  }
+}
+
+// Get cache statistics
+const getCacheStats = () => {
+  try {
+    if (!db) return { youtube: 0, metadata: 0 }
+    
+    const youtubeCount = (db.prepare(`SELECT COUNT(*) as count FROM youtube_cache`).get() as { count: number }).count
+    const metadataCount = (db.prepare(`SELECT COUNT(*) as count FROM metadata_cache`).get() as { count: number }).count
+    
+    return { youtube: youtubeCount, metadata: metadataCount }
+  } catch (error) {
+    console.warn('Failed to get cache stats:', error)
+    return { youtube: 0, metadata: 0 }
+  }
+}
 
 // Set up middleware (code that runs before our API endpoints)
 app.use(helmet())       // Add security headers to all responses
@@ -151,7 +317,14 @@ async function searchYouTubeForMatch(title: string, date?: string) {
     return null // Exit early if YouTube isn't set up
   }
   
-  console.log('YouTube credentials found, searching...')
+  // Check cache first to avoid hitting YouTube API
+  const cached = getYouTubeFromCache(title, date, youtubeConfig.channelId)
+  if (cached) {
+    console.log(`📦 Using cached YouTube result for: "${title}"`)
+    return cached
+  }
+  
+  console.log(`🔍 Searching YouTube API for: "${title}" (not in cache)`)
   
   try {
     // Parse the Archive.org title to extract useful parts
@@ -164,22 +337,24 @@ async function searchYouTubeForMatch(title: string, date?: string) {
     // Convert date formats to match what might be in YouTube titles
     // Archive.org uses YYYY-MM-DD, but YouTube titles often use MM.DD.YY
     let searchDate = date
-    if (date && date.match(/\d{4}-\d{2}-\d{2}/)) {  // If date looks like "2023-10-15"
-      const [year, month, day] = date.split('-')   // Split into parts
-      searchDate = `${month}.${day}.${year.slice(-2)}` // Convert to "10.15.23"
+    if (date) {
+      if (date.match(/\d{4}-\d{2}-\d{2}/)) {  // If date looks like "2014-05-15"
+        const [year, month, day] = date.split('-')   // Split into parts
+        searchDate = `${month}.${day}.${year.slice(-2)}` // Convert to "05.15.14"
+      } else if (date.match(/\d{2}\.\d{2}\.\d{2}/)) {  // If already in MM.DD.YY format
+        searchDate = date  // Use as-is
+      }
     }
     
     // Create multiple search queries to try, from most specific to least specific
     // This increases our chances of finding a match
     const searchQueries = [
-      `${band} ${searchDate}`.trim(),           // "Radiohead 10.15.23" (most specific)
-      `${band} 01.05.12`.trim(),                // Fallback with common date format
-      `${band} che cafe ${searchDate}`.trim(),  // Include venue if it's a common one
-      band || title,                            // Just the band name
-      `${band} ${venue}`.trim(),                // Band + venue (no date)
-      `${band} che cafe`.trim(),                // Band + common venue
-      title,                                    // Full original title (least specific)
-    ].filter(Boolean)                           // Remove empty strings
+      `${band} ${venue} ${searchDate}`.trim(),     // "Landfill Mango's Cafe 05.15.14" (most specific)
+      `${band} ${venue}`.trim(),                   // "Landfill Mango's Cafe" (band + venue)
+      `${band} ${searchDate}`.trim(),              // "Landfill 05.15.14" (band + date)
+      band || title,                               // Just the band name
+      title,                                       // Full original title (fallback)
+    ].filter(Boolean)                              // Remove empty strings
      .filter((query, index, arr) => arr.indexOf(query) === index) // Remove duplicates
     
     console.log(`Trying ${searchQueries.length} search queries for: ${title}`)
@@ -203,6 +378,9 @@ async function searchYouTubeForMatch(title: string, date?: string) {
       
       const response = await fetch(`${YOUTUBE_API_BASE}/search?${searchParams}`)
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(`YouTube API rate limit exceeded. Daily quota: 10,000 units, each search uses 100 units. Wait 24 hours or check your Google Cloud Console quota.`)
+        }
         throw new Error(`YouTube API error: ${response.status} ${response.statusText}`)
       }
       const data = await response.json()
@@ -221,18 +399,42 @@ async function searchYouTubeForMatch(title: string, date?: string) {
           let score = 0
           const lowerTitle = videoTitle.toLowerCase()  // Convert to lowercase for comparison
           const lowerBand = band?.toLowerCase() || ''  // Convert band name to lowercase too
+          const lowerVenue = venue?.toLowerCase() || '' // Convert venue name to lowercase too
           
           // Add points for different types of matches (higher = better match)
-          if (lowerTitle.includes(lowerBand)) score += 10           // Band name found = +10 points
-          if (lowerTitle.includes('che cafe')) score += 5          // Specific venue = +5 points  
-          if (lowerTitle.includes('01.05.12') || lowerTitle.includes('2012-01-05')) score += 15 // Specific date = +15 points
+          if (lowerBand && lowerTitle.includes(lowerBand)) {
+            score += 15  // Band name match is very important = +15 points
+          }
           
-          console.log(`Score for "${videoTitle}": ${score}`)
+          if (lowerVenue && lowerTitle.includes(lowerVenue)) {
+            score += 10  // Venue match is important = +10 points
+          }
+          
+          // Check for date matches in multiple formats
+          if (searchDate) {
+            if (lowerTitle.includes(searchDate.toLowerCase())) {
+              score += 20  // Date match is most important = +20 points
+            }
+            // Also check for original date format
+            if (date && lowerTitle.includes(date)) {
+              score += 20  // Original date format match = +20 points
+            }
+          }
+          
+          // Check for common venue keywords that might be in YouTube titles
+          const venueKeywords = ['cafe', 'club', 'bar', 'venue', 'theater', 'hall', 'house']
+          venueKeywords.forEach(keyword => {
+            if (lowerVenue.includes(keyword) && lowerTitle.includes(keyword)) {
+              score += 5  // Venue type match = +5 points
+            }
+          })
+          
+          console.log(`Score for "${videoTitle}": ${score} (band: ${lowerBand ? 'found' : 'missing'}, venue: ${lowerVenue ? 'found' : 'missing'}, date: ${searchDate ? 'found' : 'missing'})`)
           
           // If this video scored high enough, consider it a good match
-          if (score >= 10) {
+          if (score >= 15) {  // Raised threshold for better matches
             console.log(`Using match with score ${score}: ${videoTitle}`)
-            return {
+            const result = {
               videoId: item.id.videoId,                                    // YouTube video ID  
               title: videoTitle,                                           // YouTube video title
               url: `https://youtu.be/${item.id.videoId}`,                 // Full YouTube URL
@@ -242,13 +444,19 @@ async function searchYouTubeForMatch(title: string, date?: string) {
               extractedVenue: extractVenueFromTitle(videoTitle),          // Venue name from YouTube title
               extractedDate: extractDateFromTitle(videoTitle)             // Date from YouTube title
             }
+            
+            // Cache the successful result
+            saveYouTubeToCache(title, date, youtubeConfig.channelId, result)
+            console.log(`💾 Cached YouTube result for future use`)
+            
+            return result
           }
         }
         
         // If no good scored match, fall back to first result
         const bestMatch = data.items[0]
         console.log(`No high-scoring match, using first result: ${bestMatch.snippet.title}`)
-        return {
+        const fallbackResult = {
           videoId: bestMatch.id.videoId,
           title: bestMatch.snippet.title,
           url: `https://youtu.be/${bestMatch.id.videoId}`,
@@ -258,12 +466,23 @@ async function searchYouTubeForMatch(title: string, date?: string) {
           extractedVenue: extractVenueFromTitle(bestMatch.snippet.title),
           extractedDate: extractDateFromTitle(bestMatch.snippet.title)
         }
+        
+        // Cache the fallback result
+        saveYouTubeToCache(title, date, youtubeConfig.channelId, fallbackResult)
+        console.log(`💾 Cached fallback YouTube result`)
+        
+        return fallbackResult
       } else {
         console.log(`No results for query "${searchQuery}"`)
       }
     }
     
     console.log('No YouTube matches found after trying all queries')
+    
+    // Cache the "no match" result to avoid repeated API calls
+    saveYouTubeToCache(title, date, youtubeConfig.channelId, null)
+    console.log(`💾 Cached "no match" result to avoid future API calls`)
+    
     return null
   } catch (error) {
     console.error('YouTube search error:', error)
@@ -363,36 +582,58 @@ function convertToArchiveFormat(dateStr: string): string {
 }
 
 // API ENDPOINT: GET /search
-// This endpoint lets users search for Archive.org items publicly
-// Example: GET /search?q=radiohead will search for "radiohead" on Archive.org
+// This endpoint searches within the authenticated user's uploaded items only
+// Example: GET /search?q=radiohead will search for "radiohead" in YOUR items on Archive.org
 app.get('/search', async (req, res) => {
   try {
     // Validate that the request has a proper 'q' (query) parameter
     const { q } = searchQuerySchema.parse(req.query)  // Zod validates the format
     
-    // Build parameters for Archive.org's search API
-    // We use the "legacy" API because it's more reliable for public searches
+    // Get user's Archive.org credentials to limit search to their items
+    const { email, accessKey, secretKey } = getArchiveCredentials()
+    
+    // Combine user query with uploader filter to search only their items
+    // Example: if user searches "radiohead", actual query becomes "radiohead AND uploader:user@example.com"
+    const combinedQuery = `(${q}) AND uploader:${email}`
+    
+    console.log(`Searching user items with query: "${combinedQuery}"`)
+    
+    // Build parameters for Archive.org's search API with authentication
     const searchParams = new URLSearchParams({
-      q,                                                                              // The search query
-      fl: 'identifier,title,creator,description,date,mediatype,collection,subject',  // Which fields to return
-      rows: '50',                                                                     // Return up to 50 results
-      output: 'json'                                                                  // Return results as JSON
+      q: combinedQuery,                                                               // Combined query (user search + uploader filter)
+      fl: 'identifier,title,creator,description,date,mediatype,collection,subject,uploader',  // Include uploader field
+      rows: '1000',                                                                   // Return up to 1000 results to handle large collections
+      output: 'json',                                                                 // Return results as JSON
+      sort: 'addeddate desc'                                                          // Sort by upload date (newest first) to ensure consistent results
     })
     
-    const response = await fetch(`${ARCHIVE_LEGACY_SEARCH_API}?${searchParams}`)
+    // Use authenticated request to access uploader field
+    const auth = btoa(`${accessKey}:${secretKey}`)
+    const response = await fetch(`${ARCHIVE_LEGACY_SEARCH_API}?${searchParams}`, {
+      headers: {
+        'Authorization': `Basic ${auth}`
+      }
+    })
     if (!response.ok) {
       throw new Error(`Archive.org search error: ${response.status} ${response.statusText}`)
     }
     const data = await response.json()
     
+    console.log(`Search results: Found ${data.response?.numFound || 0} total, returning ${data.response?.docs?.length || 0} items`)
+    
     res.json({
       items: data.response?.docs || [],
-      total: data.response?.numFound || 0
+      total: data.response?.numFound || 0,
+      query: combinedQuery,  // Return the actual query used for debugging
+      returned: data.response?.docs?.length || 0  // How many items we're actually returning
     })
   } catch (error) {
     console.error('Search error:', error)
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid search query' })
+    }
+    if (error instanceof Error && error.message.includes('credentials')) {
+      return res.status(401).json({ error: error.message })
     }
     res.status(500).json({ error: 'Search failed' })
   }
@@ -533,7 +774,15 @@ app.get('/user-items', async (req, res) => {
 
 // Helper function to get current metadata for an item to check if update is needed
 async function getCurrentMetadata(identifier: string, accessKey: string, secretKey: string): Promise<any> {
+  // Check cache first
+  const cached = getMetadataFromCache(identifier)
+  if (cached) {
+    console.log(`📦 Using cached metadata for: ${identifier}`)
+    return cached
+  }
+  
   try {
+    console.log(`🔍 Fetching metadata from Archive.org for: ${identifier} (not in cache)`)
     const response = await fetch(`${ARCHIVE_API_BASE}/metadata/${identifier}`, {
       headers: {
         'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`
@@ -546,7 +795,15 @@ async function getCurrentMetadata(identifier: string, accessKey: string, secretK
     }
     
     const data = await response.json()
-    return data.metadata || null
+    const metadata = data.metadata || null
+    
+    // Cache the metadata
+    if (metadata) {
+      saveMetadataToCache(identifier, metadata)
+      console.log(`💾 Cached metadata for ${identifier}`)
+    }
+    
+    return metadata
   } catch (error) {
     console.log(`Error fetching metadata for ${identifier}, proceeding with update`)
     return null
@@ -562,12 +819,8 @@ async function updateItemMetadata(identifier: string, updates: any[], accessKey:
   // First, get current metadata to check if updates are needed
   const currentMetadata = await getCurrentMetadata(identifier, accessKey, secretKey)
   
-  // Check if item is curated (has restrictions on editing)
-  if (currentMetadata && currentMetadata.curation) {
-    console.log(`   🚫 ITEM IS CURATED: ${identifier}`)
-    console.log(`   📋 Curation info: ${currentMetadata.curation}`)
-    throw new Error(`Item ${identifier} has been curated by Archive.org staff and cannot be edited. Contact Archive.org support if changes are needed.`)
-  }
+  // Note: Removed blanket curation check as many curated items can still be edited
+  // We'll handle specific edit restrictions when they occur during the API call
   
   // Process each metadata update one by one (safer than doing them all at once)
   const actualUpdates = []
@@ -756,6 +1009,13 @@ async function updateItemMetadata(identifier: string, updates: any[], accessKey:
       }
     } catch (error) {
       console.error(`Failed to update ${update.field} for ${identifier}:`, error)
+      
+      // Check if this is a curation-related error (only throw specific error for actual restrictions)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      if (errorMessage.includes('curator') || errorMessage.includes('restricted') || errorMessage.includes('permission')) {
+        throw new Error(`Item ${identifier} has editing restrictions. Contact Archive.org support if changes are needed. Original error: ${errorMessage}`)
+      }
+      
       throw error
     }
   }
@@ -763,6 +1023,177 @@ async function updateItemMetadata(identifier: string, updates: any[], accessKey:
   return { skipped: skippedUpdates.length, updated: actualUpdates.length }
 }
 
+// Real-time streaming endpoint for metadata updates
+// Uses Server-Sent Events (SSE) to send progress updates to the browser as each item is processed
+app.post('/update-metadata-stream', async (req, res) => {
+  try {
+    const { items, updates } = updateRequestSchema.parse(req.body)
+    const { accessKey, secretKey } = getArchiveCredentials()
+    
+    // Set up Server-Sent Events headers
+    // This tells the browser to keep the connection open and expect streaming data
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',  // SSE content type
+      'Cache-Control': 'no-cache',          // Don't cache the stream
+      'Connection': 'keep-alive',           // Keep connection open
+      'Access-Control-Allow-Origin': '*',   // Allow cross-origin requests
+      'Access-Control-Allow-Headers': 'Cache-Control',
+    })
+    
+    // Helper function to send SSE events to the browser
+    // Each event has a type and data that the frontend can listen for
+    const sendEvent = (type: string, data: any) => {
+      res.write(`event: ${type}\n`)          // Event type (e.g., 'progress', 'error')
+      res.write(`data: ${JSON.stringify(data)}\n\n`)  // Event data as JSON
+    }
+    
+    console.log(`🚀 BATCH UPDATE STARTED (STREAMING)`)
+    console.log(`📊 Items: ${items.length} | Fields: ${updates.length}`)
+    
+    // Send initial start event
+    sendEvent('start', {
+      message: `Starting metadata update for ${items.length} items...`,
+      totalItems: items.length
+    })
+    
+    // Process items ONE AT A TIME to avoid overwhelming Archive.org
+    const results = []
+    for (let i = 0; i < items.length; i++) {
+      const identifier = items[i]
+      const progress = `[${i + 1}/${items.length}]`
+      
+      console.log(`\n${progress} 🔄 PROCESSING: ${identifier}`)
+      
+      // Send processing event
+      sendEvent('processing', {
+        identifier,
+        progress: i + 1,
+        total: items.length,
+        message: `Processing ${identifier}...`
+      })
+      
+      // Add delay between items (except for first item)
+      if (i > 0) {
+        console.log(`${progress} ⏳ Waiting ${API_DELAY_MS}ms...`)
+        await delay(API_DELAY_MS)
+      }
+      
+      try {
+        const updateResult = await updateItemMetadata(identifier, updates, accessKey, secretKey)
+        const result = {
+          success: true,
+          identifier,
+          message: updateResult.updated === 0 
+            ? `All ${updateResult.skipped} field(s) already up-to-date (skipped)`
+            : updateResult.skipped > 0
+              ? `Updated ${updateResult.updated} field(s), skipped ${updateResult.skipped} field(s)`
+              : `Updated ${updateResult.updated} field(s) successfully`,
+          progress: `${i + 1}/${items.length}`,
+          skipped: updateResult.skipped,
+          updated: updateResult.updated
+        }
+        results.push(result)
+        
+        // Send success event immediately
+        sendEvent('success', {
+          identifier,
+          progress: i + 1,
+          total: items.length,
+          message: result.message,
+          skipped: updateResult.skipped,
+          updated: updateResult.updated
+        })
+        
+        if (updateResult.updated === 0) {
+          console.log(`${progress} ⏭️  SKIPPED: ${identifier} (no changes needed)`)
+        } else {
+          console.log(`${progress} ✅ SUCCESS: ${identifier} (${updateResult.updated} updated, ${updateResult.skipped} skipped)`)
+        }
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        const result = {
+          success: false,
+          identifier,
+          error: errorMessage,
+          progress: `${i + 1}/${items.length}`,
+          skipped: 0,
+          updated: 0
+        }
+        results.push(result)
+        
+        // Send error event immediately
+        sendEvent('error', {
+          identifier,
+          progress: i + 1,
+          total: items.length,
+          error: errorMessage
+        })
+        
+        console.error(`${progress} ❌ FAILED: ${identifier} - ${errorMessage}`)
+      }
+      
+      // Show progress every 10 items
+      if ((i + 1) % 10 === 0 || i === items.length - 1) {
+        const completed = i + 1
+        const remaining = items.length - completed
+        const percent = Math.round((completed / items.length) * 100)
+        const successSoFar = results.filter(r => r.success).length
+        const skippedSoFar = results.reduce((sum, r) => sum + (r.skipped || 0), 0)
+        const updatedSoFar = results.reduce((sum, r) => sum + (r.updated || 0), 0)
+        console.log(`\n📈 PROGRESS UPDATE: ${completed}/${items.length} (${percent}%) | ✅ ${successSoFar} success | 🔄 ${updatedSoFar} updated | ⏭️ ${skippedSoFar} skipped | ⏳ ${remaining} remaining`)
+      }
+    }
+    
+    // Calculate final statistics
+    const successCount = results.filter(r => r.success).length
+    const failureCount = results.length - successCount
+    const successRate = Math.round((successCount / items.length) * 100)
+    const totalSkipped = results.reduce((sum, r) => sum + (r.skipped || 0), 0)
+    const totalUpdated = results.reduce((sum, r) => sum + (r.updated || 0), 0)
+    const fullySkippedItems = results.filter(r => r.success && r.updated === 0).length
+    
+    console.log(`\n════════════════════════════════════════════════════════════════`)
+    console.log(`🎉 BATCH UPDATE COMPLETED (STREAMING)`)
+    console.log(`📊 Total Items: ${items.length}`)
+    console.log(`✅ Successful: ${successCount} (${successRate}%)`)
+    console.log(`❌ Failed: ${failureCount}`)
+    console.log(`🔄 Fields Updated: ${totalUpdated}`)
+    console.log(`⏭️ Fields Skipped: ${totalSkipped} (already correct)`)
+    console.log(`👍 Items Fully Up-to-Date: ${fullySkippedItems}`)
+    console.log(`════════════════════════════════════════════════════════════════`)
+    
+    // Send completion event
+    sendEvent('complete', {
+      summary: {
+        successCount,
+        failureCount,
+        totalItems: items.length,
+        successRate,
+        totalUpdated,
+        totalSkipped,
+        fullySkippedItems
+      },
+      message: `🎉 Batch update completed! ${successCount}/${items.length} items successful (${successRate}%)`
+    })
+    
+    // Close the SSE connection
+    res.end()
+  } catch (error) {
+    console.error('Update metadata error (streaming):', error)
+    const errorMessage = error instanceof Error ? error.message : 'Metadata update failed'
+    
+    // Send error event and close connection
+    res.write(`event: error\n`)
+    res.write(`data: ${JSON.stringify({ 
+      message: errorMessage,
+      fatal: true 
+    })}\n\n`)
+    res.end()
+  }
+})
+
+// Keep original endpoint as fallback for non-streaming clients
 app.post('/update-metadata', async (req, res) => {
   try {
     const { items, updates } = updateRequestSchema.parse(req.body)
@@ -915,8 +1346,69 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-app.listen(PORT, () => {
+// Cache management endpoints
+app.post('/cache/clear', async (req, res) => {
+  try {
+    const { type } = req.body // 'youtube', 'metadata', or 'all'
+    
+    if (!db) {
+      return res.status(500).json({ error: 'Cache database not initialized' })
+    }
+    
+    let youtubeCleared = 0
+    let metadataCleared = 0
+    
+    if (type === 'youtube' || type === 'all') {
+      youtubeCleared = db.prepare(`DELETE FROM youtube_cache`).run().changes
+      console.log(`🗑️  Cleared ${youtubeCleared} YouTube cache entries`)
+    }
+    
+    if (type === 'metadata' || type === 'all') {
+      metadataCleared = db.prepare(`DELETE FROM metadata_cache`).run().changes
+      console.log(`🗑️  Cleared ${metadataCleared} metadata cache entries`)
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `Cleared ${type} cache`,
+      cleared: { youtube: youtubeCleared, metadata: metadataCleared }
+    })
+  } catch (error) {
+    console.error('Cache clear error:', error)
+    res.status(500).json({ error: 'Failed to clear cache' })
+  }
+})
+
+app.get('/cache/stats', async (_req, res) => {
+  try {
+    const stats = getCacheStats()
+    
+    res.json({
+      youtube: {
+        entries: stats.youtube,
+        table: 'youtube_cache'
+      },
+      metadata: {
+        entries: stats.metadata,
+        table: 'metadata_cache'
+      },
+      database: CACHE_DB_PATH,
+      expiry: `${CACHE_EXPIRY_DAYS} days`
+    })
+  } catch (error) {
+    console.error('Cache stats error:', error)
+    res.status(500).json({ error: 'Failed to get cache stats' })
+  }
+})
+
+app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`)
+  
+  // Initialize SQLite database
+  initializeDatabase()
+  
+  // Clean up expired cache entries
+  cleanupExpiredCache()
   
   try {
     getArchiveCredentials()
@@ -935,4 +1427,8 @@ app.listen(PORT, () => {
   } else {
     console.log('YouTube integration not configured (optional)')
   }
+  
+  // Show cache stats
+  const stats = getCacheStats()
+  console.log(`💾 Cache: ${stats.youtube} YouTube + ${stats.metadata} metadata entries (expire after ${CACHE_EXPIRY_DAYS} days)`)
 })

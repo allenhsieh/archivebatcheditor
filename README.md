@@ -1,14 +1,16 @@
 # Archive.org Batch Metadata Editor
 
-A modern web application for batch editing metadata on Archive.org items with YouTube integration.
+A modern web application for batch editing metadata on Archive.org items with YouTube integration and real-time progress tracking.
 
 ## What This Does
 
 This tool allows you to:
-- **Load all your Archive.org items** at once (with smart caching)
-- **Batch edit metadata** for multiple items simultaneously 
+- **Load all your Archive.org items** at once (with smart SQLite caching)
+- **Batch edit metadata** for multiple items simultaneously with real-time progress updates
 - **Auto-match with YouTube videos** to extract band names, venues, and dates
 - **Update Archive.org records** with consistent, clean metadata
+- **Track progress in real-time** - see each item update as it happens
+- **Smart caching** - avoid hitting API limits with local database storage
 
 Perfect for managing large collections of concert recordings, podcasts, or other media archives.
 
@@ -103,25 +105,39 @@ Go to: **http://localhost:3000**
 ### Loading Your Items
 
 1. Click **"Load My Items"** to fetch all your Archive.org uploads
-2. The first load takes a few seconds, then it's cached for 30 minutes
-3. Use **"🔄 Refresh"** to force reload fresh data from Archive.org
+2. The app now only shows **your items** (filtered by your email automatically)
+3. Items are cached in a local SQLite database for 30 days to save API calls
+4. Use **"🔄 Refresh"** to force reload fresh data from Archive.org
 
-### Editing Metadata
+### Editing Metadata with Real-Time Updates
 
 1. **Select items** by checking the boxes next to items you want to edit
 2. **Add metadata fields** using the dropdown (title, creator, venue, date, etc.)
 3. **Enter values** that will replace existing metadata
 4. **Click "Update X Items"** to save changes to Archive.org
+5. **Watch real-time progress** - each item updates individually with live status:
+   - ✅ **Green checkmarks** for successful updates
+   - ❌ **Red X's** with error messages for failures
+   - 🔄 **Progress indicators** showing current item being processed
 
 ### YouTube Integration (Optional)
 
 If you configured YouTube API credentials:
 
 1. **Select Archive.org items** you want to match
-2. **Click "Get YouTube Match"** for each item
+2. **Click "Get YouTube Match"** to find all matching videos at once
 3. **Review suggestions** showing extracted band, venue, date info
 4. **Click "Apply to Metadata"** to add YouTube data to your form
-5. **Click "Update X Items"** to save the changes
+5. **Use "Add YouTube Links"** to only add YouTube URLs without other metadata
+6. **Watch real-time updates** as each item gets processed
+
+### Smart Caching System
+
+The app now uses a local SQLite database (`cache.db`) that:
+- **Stores YouTube search results** for 30 days (saves API quota)
+- **Caches Archive.org metadata** to reduce load times
+- **Automatically cleans up** expired entries
+- **Shows cache status** in the server console (e.g., "💾 Cache: 15 YouTube + 8 metadata entries")
 
 ## Troubleshooting
 
@@ -129,20 +145,35 @@ If you configured YouTube API credentials:
 - Check your Archive.org credentials in `.env`
 - Make sure your email matches your Archive.org account
 - Try clicking the "🔄 Refresh" button
+- Check the server console for error messages
 
-### "YouTube match not found"  
+### "YouTube match not found" or "Rate limit exceeded"
 - YouTube integration is optional - your main functionality still works
 - Check your YouTube API key and channel ID in `.env`
+- YouTube API has daily limits (10,000 units/day, 100 per search)
+- Wait 24 hours if you hit the rate limit, or cached results will be used automatically
 - Some items may not have matching YouTube videos
 
 ### "Server not starting"
-- Make sure Node.js is installed: `node --version`
+- Make sure Node.js is installed: `node --version` (need v18+)
 - Check that ports 3000 and 3001 aren't being used by other apps
 - Try `npm install` again to reinstall dependencies
+- Look for error messages about SQLite compilation issues
 
 ### "Permission errors during npm install"
 - Try: `npm install --cache /tmp/npm-cache`
 - Or run with `sudo` on Mac/Linux: `sudo npm install`
+- For SQLite errors, you may need build tools: `xcode-select --install` on Mac
+
+### "Items stuck in processing" or "Real-time updates not working"
+- Refresh the page to reconnect the real-time stream
+- Check your internet connection
+- Look at the browser's developer console (F12) for errors
+- The server console shows detailed progress even if the UI gets disconnected
+
+### "Cache database errors"
+- Delete the `cache.db` file and restart the server to rebuild it
+- Make sure you have write permissions in the project directory
 
 ## Security Notes
 
@@ -171,6 +202,8 @@ If you configured YouTube API credentials:
 ### Tech Stack
 - **Frontend:** React 18 + TypeScript + Vite
 - **Backend:** Node.js + Express + TypeScript
+- **Database:** SQLite with better-sqlite3 for local caching
+- **Real-time:** Server-Sent Events (SSE) for live progress updates
 - **APIs:** Archive.org Search/Metadata APIs + YouTube Data API v3
 
 ## Contributing

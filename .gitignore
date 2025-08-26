@@ -61,3 +61,7 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# SQLite cache database (contains API response cache)
+cache.db
+cache.db-*
