@@ -19,6 +19,45 @@ const CACHE_EXPIRY_DAYS = 30 // Cache entries expire after 30 days to keep data 
 // Initialize SQLite database
 let db: Database.Database
 
+// YouTube API quota tracking
+let dailyQuotaUsed = 0
+let quotaResetDate = new Date().toDateString()
+const YOUTUBE_API_QUOTA_LIMIT = 10000  // Daily limit
+const SEARCH_COST = 100  // Units per search
+
+// Reset quota counter daily
+const checkQuotaReset = () => {
+  const today = new Date().toDateString()
+  if (quotaResetDate !== today) {
+    dailyQuotaUsed = 0
+    quotaResetDate = today
+    console.log('🔄 YouTube API quota reset for new day')
+  }
+}
+
+// Check if we can make more API calls
+const canMakeAPICall = () => {
+  checkQuotaReset()
+  return dailyQuotaUsed + SEARCH_COST <= YOUTUBE_API_QUOTA_LIMIT
+}
+
+// Track API usage
+const recordAPIUsage = () => {
+  dailyQuotaUsed += SEARCH_COST
+  console.log(`📊 YouTube API quota used: ${dailyQuotaUsed}/${YOUTUBE_API_QUOTA_LIMIT} (${Math.round((dailyQuotaUsed/YOUTUBE_API_QUOTA_LIMIT)*100)}%)`)
+}
+
+// Get current quota status
+const getQuotaStatus = () => {
+  checkQuotaReset()
+  return {
+    used: dailyQuotaUsed,
+    limit: YOUTUBE_API_QUOTA_LIMIT,
+    remaining: YOUTUBE_API_QUOTA_LIMIT - dailyQuotaUsed,
+    percentage: Math.round((dailyQuotaUsed / YOUTUBE_API_QUOTA_LIMIT) * 100)
+  }
+}
+
 const initializeDatabase = () => {
   try {
     // Create a new SQLite database file (or connect to existing one)
@@ -324,6 +363,13 @@ async function searchYouTubeForMatch(title: string, date?: string) {
     return cached
   }
   
+  // Check quota before making API call
+  if (!canMakeAPICall()) {
+    const quotaStatus = getQuotaStatus()
+    console.log(`⚠️  YouTube API quota limit reached: ${quotaStatus.used}/${quotaStatus.limit}`)
+    throw new Error('YouTube API quota limit reached for today. Try again tomorrow.')
+  }
+  
   console.log(`🔍 Searching YouTube API for: "${title}" (not in cache)`)
   
   try {
@@ -377,9 +423,14 @@ async function searchYouTubeForMatch(title: string, date?: string) {
       console.log(`[${i+1}/${searchQueries.length}] YouTube search query: "${searchQuery}"`)
       
       const response = await fetch(`${YOUTUBE_API_BASE}/search?${searchParams}`)
+      
+      // Record API usage regardless of success/failure
+      recordAPIUsage()
+      
       if (!response.ok) {
         if (response.status === 403) {
-          throw new Error(`YouTube API rate limit exceeded. Daily quota: 10,000 units, each search uses 100 units. Wait 24 hours or check your Google Cloud Console quota.`)
+          const quotaStatus = getQuotaStatus()
+          throw new Error(`YouTube API rate limit exceeded. Daily quota used: ${quotaStatus.used}/${quotaStatus.limit} (${quotaStatus.percentage}%). Try again tomorrow when quota resets.`)
         }
         throw new Error(`YouTube API error: ${response.status} ${response.statusText}`)
       }
@@ -1340,6 +1391,16 @@ app.post('/youtube-suggest', async (req, res) => {
     const errorMessage = error instanceof Error ? error.message : 'Failed to search YouTube'
     res.status(500).json({ error: errorMessage })
   }
+})
+
+// Endpoint to get current YouTube API quota status
+app.get('/youtube-quota', (_req, res) => {
+  const quotaStatus = getQuotaStatus()
+  res.json({
+    ...quotaStatus,
+    canMakeCall: canMakeAPICall(),
+    nextReset: new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0] + 'T00:00:00Z'
+  })
 })
 
 app.get('/health', (_req, res) => {

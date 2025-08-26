@@ -14,6 +14,7 @@ export const useArchive = () => {
   const [loading, setLoading] = useState(false)                   // Whether we're currently loading data
   const [logs, setLogs] = useState<LogEntry[]>([])                // Activity log to show user what happened
   const [itemStatuses, setItemStatuses] = useState<Record<string, ItemStatus>>({}) // Track processing status for each item
+  const [quotaStatus, setQuotaStatus] = useState<{used: number, limit: number, remaining: number, percentage: number} | null>(null) // YouTube API quota tracking
 
   // Helper function to add entries to the activity log
   // useCallback prevents this function from being recreated on every render (performance optimization)
@@ -22,6 +23,19 @@ export const useArchive = () => {
     // ...prev keeps all existing logs, then we add the new one
     setLogs(prev => [...prev, { ...entry, timestamp: new Date() }])
   }, [])  // Empty dependency array = this function never changes
+
+  // FUNCTION: Fetch current YouTube API quota status
+  const fetchQuotaStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/youtube-quota')
+      if (response.ok) {
+        const data = await response.json()
+        setQuotaStatus(data)
+      }
+    } catch (error) {
+      console.warn('Failed to fetch quota status:', error)
+    }
+  }, [])
 
   // FUNCTION: Search within your own uploaded Archive.org items 
   const searchItems = useCallback(async (query: string) => {
@@ -293,8 +307,10 @@ export const useArchive = () => {
       }
     } finally {
       setLoading(false)
+      // Refresh quota status after any operation that might use YouTube API
+      fetchQuotaStatus()
     }
-  }, [addLog])
+  }, [addLog, fetchQuotaStatus])
 
   // HELPER FUNCTION: Toggle whether an item is selected
   // Used when user clicks checkboxes next to items
@@ -339,6 +355,7 @@ export const useArchive = () => {
     loading,            // Boolean: are we loading something?
     logs,               // Array of activity log entries
     itemStatuses,       // Object mapping item IDs to their processing status
+    quotaStatus,        // YouTube API quota status (used/limit/percentage)
     
     // FUNCTIONS (actions that components can trigger)
     searchItems,        // Search Archive.org publicly
@@ -349,6 +366,7 @@ export const useArchive = () => {
     selectAllItems,     // Select all loaded items
     clearSelection,     // Deselect all items
     clearLogs,          // Clear the activity log
-    clearItemStatuses   // Clear all item status indicators
+    clearItemStatuses,  // Clear all item status indicators
+    fetchQuotaStatus    // Fetch current YouTube API quota status
   }
 }

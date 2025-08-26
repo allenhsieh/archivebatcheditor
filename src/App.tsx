@@ -1,4 +1,4 @@
-import { } from 'react'
+import { useEffect } from 'react'
 import { useArchive } from './hooks/useArchive'
 import { SearchSection } from './components/SearchSection'
 import { ItemSelector } from './components/ItemSelector'
@@ -11,7 +11,8 @@ function App() {
     selectedItems,
     loading,
     logs,
-    itemStatuses,  // Add the new itemStatuses from the hook
+    itemStatuses,
+    quotaStatus,  // Add quota status
     searchItems,
     getUserItems,
     refreshUserItems,
@@ -19,8 +20,16 @@ function App() {
     toggleItemSelection,
     selectAllItems,
     clearSelection,
-    clearLogs
+    clearLogs,
+    fetchQuotaStatus  // Add fetch function
   } = useArchive()
+
+  // Fetch quota status when app loads and periodically update it
+  useEffect(() => {
+    fetchQuotaStatus() // Initial load
+    const interval = setInterval(fetchQuotaStatus, 30000) // Update every 30 seconds
+    return () => clearInterval(interval)
+  }, [fetchQuotaStatus])
 
   return (
     <div className="container">
@@ -30,6 +39,44 @@ function App() {
           Search and batch edit metadata for your Archive.org items
         </p>
       </header>
+
+      {/* YouTube API Quota Status */}
+      {quotaStatus && (
+        <div style={{ 
+          marginBottom: '20px', 
+          padding: '15px', 
+          backgroundColor: '#f8f9fa', 
+          borderRadius: '8px',
+          border: '1px solid #e9ecef'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <strong>🎵 YouTube API Quota Status</strong>
+            <span style={{ fontSize: '14px', color: '#666' }}>
+              {quotaStatus.used.toLocaleString()} / {quotaStatus.limit.toLocaleString()} units ({quotaStatus.percentage}%)
+            </span>
+          </div>
+          <div style={{ 
+            width: '100%', 
+            height: '8px', 
+            backgroundColor: '#e9ecef', 
+            borderRadius: '4px',
+            overflow: 'hidden'
+          }}>
+            <div style={{ 
+              width: `${quotaStatus.percentage}%`, 
+              height: '100%', 
+              backgroundColor: quotaStatus.percentage > 90 ? '#dc3545' : quotaStatus.percentage > 70 ? '#ffc107' : '#28a745',
+              transition: 'width 0.3s ease'
+            }} />
+          </div>
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+            {quotaStatus.remaining > 0 
+              ? `${quotaStatus.remaining} units remaining (≈${Math.floor(quotaStatus.remaining / 100)} YouTube searches)`
+              : '⚠️ Quota exceeded - searches will fail until tomorrow'
+            }
+          </div>
+        </div>
+      )}
 
       <SearchSection
         onSearch={searchItems}
