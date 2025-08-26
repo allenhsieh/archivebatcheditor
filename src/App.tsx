@@ -11,6 +11,7 @@ function App() {
     selectedItems,
     loading,
     logs,
+    itemStatuses,  // Add the new itemStatuses from the hook
     searchItems,
     getUserItems,
     refreshUserItems,
@@ -40,6 +41,7 @@ function App() {
       <ItemSelector
         items={items}
         selectedItems={selectedItems}
+        itemStatuses={itemStatuses}  // Pass the item statuses
         onToggleItem={toggleItemSelection}
         onSelectAll={selectAllItems}
         onClearSelection={clearSelection}

@@ -26,6 +26,9 @@ export interface ApiResponse {
   identifier?: string
   message?: string
   error?: string
+  progress?: string
+  skipped?: number
+  updated?: number
 }
 
 export interface LogEntry {

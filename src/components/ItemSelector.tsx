@@ -1,9 +1,13 @@
 import React from 'react'
 import { ArchiveItem } from '../types'
 
+// Define the possible status states for each item during processing
+type ItemStatus = 'idle' | 'processing' | 'success' | 'error' | 'skipped'
+
 interface ItemSelectorProps {
   items: ArchiveItem[]
   selectedItems: string[]
+  itemStatuses: Record<string, ItemStatus>  // New prop for item processing statuses
   onToggleItem: (identifier: string) => void
   onSelectAll: () => void
   onClearSelection: () => void
@@ -12,10 +16,27 @@ interface ItemSelectorProps {
 export const ItemSelector: React.FC<ItemSelectorProps> = ({
   items,
   selectedItems,
+  itemStatuses,  // New prop
   onToggleItem,
   onSelectAll,
   onClearSelection
 }) => {
+  // Helper function to get status indicator for an item
+  const getStatusIndicator = (identifier: string) => {
+    const status = itemStatuses[identifier] || 'idle'
+    switch (status) {
+      case 'processing':
+        return <span style={{ color: '#007bff', fontSize: '16px', marginLeft: '8px' }} title="Processing...">🔄</span>
+      case 'success':
+        return <span style={{ color: '#28a745', fontSize: '16px', marginLeft: '8px' }} title="Successfully updated">✅</span>
+      case 'error':
+        return <span style={{ color: '#dc3545', fontSize: '16px', marginLeft: '8px' }} title="Update failed">❌</span>
+      case 'skipped':
+        return <span style={{ color: '#6c757d', fontSize: '16px', marginLeft: '8px' }} title="Skipped (already up-to-date)">⏭️</span>
+      default:
+        return null
+    }
+  }
   if (items.length === 0) {
     return null
   }
@@ -53,7 +74,10 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({
                 onClick={(e) => e.stopPropagation()}
               />
               <div style={{ flex: 1 }}>
-                <h4>{item.title || item.identifier}</h4>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <h4 style={{ margin: 0, flex: 1 }}>{item.title || item.identifier}</h4>
+                  {getStatusIndicator(item.identifier)}
+                </div>
                 <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '8px' }}>
                   ID: <a 
                     href={`https://archive.org/details/${item.identifier}`} 
