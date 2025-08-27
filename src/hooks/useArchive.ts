@@ -5,6 +5,16 @@ import { ArchiveItem, UpdateRequest, ApiResponse, LogEntry } from '../types' // 
 // Define the possible status states for each item during processing
 type ItemStatus = 'idle' | 'processing' | 'success' | 'error' | 'skipped'
 
+// Debug logging configuration - check for debug environment variable
+const DEBUG_LOGGING = process.env.NODE_ENV === 'development' && localStorage.getItem('debug_logging') === 'true'
+
+// Debug logging helper - only logs when DEBUG_LOGGING is enabled or explicitly requested
+const debugLog = (...args: any[]) => {
+  if (DEBUG_LOGGING || localStorage.getItem('debug_logging') === 'true') {
+    console.log('[DEBUG]', ...args)
+  }
+}
+
 // This is a "custom hook" - a React pattern for sharing stateful logic between components
 // Think of it as a collection of related state and functions that work together
 export const useArchive = () => {
@@ -136,9 +146,11 @@ export const useArchive = () => {
     setItemStatuses(initialStatuses)
     
     // Log that we're starting the update process
+    const startMessage = `Starting metadata update for ${updateData.items.length} items...`
+    console.log(startMessage)
     addLog({
       type: 'info',
-      message: `Starting metadata update for ${updateData.items.length} items...`
+      message: startMessage
     })
 
     try {
@@ -195,9 +207,11 @@ export const useArchive = () => {
                 if (data.error) {
                   // Error for this item
                   setItemStatuses(prev => ({ ...prev, [data.identifier]: 'error' }))
+                  const errorMessage = `[${data.progress}/${data.total}] ❌ Failed ${data.identifier}: ${data.error}`
+                  console.error(errorMessage)
                   addLog({
                     type: 'error',
-                    message: `[${data.progress}/${data.total}] ❌ Failed ${data.identifier}: ${data.error}`,
+                    message: errorMessage,
                     identifier: data.identifier
                   })
                 } else if (data.message?.includes('Processing')) {
@@ -207,25 +221,31 @@ export const useArchive = () => {
                   // Success for this item
                   const status: ItemStatus = data.updated === 0 ? 'skipped' : 'success'
                   setItemStatuses(prev => ({ ...prev, [data.identifier]: status }))
+                  const successMessage = `[${data.progress}/${data.total}] ✅ Updated ${data.identifier}: ${data.message}`
+                  console.log(successMessage)
                   addLog({
                     type: 'success',
-                    message: `[${data.progress}/${data.total}] ✅ Updated ${data.identifier}: ${data.message}`,
+                    message: successMessage,
                     identifier: data.identifier
                   })
                 }
               } else if (data.summary) {
                 // Final completion summary
                 const { successCount, totalItems, successRate } = data.summary
+                const summaryMessage = data.message || `🎉 Batch update completed! ${successCount}/${totalItems} items successful (${successRate}%)`
+                console.log(summaryMessage)
                 addLog({
                   type: successCount === totalItems ? 'success' : 'info',
-                  message: data.message || `🎉 Batch update completed! ${successCount}/${totalItems} items successful (${successRate}%)`
+                  message: summaryMessage
                 })
                 
                 if (successCount < totalItems) {
                   const failureCount = totalItems - successCount
+                  const failureMessage = `📋 ${failureCount} item(s) failed - check individual results above for details`
+                  console.log(failureMessage)
                   addLog({
                     type: 'info',
-                    message: `📋 ${failureCount} item(s) failed - check individual results above for details`
+                    message: failureMessage
                   })
                 }
               } else if (data.fatal) {
@@ -233,7 +253,7 @@ export const useArchive = () => {
                 throw new Error(data.message)
               }
             } catch (parseError) {
-              console.warn('Failed to parse SSE data:', line)
+              debugLog('Failed to parse SSE data:', line)
             }
           }
         }
@@ -276,33 +296,47 @@ export const useArchive = () => {
             setItemStatuses(prev => ({ ...prev, [result.identifier!]: status }))
           }
           
+          const resultMessage = result.success 
+            ? `[${progress}] ✅ Updated ${result.identifier}: ${result.message || 'Success'}`
+            : `[${progress}] ❌ Failed ${result.identifier}: ${result.error || 'Unknown error'}`
+          
+          if (result.success) {
+            console.log(resultMessage)
+          } else {
+            console.error(resultMessage)
+          }
+          
           addLog({
             type: result.success ? 'success' : 'error',
-            message: result.success 
-              ? `[${progress}] ✅ Updated ${result.identifier}: ${result.message || 'Success'}`
-              : `[${progress}] ❌ Failed ${result.identifier}: ${result.error || 'Unknown error'}`,
+            message: resultMessage,
             identifier: result.identifier
           })
         })
         
         const successCount = results.filter(r => r.success).length
         const successRate = Math.round((successCount / results.length) * 100)
+        const completionMessage = `🎉 Batch update completed! ${successCount}/${results.length} items successful (${successRate}%)`
+        console.log(completionMessage)
         addLog({
           type: successCount === results.length ? 'success' : 'info',
-          message: `🎉 Batch update completed! ${successCount}/${results.length} items successful (${successRate}%)`
+          message: completionMessage
         })
         
         if (successCount < results.length) {
           const failureCount = results.length - successCount
+          const failureSummaryMessage = `📋 ${failureCount} item(s) failed - check individual results above for details`
+          console.log(failureSummaryMessage)
           addLog({
             type: 'info',
-            message: `📋 ${failureCount} item(s) failed - check individual results above for details`
+            message: failureSummaryMessage
           })
         }
       } catch (fallbackError) {
+        const fallbackErrorMessage = `Batch update failed: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`
+        console.error(fallbackErrorMessage)
         addLog({
           type: 'error',
-          message: `Batch update failed: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`
+          message: fallbackErrorMessage
         })
       }
     } finally {
@@ -346,6 +380,19 @@ export const useArchive = () => {
     setItemStatuses({})
   }, [])
 
+  // HELPER FUNCTION: Toggle debug logging
+  // Users can call this to enable/disable verbose debug output
+  const toggleDebugLogging = useCallback(() => {
+    const current = localStorage.getItem('debug_logging') === 'true'
+    const newValue = !current
+    localStorage.setItem('debug_logging', String(newValue))
+    console.log(`Debug logging ${newValue ? 'enabled' : 'disabled'}`)
+    addLog({
+      type: 'info',
+      message: `🔧 Debug logging ${newValue ? 'enabled' : 'disabled'}`
+    })
+  }, [addLog])
+
   // RETURN: All the state and functions that components can use
   // This is what gets "hooked into" when components call useArchive()
   return {
@@ -367,6 +414,8 @@ export const useArchive = () => {
     clearSelection,     // Deselect all items
     clearLogs,          // Clear the activity log
     clearItemStatuses,  // Clear all item status indicators
-    fetchQuotaStatus    // Fetch current YouTube API quota status
+    fetchQuotaStatus,   // Fetch current YouTube API quota status
+    addLog,             // Add entries to the activity log
+    toggleDebugLogging  // Toggle verbose debug logging on/off
   }
 }

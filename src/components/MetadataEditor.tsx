@@ -6,6 +6,7 @@ interface MetadataEditorProps {
   items: ArchiveItem[]
   onUpdate: (updateData: UpdateRequest) => void
   loading: boolean
+  addLog: (entry: { type: 'success' | 'error' | 'info', message: string, identifier?: string }) => void
 }
 
 const commonFields = [
@@ -32,7 +33,8 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
   selectedItems,
   items,
   onUpdate,
-  loading
+  loading,
+  addLog
 }) => {
   const [updates, setUpdates] = useState<MetadataUpdate[]>([
     { field: 'city', value: '', operation: 'replace' }
@@ -40,6 +42,8 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
   const [youtubeSuggestions, setYoutubeSuggestions] = useState<Record<string, YouTubeSuggestionResponse>>({})
   const [loadingYoutube, setLoadingYoutube] = useState<Record<string, boolean>>({})
   const [selectedFields, setSelectedFields] = useState<Record<string, Record<string, boolean>>>({})
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
+  const [uploadingImages, setUploadingImages] = useState(false)
 
   const handleUpdateChange = (index: number, key: keyof MetadataUpdate, value: string) => {
     const newUpdates = [...updates]
@@ -559,6 +563,198 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
             >
               ✅ Apply All Selected Fields
             </button>
+          </div>
+        </div>
+      )}
+
+      {selectedItems.length > 0 && (
+        <div style={{ marginTop: '30px', padding: '20px', background: 'rgba(255, 140, 0, 0.1)', borderRadius: '8px' }}>
+          <h4 style={{ marginBottom: '15px' }}>🖼️ Batch Image Upload</h4>
+          <p style={{ marginBottom: '15px', fontSize: '14px', opacity: 0.9 }}>
+            Upload a flyer or cover image to apply to all selected items as their thumbnail/cover image:
+          </p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+                    if (!validTypes.includes(file.type)) {
+                      alert(`Unsupported file type: ${file.type}. Please select a JPEG, PNG, GIF, or WebP image.`)
+                      e.target.value = '' // Clear the input
+                      return
+                    }
+                    
+                    // Validate file size (10MB limit)
+                    const maxSize = 10 * 1024 * 1024 // 10MB in bytes
+                    if (file.size > maxSize) {
+                      alert(`File is too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`)
+                      e.target.value = '' // Clear the input
+                      return
+                    }
+                    
+                    setSelectedImageFile(file)
+                    console.log('Selected image file:', file.name, `${(file.size / 1024 / 1024).toFixed(1)}MB`, `Type: ${file.type}`)
+                  }
+                }}
+                style={{
+                  padding: '8px 12px',
+                  border: '2px dashed rgba(255, 255, 255, 0.3)',
+                  borderRadius: '4px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'white',
+                  cursor: 'pointer'
+                }}
+              />
+              
+              <button
+                type="button"
+                className="button"
+                onClick={async () => {
+                  if (!selectedImageFile) {
+                    alert('Please select an image file first')
+                    return
+                  }
+                  
+                  if (!confirm(`Upload "${selectedImageFile.name}" as cover image to all ${selectedItems.length} selected items?`)) {
+                    return
+                  }
+                  
+                  setUploadingImages(true)
+                  
+                  try {
+                    const formData = new FormData()
+                    formData.append('image', selectedImageFile)
+                    formData.append('items', JSON.stringify(selectedItems))
+                    
+                    // Log start of batch upload to both console and activity log
+                    const startMessage = `🖼️ Starting image upload "${selectedImageFile.name}" for ${selectedItems.length} items...`
+                    console.log(startMessage)
+                    addLog({
+                      type: 'info',
+                      message: startMessage
+                    })
+                    
+                    // Use the streaming endpoint to get real-time progress
+                    const response = await fetch('/api/batch-upload-image-stream', {
+                      method: 'POST',
+                      body: formData
+                    })
+                    
+                    if (!response.ok) {
+                      throw new Error(`Upload failed: ${response.status} ${response.statusText}`)
+                    }
+                    
+                    // Handle streaming response
+                    const reader = response.body?.getReader()
+                    if (!reader) {
+                      throw new Error('Stream reader not available')
+                    }
+                    
+                    const decoder = new TextDecoder()
+                    let buffer = ''
+                    
+                    try {
+                      while (true) {
+                        const { done, value } = await reader.read()
+                        if (done) break
+                        
+                        buffer += decoder.decode(value, { stream: true })
+                        
+                        // Process complete SSE messages
+                        const lines = buffer.split('\n')
+                        buffer = lines.pop() || '' // Keep incomplete line in buffer
+                        
+                        for (const line of lines) {
+                          if (line.startsWith('data: ')) {
+                            try {
+                              const data = JSON.parse(line.substring(6))
+                              
+                              // Handle individual item results
+                              if (data.identifier) {
+                                if (data.error) {
+                                  const errorMsg = `Image upload failed: ${data.error}`
+                                  console.error(`📷 ❌ ${data.identifier}: ${errorMsg}`)
+                                  addLog({
+                                    type: 'error',
+                                    message: errorMsg,
+                                    identifier: data.identifier
+                                  })
+                                } else {
+                                  const successMsg = `Image uploaded successfully`
+                                  console.log(`📷 ✅ ${data.identifier}: ${successMsg}`)
+                                  addLog({
+                                    type: 'success',
+                                    message: successMsg,
+                                    identifier: data.identifier
+                                  })
+                                }
+                              }
+                              // Handle server messages (including completion summary)
+                              else if (data.message) {
+                                console.log(`📷 ${data.message}`)
+                                addLog({
+                                  type: 'info',
+                                  message: data.message
+                                })
+                              }
+                              
+                            } catch (parseError) {
+                              // Ignore parse errors for incomplete messages
+                            }
+                          }
+                        }
+                      }
+                    } finally {
+                      reader.releaseLock()
+                    }
+                    
+                    // Clear the selected file
+                    setSelectedImageFile(null)
+                    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+                    if (fileInput) fileInput.value = ''
+                    
+                  } catch (error) {
+                    addLog({
+                      type: 'error',
+                      message: `Batch image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    })
+                  } finally {
+                    setUploadingImages(false)
+                  }
+                }}
+                style={{ padding: '8px 16px' }}
+                disabled={!selectedImageFile || uploadingImages || loading}
+              >
+                {uploadingImages ? (
+                  <>🔄 Uploading...</>
+                ) : (
+                  <>🚀 Upload to All {selectedItems.length} Items</>
+                )}
+              </button>
+            </div>
+            
+            {selectedImageFile && (
+              <div style={{ 
+                padding: '10px', 
+                background: 'rgba(255, 255, 255, 0.05)', 
+                borderRadius: '4px', 
+                fontSize: '13px' 
+              }}>
+                <strong>Selected:</strong> {selectedImageFile.name} ({(selectedImageFile.size / 1024 / 1024).toFixed(1)}MB)
+              </div>
+            )}
+            
+            <div style={{ fontSize: '12px', opacity: 0.7 }}>
+              <strong>Supported formats:</strong> JPG, PNG, GIF, WebP<br/>
+              <strong>Recommended size:</strong> At least 300x300px for good thumbnail quality<br/>
+              <strong>What happens:</strong> The image will be uploaded as the cover/thumbnail for each selected item
+            </div>
           </div>
         </div>
       )}

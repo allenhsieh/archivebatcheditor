@@ -4,9 +4,10 @@ import { LogEntry } from '../types'
 interface LogViewerProps {
   logs: LogEntry[]
   onClearLogs: () => void
+  onToggleDebugLogging?: () => void
 }
 
-export const LogViewer: React.FC<LogViewerProps> = ({ logs, onClearLogs }) => {
+export const LogViewer: React.FC<LogViewerProps> = ({ logs, onClearLogs, onToggleDebugLogging }) => {
   if (logs.length === 0) {
     return null
   }
@@ -15,9 +16,16 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logs, onClearLogs }) => {
     <div className="section">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <h3>Activity Log ({logs.length})</h3>
-        <button className="button secondary" onClick={onClearLogs}>
-          Clear Log
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {onToggleDebugLogging && (
+            <button className="button secondary" onClick={onToggleDebugLogging}>
+              🔧 Debug
+            </button>
+          )}
+          <button className="button secondary" onClick={onClearLogs}>
+            Clear Log
+          </button>
+        </div>
       </div>
       
       <div className="status-log">

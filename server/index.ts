@@ -5,11 +5,21 @@ import helmet from 'helmet'    // Helmet - adds security headers to protect agai
 import { z } from 'zod'        // Zod - validates that data sent to our API has the right format
 import Database from 'better-sqlite3'  // SQLite database for caching
 import path from 'path'        // Path utilities for cache directory
+import multer from 'multer'    // Multer - handles file uploads
 
 // Create our Express server app
 const app = express()
 // Get the port number from environment variables, or use 3001 as default
 const PORT = process.env.PORT || 3001
+// Debug logging configuration - only log verbose details when enabled
+const DEBUG_LOGGING = process.env.DEBUG_LOGGING === 'true'
+
+// Debug logging helper - only logs when DEBUG_LOGGING is enabled
+const debugLog = (...args: any[]) => {
+  if (DEBUG_LOGGING) {
+    console.log('[DEBUG]', ...args)
+  }
+}
 
 // SQLite Cache configuration
 // This caching system helps us avoid hitting API limits by storing previous results locally
@@ -261,6 +271,12 @@ app.use(helmet())       // Add security headers to all responses
 app.use(cors())         // Allow cross-origin requests (frontend on port 3000 → backend on port 3001)
 app.use(express.json()) // Automatically parse JSON data from POST requests
 
+// Debug request logging
+app.use((req, res, next) => {
+  debugLog(`${req.method} ${req.path}`)
+  next()
+})
+
 // Define what valid search requests should look like using Zod
 // This ensures users send us a 'q' parameter that's a non-empty string
 const searchQuerySchema = z.object({
@@ -350,11 +366,11 @@ function isRateLimitError(error: any): boolean {
 async function makeArchiveApiCall<T>(apiCall: () => Promise<T>, context: string): Promise<T> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.log(`${context} - Attempt ${attempt}/${MAX_RETRIES}`)
+      debugLog(`${context} - Attempt ${attempt}/${MAX_RETRIES}`)
       
       // Add delay before each attempt (except the first one)
       if (attempt > 1) {
-        console.log(`Waiting ${RETRY_DELAY_MS}ms before retry...`)
+        debugLog(`Waiting ${RETRY_DELAY_MS}ms before retry...`)
         await delay(RETRY_DELAY_MS)
       }
       
@@ -362,7 +378,7 @@ async function makeArchiveApiCall<T>(apiCall: () => Promise<T>, context: string)
       
       // If we get here, the call succeeded
       if (attempt > 1) {
-        console.log(`${context} - Succeeded on attempt ${attempt}`)
+        debugLog(`${context} - Succeeded on attempt ${attempt}`)
       }
       
       return result
@@ -378,7 +394,7 @@ async function makeArchiveApiCall<T>(apiCall: () => Promise<T>, context: string)
       
       // If it's a rate limit error, wait longer before retrying
       if (isRateLimitError(error)) {
-        console.log(`${context} - Rate limit detected, will retry after longer delay`)
+        debugLog(`${context} - Rate limit detected, will retry after longer delay`)
         await delay(RETRY_DELAY_MS * 2) // Wait even longer for rate limits
       }
     }
@@ -394,14 +410,14 @@ async function searchYouTubeForMatch(title: string, date?: string) {
   // First, check if YouTube integration is enabled
   const youtubeConfig = getYouTubeCredentials()
   if (!youtubeConfig) {
-    console.log('No YouTube credentials configured')
+    debugLog('No YouTube credentials configured')
     return null // Exit early if YouTube isn't set up
   }
   
   // Check cache first to avoid hitting YouTube API
   const cached = getYouTubeFromCache(title, date, youtubeConfig.channelId)
   if (cached) {
-    console.log(`📦 Using cached YouTube result for: "${title}"`)
+    debugLog(`📦 Using cached YouTube result for: "${title}"`)
     return cached
   }
   
@@ -1511,6 +1527,359 @@ app.get('/youtube-quota', (_req, res) => {
     canMakeCall: canMakeAPICall(),
     nextReset: new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0] + 'T00:00:00Z'
   })
+})
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(), // Store files in memory for processing
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Only allow image files
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    
+    if (file.mimetype.startsWith('image/') || validTypes.includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error(`Only image files are allowed. Received: ${file.mimetype}`))
+    }
+  }
+})
+
+// Helper function to upload file to Archive.org via S3 API
+async function uploadImageToArchiveItem(identifier: string, imageBuffer: Buffer, originalName: string, accessKey: string, secretKey: string) {
+  // Extract date from original filename (assumes format like "2025-07-06-something.jpg")
+  const extension = originalName.split('.').pop() || 'jpg'
+  
+  // Try to extract date from the beginning of the filename (YYYY-MM-DD format)
+  const dateMatch = originalName.match(/^(\d{4}-\d{2}-\d{2})/)
+  
+  let filename
+  if (dateMatch) {
+    // Use the extracted date for consistent flyer naming across all items
+    const date = dateMatch[1]
+    filename = `${date}-flyer_itemimage.${extension}`
+  } else {
+    // Fallback: if no date found, use a generic flyer name
+    filename = `flyer_itemimage.${extension}`
+  }
+  
+  // Archive.org S3 upload URL
+  const uploadUrl = `https://s3.us.archive.org/${identifier}/${filename}`
+  
+  try {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `LOW ${accessKey}:${secretKey}`,
+        'Content-Type': 'application/octet-stream',
+        // Set file-level metadata to make this the item thumbnail
+        [`x-archive-meta-${filename.replace(/\./g, '-')}-format`]: 'Item Image',
+        'x-archive-queue-derive': '0', // Skip automatic file processing for faster upload
+        'x-archive-interactive-priority': '1' // Higher priority processing
+      },
+      body: imageBuffer
+    })
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Upload failed: ${response.status} ${response.statusText}`)
+    }
+    
+    return { success: true, message: `Image uploaded successfully` }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+// Real-time streaming endpoint for batch image uploads
+// Uses Server-Sent Events (SSE) to send progress updates to the browser as each item is processed
+app.post('/batch-upload-image-stream', (req, res, next) => {
+  debugLog('🖼️ Batch upload image stream endpoint hit')
+  // Custom multer error handling
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      console.error('File upload error:', err.message)
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large. Maximum size is 10MB.' })
+      }
+      if (err.message.includes('Only image files')) {
+        return res.status(400).json({ error: err.message })
+      }
+      return res.status(400).json({ error: `File upload error: ${err.message}` })
+    }
+    next()
+  })
+}, async (req, res) => {
+  try {
+    // Validate required data
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' })
+    }
+    
+    if (!req.body.items) {
+      return res.status(400).json({ error: 'No items list provided' })
+    }
+    
+    const items = JSON.parse(req.body.items) as string[]
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Items must be a non-empty array' })
+    }
+    
+    // Get Archive.org credentials
+    const { accessKey, secretKey } = getArchiveCredentials()
+    
+    // Set up Server-Sent Events headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control',
+    })
+    
+    // Helper function to send SSE events to the browser
+    const sendEvent = (type: string, data: any) => {
+      res.write(`event: ${type}\n`)
+      res.write(`data: ${JSON.stringify(data)}\n\n`)
+    }
+    
+    console.log(`🖼️  BATCH IMAGE UPLOAD STARTED`)
+    console.log(`📷 Image: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(1)}MB)`)
+    console.log(`📊 Items: ${items.length}`)
+    
+    // Send initial start event
+    sendEvent('start', {
+      message: `Starting image upload for ${items.length} items...`,
+      totalItems: items.length,
+      image: {
+        name: req.file.originalname,
+        size: req.file.size
+      }
+    })
+    
+    // Process items ONE AT A TIME to avoid overwhelming Archive.org
+    const results = []
+    let successCount = 0
+    
+    for (let i = 0; i < items.length; i++) {
+      const identifier = items[i]
+      
+      console.log(`[${i + 1}/${items.length}] Processing: ${identifier}`)
+      
+      // Send processing event
+      sendEvent('processing', {
+        identifier,
+        progress: i + 1,
+        total: items.length,
+        message: `Uploading image to ${identifier}...`
+      })
+      
+      // Add delay between uploads (except for first upload)
+      if (i > 0) {
+        await delay(API_DELAY_MS)
+      }
+      
+      try {
+        const result = await uploadImageToArchiveItem(
+          identifier, 
+          req.file.buffer, 
+          req.file.originalname,
+          accessKey, 
+          secretKey
+        )
+        
+        results.push({
+          identifier,
+          success: result.success,
+          message: result.message,
+          error: result.error
+        })
+        
+        if (result.success) {
+          successCount++
+          
+          // Send success event immediately
+          sendEvent('success', {
+            identifier,
+            progress: i + 1,
+            total: items.length,
+            message: `Image uploaded successfully`
+          })
+          
+          console.log(`[${i + 1}/${items.length}] ✅ ${identifier}`)
+        } else {
+          // Send error event immediately
+          sendEvent('error', {
+            identifier,
+            progress: i + 1,
+            total: items.length,
+            error: result.error || 'Upload failed'
+          })
+          
+          console.log(`[${i + 1}/${items.length}] ❌ ${identifier}: ${result.error}`)
+        }
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        results.push({
+          identifier,
+          success: false,
+          error: errorMessage
+        })
+        
+        // Send error event immediately
+        sendEvent('error', {
+          identifier,
+          progress: i + 1,
+          total: items.length,
+          error: errorMessage
+        })
+        
+        console.error(`[${i + 1}/${items.length}] ❌ ${identifier}: ${errorMessage}`)
+      }
+    }
+    
+    // Calculate final statistics
+    const failureCount = items.length - successCount
+    const successRate = Math.round((successCount / items.length) * 100)
+    
+    console.log(`🎉 Image upload completed: ${successCount}/${items.length} successful`)
+    
+    // Send completion event
+    sendEvent('complete', {
+      summary: {
+        successCount,
+        failureCount,
+        totalItems: items.length,
+        successRate
+      },
+      message: `🖼️ Image upload completed! ${successCount}/${items.length} items successful (${successRate}%)`
+    })
+    
+    // Close the SSE connection
+    res.end()
+    
+  } catch (error) {
+    console.error('Batch image upload error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Image upload failed'
+    
+    // Send error event and close connection
+    res.write(`event: error\n`)
+    res.write(`data: ${JSON.stringify({ 
+      message: errorMessage,
+      fatal: true 
+    })}\n\n`)
+    res.end()
+  }
+})
+
+// Keep original endpoint as fallback for non-streaming clients
+app.post('/batch-upload-image', (req, res, next) => {
+  // Custom multer error handling
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      console.error('File upload error:', err.message)
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large. Maximum size is 10MB.' })
+      }
+      if (err.message.includes('Only image files')) {
+        return res.status(400).json({ error: err.message })
+      }
+      return res.status(400).json({ error: `File upload error: ${err.message}` })
+    }
+    next()
+  })
+}, async (req, res) => {
+  try {
+    // Validate required data
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' })
+    }
+    
+    if (!req.body.items) {
+      return res.status(400).json({ error: 'No items list provided' })
+    }
+    
+    const items = JSON.parse(req.body.items) as string[]
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Items must be a non-empty array' })
+    }
+    
+    // Get Archive.org credentials
+    const { accessKey, secretKey } = getArchiveCredentials()
+    
+    console.log(`🖼️  BATCH IMAGE UPLOAD STARTED (${items.length} items)`)
+    
+    // Process items one by one
+    const results = []
+    let successCount = 0
+    
+    for (let i = 0; i < items.length; i++) {
+      const identifier = items[i]
+      
+      if (i > 0) await delay(API_DELAY_MS)
+      
+      try {
+        const result = await uploadImageToArchiveItem(
+          identifier, 
+          req.file.buffer, 
+          req.file.originalname,
+          accessKey, 
+          secretKey
+        )
+        
+        results.push({
+          identifier,
+          success: result.success,
+          message: result.message,
+          error: result.error
+        })
+        
+        if (result.success) successCount++
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        results.push({
+          identifier,
+          success: false,
+          error: errorMessage
+        })
+      }
+    }
+    
+    // Calculate final statistics
+    const failureCount = items.length - successCount
+    const successRate = Math.round((successCount / items.length) * 100)
+    
+    console.log(`🎉 Image upload completed: ${successCount}/${items.length} successful`)
+    
+    res.json({
+      success: true,
+      successCount,
+      failureCount,
+      totalItems: items.length,
+      successRate,
+      results,
+      image: {
+        name: req.file.originalname,
+        size: req.file.size
+      }
+    })
+    
+  } catch (error) {
+    console.error('Batch image upload error:', error)
+    if (error instanceof Error && error.message.includes('credentials')) {
+      return res.status(401).json({ error: error.message })
+    }
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Batch image upload failed' 
+    })
+  }
 })
 
 app.get('/health', (_req, res) => {

@@ -21,7 +21,9 @@ function App() {
     selectAllItems,
     clearSelection,
     clearLogs,
-    fetchQuotaStatus  // Add fetch function
+    fetchQuotaStatus,  // Add fetch function
+    addLog,  // Add logging function
+    toggleDebugLogging  // Add debug toggle function
   } = useArchive()
 
   // Fetch quota status when app loads and periodically update it
@@ -99,11 +101,13 @@ function App() {
         items={items}
         onUpdate={updateMetadata}
         loading={loading}
+        addLog={addLog}
       />
 
       <LogViewer
         logs={logs}
         onClearLogs={clearLogs}
+        onToggleDebugLogging={toggleDebugLogging}
       />
     </div>
   )
