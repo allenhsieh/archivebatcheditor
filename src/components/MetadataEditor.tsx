@@ -502,50 +502,57 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
               type="button"
               className="button secondary"
               onClick={() => {
-                // Apply ALL selected metadata for items that have matches
-                const newUpdates = [...updates]
-                
+                // Apply selected metadata individually for each item that has matches
                 selectedItems.forEach(identifier => {
                   const suggestion = youtubeSuggestions[identifier]
-                  if (suggestion?.success && suggestion.suggestions?.youtube) {
+                  if (suggestion?.success && suggestion.suggestions) {
                     // Check if fields are selected (default to true for YouTube)
                     const fields = selectedFields[identifier] || { youtube: true }
                     
-                    if (fields.youtube) {
-                      newUpdates.push({
+                    // Build updates for this specific item
+                    const itemUpdates = []
+                    
+                    if (fields.youtube && suggestion.suggestions.youtube) {
+                      itemUpdates.push({
                         field: 'youtube',
                         value: suggestion.suggestions.youtube,
-                        operation: 'replace'
+                        operation: 'replace' as const
                       })
                     }
                     
                     if (fields.band && suggestion.suggestions.band) {
-                      newUpdates.push({
+                      itemUpdates.push({
                         field: 'band',
                         value: suggestion.suggestions.band,
-                        operation: 'replace'
+                        operation: 'replace' as const
                       })
                     }
                     
                     if (fields.venue && suggestion.suggestions.venue) {
-                      newUpdates.push({
+                      itemUpdates.push({
                         field: 'venue',
                         value: suggestion.suggestions.venue,
-                        operation: 'replace'
+                        operation: 'replace' as const
                       })
                     }
                     
                     if (fields.date && suggestion.suggestions.date) {
-                      newUpdates.push({
+                      itemUpdates.push({
                         field: 'date',
                         value: suggestion.suggestions.date,
-                        operation: 'replace'
+                        operation: 'replace' as const
+                      })
+                    }
+                    
+                    // Apply updates to this specific item only
+                    if (itemUpdates.length > 0) {
+                      onUpdate({
+                        items: [identifier],
+                        updates: itemUpdates
                       })
                     }
                   }
                 })
-                
-                setUpdates(newUpdates)
               }}
               style={{ padding: '10px 20px' }}
               disabled={!Object.values(youtubeSuggestions).some(s => s?.success)}

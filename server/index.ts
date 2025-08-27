@@ -20,41 +20,71 @@ const CACHE_EXPIRY_DAYS = 30 // Cache entries expire after 30 days to keep data 
 let db: Database.Database
 
 // YouTube API quota tracking
-let dailyQuotaUsed = 0
-let quotaResetDate = new Date().toDateString()
 const YOUTUBE_API_QUOTA_LIMIT = 10000  // Daily limit
 const SEARCH_COST = 100  // Units per search
 
-// Reset quota counter daily
-const checkQuotaReset = () => {
-  const today = new Date().toDateString()
-  if (quotaResetDate !== today) {
-    dailyQuotaUsed = 0
-    quotaResetDate = today
-    console.log('🔄 YouTube API quota reset for new day')
+// Get today's date in YYYY-MM-DD format
+const getTodayDateString = () => {
+  const today = new Date()
+  return today.getFullYear() + '-' + 
+         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+         String(today.getDate()).padStart(2, '0')
+}
+
+// Load quota usage from database
+const loadQuotaUsage = () => {
+  try {
+    if (!db) return 0
+    
+    const today = getTodayDateString()
+    const row = db.prepare(`SELECT quota_used FROM youtube_quota WHERE date = ?`).get(today) as { quota_used: number } | undefined
+    
+    return row ? row.quota_used : 0
+  } catch (error) {
+    console.warn('Failed to load quota usage:', error)
+    return 0
+  }
+}
+
+// Save quota usage to database
+const saveQuotaUsage = (quotaUsed: number) => {
+  try {
+    if (!db) return
+    
+    const today = getTodayDateString()
+    
+    db.prepare(`
+      INSERT OR REPLACE INTO youtube_quota (date, quota_used, updated_at)
+      VALUES (?, ?, CURRENT_TIMESTAMP)
+    `).run(today, quotaUsed)
+    
+  } catch (error) {
+    console.warn('Failed to save quota usage:', error)
   }
 }
 
 // Check if we can make more API calls
 const canMakeAPICall = () => {
-  checkQuotaReset()
-  return dailyQuotaUsed + SEARCH_COST <= YOUTUBE_API_QUOTA_LIMIT
+  const currentUsage = loadQuotaUsage()
+  return currentUsage + SEARCH_COST <= YOUTUBE_API_QUOTA_LIMIT
 }
 
 // Track API usage
 const recordAPIUsage = () => {
-  dailyQuotaUsed += SEARCH_COST
-  console.log(`📊 YouTube API quota used: ${dailyQuotaUsed}/${YOUTUBE_API_QUOTA_LIMIT} (${Math.round((dailyQuotaUsed/YOUTUBE_API_QUOTA_LIMIT)*100)}%)`)
+  const currentUsage = loadQuotaUsage()
+  const newUsage = currentUsage + SEARCH_COST
+  saveQuotaUsage(newUsage)
+  console.log(`📊 YouTube API quota used: ${newUsage}/${YOUTUBE_API_QUOTA_LIMIT} (${Math.round((newUsage/YOUTUBE_API_QUOTA_LIMIT)*100)}%)`)
 }
 
 // Get current quota status
 const getQuotaStatus = () => {
-  checkQuotaReset()
+  const used = loadQuotaUsage()
   return {
-    used: dailyQuotaUsed,
+    used: used,
     limit: YOUTUBE_API_QUOTA_LIMIT,
-    remaining: YOUTUBE_API_QUOTA_LIMIT - dailyQuotaUsed,
-    percentage: Math.round((dailyQuotaUsed / YOUTUBE_API_QUOTA_LIMIT) * 100)
+    remaining: YOUTUBE_API_QUOTA_LIMIT - used,
+    percentage: Math.round((used / YOUTUBE_API_QUOTA_LIMIT) * 100)
   }
 }
 
@@ -86,11 +116,23 @@ const initializeDatabase = () => {
       )
     `)
     
+    // YouTube API quota tracking table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS youtube_quota (
+        id INTEGER PRIMARY KEY,
+        date TEXT UNIQUE NOT NULL,               -- Date in YYYY-MM-DD format
+        quota_used INTEGER DEFAULT 0,           -- How much quota used this day
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    
     // Create indexes for faster database lookups (like adding bookmarks to a book)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_youtube_cache_key ON youtube_cache(cache_key)`)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_youtube_created ON youtube_cache(created_at)`)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_metadata_identifier ON metadata_cache(identifier)`)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_metadata_created ON metadata_cache(created_at)`)
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_quota_date ON youtube_quota(date)`)
     
     console.log('📁 SQLite cache database initialized')
     
@@ -910,6 +952,7 @@ async function updateItemMetadata(identifier: string, updates: any[], accessKey:
   console.log(`   🎯 Will update ${actualUpdates.length} field(s), skip ${skippedUpdates.length} field(s)`)
   
   // Now process only the updates that are actually needed
+  let actuallyUpdatedCount = 0  // Track fields that were actually updated
   for (let i = 0; i < actualUpdates.length; i++) {
     const update = actualUpdates[i]
     
@@ -995,9 +1038,25 @@ async function updateItemMetadata(identifier: string, updates: any[], accessKey:
           responseData = { rawResponse: responseText }
         }
         
-        // For 400 errors with specific "already set" message, don't throw - return the data so we can handle retry
-        if (response.status === 400 && responseData.error && responseData.error.includes("already set")) {
-          return { response, data: responseData }
+        // Handle specific 400 errors that aren't really errors
+        if (response.status === 400 && responseData.error) {
+          // "already set" - field exists, need to try replace
+          if (responseData.error.includes("already set")) {
+            return { response, data: responseData }
+          }
+          
+          // "no changes to _meta.xml" - field already has the correct value, treat as success
+          if (responseData.error.includes("no changes to _meta.xml")) {
+            console.log(`   ⏭️  Field ${update.field} already has the correct value, skipping`)
+            return { 
+              response, 
+              data: { 
+                success: true, 
+                message: `Field already has correct value: ${update.value}`,
+                noChanges: true 
+              } 
+            }
+          }
         }
         
         if (!response.ok) {
@@ -1039,39 +1098,90 @@ async function updateItemMetadata(identifier: string, updates: any[], accessKey:
             body: retryFormData
           })
           
+          // Get response text to see what Archive.org actually returned
+          const retryResponseText = await retryResponse.text()
+          console.log(`\n=== REPLACE RETRY RESPONSE ===`)
+          console.log(`Status: ${retryResponse.status} ${retryResponse.statusText}`)
+          console.log(`Response body:`, retryResponseText)
+          console.log(`==============================\n`)
+          
+          // Handle "no changes" as success (skip) rather than error
           if (!retryResponse.ok) {
-            const error = new Error(`Archive.org metadata API error on retry: ${retryResponse.status} ${retryResponse.statusText}`)
+            // Try to parse the error response to check if it's a "no changes" error
+            let errorData
+            try {
+              errorData = JSON.parse(retryResponseText)
+            } catch {
+              errorData = { error: retryResponseText }
+            }
+            
+            // If Archive.org says "no changes to _meta.xml", treat as skip (success with 0 updates)
+            if (errorData.error && errorData.error.includes('no changes to _meta.xml')) {
+              console.log(`   ⏭️  Field ${update.field} already has the correct value, skipping`)
+              return { 
+                retryData: { 
+                  success: true, 
+                  message: `Field already has correct value: ${update.value}`,
+                  noChanges: true 
+                } 
+              }
+            }
+            
+            const error = new Error(`Archive.org metadata API error on retry: ${retryResponse.status} ${retryResponse.statusText}. Response: ${retryResponseText}`)
             ;(error as any).status = retryResponse.status
             throw error
           }
           
-          const retryData = await retryResponse.json()
+          // Try to parse the response as JSON
+          let retryData
+          try {
+            retryData = JSON.parse(retryResponseText)
+          } catch (parseError) {
+            console.error('Failed to parse retry response as JSON:', parseError)
+            retryData = { rawResponse: retryResponseText }
+          }
+          
           return { retryData }
         }, `Retry ${identifier}:${update.field} with replace`)
         if (!retryData.success) {
           throw new Error(retryData.error || 'Replace operation failed')
         }
         
-        console.log(`Successfully replaced ${update.field} for ${identifier}`)
+        // Check if this was a "no changes" skip or an actual update
+        if (retryData.noChanges) {
+          console.log(`   ⏭️  Field ${update.field} was already correct, skipped`)
+          skippedUpdates.push(update)  // Move from actualUpdates to skippedUpdates
+        } else {
+          console.log(`Successfully replaced ${update.field} for ${identifier}`)
+          actuallyUpdatedCount++
+        }
       } else if (!data.success) {
         throw new Error(data.error || 'Unknown error')
       } else {
-        console.log(`Successfully updated ${update.field} for ${identifier}`)
+        // Check if this was a "no changes" skip or an actual update
+        if (data.noChanges) {
+          console.log(`   ⏭️  Field ${update.field} was already correct, skipped`)
+          skippedUpdates.push(update)  // Move from actualUpdates to skippedUpdates
+        } else {
+          console.log(`Successfully updated ${update.field} for ${identifier}`)
+          actuallyUpdatedCount++
+        }
       }
     } catch (error) {
-      console.error(`Failed to update ${update.field} for ${identifier}:`, error)
+      console.error(`   ❌ Failed to update ${update.field} for ${identifier}:`, error)
       
-      // Check if this is a curation-related error (only throw specific error for actual restrictions)
+      // Check if this is a curation-related error that should stop everything
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       if (errorMessage.includes('curator') || errorMessage.includes('restricted') || errorMessage.includes('permission')) {
         throw new Error(`Item ${identifier} has editing restrictions. Contact Archive.org support if changes are needed. Original error: ${errorMessage}`)
       }
       
-      throw error
+      // For other errors, log but continue processing remaining fields
+      console.log(`   🔄 Continuing with remaining fields despite ${update.field} failure...`)
     }
   }
   
-  return { skipped: skippedUpdates.length, updated: actualUpdates.length }
+  return { skipped: skippedUpdates.length, updated: actuallyUpdatedCount }
 }
 
 // Real-time streaming endpoint for metadata updates
@@ -1485,6 +1595,10 @@ app.listen(PORT, async () => {
   if (youtubeConfig) {
     console.log('YouTube integration enabled')
     console.log(`YouTube Channel ID: ${youtubeConfig.channelId}`)
+    
+    // Show current quota status
+    const quotaStatus = getQuotaStatus()
+    console.log(`📊 YouTube API quota today: ${quotaStatus.used}/${quotaStatus.limit} (${quotaStatus.percentage}%) - ${quotaStatus.remaining} remaining`)
   } else {
     console.log('YouTube integration not configured (optional)')
   }
