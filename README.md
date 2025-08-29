@@ -1,215 +1,452 @@
 # Archive.org Batch Metadata Editor
 
-A modern web application for batch editing metadata on Archive.org items with YouTube integration and real-time progress tracking.
+🎵 **A beginner-friendly web app for managing your Archive.org collection**
 
-## What This Does
+Easily edit metadata for hundreds of Archive.org items at once, with YouTube integration and real-time progress tracking.
 
-This tool allows you to:
-- **Load all your Archive.org items** at once (with smart SQLite caching)
-- **Batch edit metadata** for multiple items simultaneously with real-time progress updates
-- **Auto-match with YouTube videos** to extract band names, venues, and dates
-- **Update Archive.org records** with consistent, clean metadata
-- **Track progress in real-time** - see each item update as it happens
-- **Smart caching** - avoid hitting API limits with local database storage
+<!-- TODO: Add demo screenshot here showing the main interface -->
 
-Perfect for managing large collections of concert recordings, podcasts, or other media archives.
+## ✨ What This App Does
 
-## Prerequisites
+**Perfect for content creators who upload to Archive.org regularly!**
 
-You'll need:
-1. **Node.js** (version 18 or higher) - Download from [nodejs.org](https://nodejs.org/)
-2. **Archive.org account** with API credentials
-3. **YouTube Data API key** (optional, for YouTube integration)
+✅ **Load your entire collection** - See all your Archive.org items in one place  
+✅ **Batch edit metadata** - Update 50+ items with just a few clicks  
+✅ **YouTube auto-matching** - Automatically find matching YouTube videos  
+✅ **Real-time progress** - Watch each item update live with green ✅ or red ❌  
+✅ **Smart caching** - Saves API calls and loads faster (30-day cache)  
+✅ **Beginner-friendly** - No coding required, just point and click!  
 
-## Getting Your API Credentials
+**Use cases:**
+- Concert recordings: Add band names, venues, dates consistently  
+- Podcast collections: Standardize titles and descriptions  
+- Video archives: Link to YouTube versions and extract metadata  
+- Any large Archive.org collection that needs consistent formatting
 
-### Archive.org API Credentials
+## 🚀 Quick Start Guide
 
-1. Go to [archive.org/account/s3.php](https://archive.org/account/s3.php)
-2. Log in to your Archive.org account
-3. You'll see your credentials:
-   - **Access Key** (example format: starts with letters and numbers)
-   - **Secret Key** (example format: alphanumeric string)
-4. Your **email** is the email address associated with your Archive.org account
+**New to web development? No problem!** Follow these simple steps:
 
-### YouTube Data API Key (Optional)
+### Step 1: Install Node.js
+- Go to [nodejs.org](https://nodejs.org/) and download the **LTS version** (18+)
+- Install it (just click through the installer)
+- Test it worked: Open terminal and type `node --version`
 
+### Step 2: Get Your API Keys
+You need these to connect to Archive.org (and optionally YouTube):
+
+**Required:** Archive.org credentials  
+**Optional:** YouTube API (for auto-matching features)
+
+## 🔑 Getting Your API Credentials
+
+<!-- TODO: Add screenshot showing Archive.org credentials page -->
+
+### 📁 Archive.org Credentials (Required)
+
+**Super easy! Just 2 steps:**
+
+1. **Go to:** [archive.org/account/s3.php](https://archive.org/account/s3.php)
+2. **Log in** with your Archive.org account
+3. **Copy these 3 things:**
+   - ✅ **Access Key** (looks like: `ABC123XYZ456`)  
+   - ✅ **Secret Key** (looks like: `abcdef1234567890`)  
+   - ✅ **Email** (your Archive.org login email)
+
+**That's it!** Keep these safe - you'll paste them in Step 4.
+
+---
+
+### 🎥 YouTube API (Optional - for auto-matching)
+
+**Want YouTube integration?** Here's how to get a free API key:
+
+<!-- TODO: Add screenshot of Google Cloud Console -->
+
+**Step 2A: Create Google Cloud Project**
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable the **YouTube Data API v3**
-4. Create credentials → **API Key**
-5. Copy the API key (example format: starts with `AIza` followed by characters)
+2. Click **"Create Project"** (top of page)  
+3. Give it any name like "Archive YouTube Matcher"
+4. Click **"Create"**
 
-### Finding Your YouTube Channel ID
+**Step 2B: Enable YouTube API**
+1. Search for **"YouTube Data API v3"** in the search bar
+2. Click on it, then click **"Enable"**
+3. Wait 30 seconds for it to activate
 
-1. Go to your YouTube channel
-2. Copy the part after `@` in your URL (e.g., `@DJPandaExpress`)
-3. Use a tool like [commentpicker.com/youtube-channel-id.php](https://commentpicker.com/youtube-channel-id.php) to convert it to a channel ID
-4. Channel ID (example format: starts with `UC` followed by characters)
+**Step 2C: Get Your API Key**
+1. Go to **"Credentials"** (left sidebar)
+2. Click **"+ Create Credentials"** → **"API Key"**  
+3. Copy the key (starts with `AIzaS...`)
+4. **Optional:** Click "Restrict Key" for security
 
-## Installation & Setup
+**Step 2D: Find Your YouTube Channel ID**
+1. Go to your YouTube channel  
+2. Copy your handle (like `@YourChannelName`)
+3. Use [commentpicker.com/youtube-channel-id.php](https://commentpicker.com/youtube-channel-id.php)
+4. Paste your handle, get your Channel ID (starts with `UC...`)
 
-### 1. Download the Code
+---
+
+**💡 Pro Tip:** YouTube integration is completely optional! The app works great for metadata editing without it.
+
+## 💻 Step 3: Download & Install
+
+### 3A. Download the Code
+**Option 1: Download ZIP (Easiest)**
+- Click the green **"Code"** button on this page
+- Click **"Download ZIP"**
+- Extract it to your Desktop or Documents folder
+
+**Option 2: Use Git (if you know git)**
 ```bash
 git clone <repository-url>
 cd archivebatcheditor
 ```
 
-### 2. Install Dependencies
+### 3B. Install App Dependencies
+1. **Open terminal** in your project folder
+2. **Run this command:**
 ```bash
 npm install
 ```
+3. **Wait 2-3 minutes** while it downloads everything needed
+4. **You should see:** "added XXX packages" when done ✅
 
-### 3. Configure Your Credentials
+---
 
-Create a file called `.env` in the main folder and add your credentials:
+## 🔧 Step 4: Add Your API Keys
 
-```
-# Archive.org credentials (REQUIRED)
-ARCHIVE_ACCESS_KEY=your_access_key_here
-ARCHIVE_SECRET_KEY=your_secret_key_here
-ARCHIVE_EMAIL=your_email@example.com
+**Create your secret configuration file:**
 
-# YouTube integration (OPTIONAL)
-YOUTUBE_API_KEY=your_youtube_api_key_here
-YOUTUBE_CHANNEL_ID=your_channel_id_here
+### 4A. Create .env File
+1. **In your project folder**, create a new file called `.env` (exactly that name)
+2. **Copy and paste this template:**
 
-# Server configuration
+```bash
+# 🔐 Archive.org credentials (REQUIRED - get from step 2)
+ARCHIVE_ACCESS_KEY=paste_your_access_key_here
+ARCHIVE_SECRET_KEY=paste_your_secret_key_here  
+ARCHIVE_EMAIL=paste_your_email_here
+
+# 🎥 YouTube integration (OPTIONAL - get from step 2)
+YOUTUBE_API_KEY=paste_your_youtube_api_key_here
+YOUTUBE_CHANNEL_ID=paste_your_channel_id_here
+
+# ⚙️ Server settings (leave these as-is)
 PORT=3001
 NODE_ENV=development
 ```
 
-**⚠️ Important:** 
-- Replace the placeholder values with your actual credentials
-- Never share this `.env` file or commit it to version control
-- The `.env` file is already ignored by git for security
+### 4B. Replace the Placeholders
+- **Replace** `paste_your_access_key_here` with your real Archive.org access key
+- **Replace** `paste_your_secret_key_here` with your real Archive.org secret key  
+- **Replace** `paste_your_email_here` with your Archive.org email
+- **If you got YouTube keys:** replace those placeholders too
+- **If no YouTube:** just leave those lines as-is or delete them
 
-### 4. Start the Application
+### 4C. Save and Secure
+✅ **Save the file**  
+🔒 **Never share this file** - it contains your passwords!  
+🚫 **Don't post it online** - the app automatically keeps it private
 
-Run both the server and web interface:
+---
 
+## 🚀 Step 5: Start the App
+
+**You need TWO terminal windows:**
+
+<!-- TODO: Add screenshot showing two terminals running -->
+
+### Terminal 1: Start the Server
 ```bash
-# Terminal 1 - Start the backend server
 npm run server:dev
+```
+**You should see:**
+- "Server running on port 3001" ✅
+- "SQLite cache database initialized" ✅  
+- "Archive.org credentials loaded successfully" ✅
 
-# Terminal 2 - Start the web interface  
+### Terminal 2: Start the Website  
+```bash
 npm run dev
 ```
+**You should see:**
+- "Local: http://localhost:3000" ✅
 
-### 5. Open in Browser
+---
 
-Go to: **http://localhost:3000**
+## 🎉 Step 6: Open the App
 
-## How to Use
+**Go to:** [http://localhost:3000](http://localhost:3000)
 
-### Loading Your Items
+**You should see the Archive.org Batch Editor interface!** 
 
-1. Click **"Load My Items"** to fetch all your Archive.org uploads
-2. The app now only shows **your items** (filtered by your email automatically)
-3. Items are cached in a local SQLite database for 30 days to save API calls
-4. Use **"🔄 Refresh"** to force reload fresh data from Archive.org
+<!-- TODO: Add screenshot of the main app interface -->
 
-### Editing Metadata with Real-Time Updates
+## 📖 How to Use the App
 
-1. **Select items** by checking the boxes next to items you want to edit
-2. **Add metadata fields** using the dropdown (title, creator, venue, date, etc.)
-3. **Enter values** that will replace existing metadata
-4. **Click "Update X Items"** to save changes to Archive.org
-5. **Watch real-time progress** - each item updates individually with live status:
-   - ✅ **Green checkmarks** for successful updates
-   - ❌ **Red X's** with error messages for failures
-   - 🔄 **Progress indicators** showing current item being processed
+**Perfect for beginners! Just follow these simple steps:**
 
-### YouTube Integration (Optional)
+<!-- TODO: Add demo video or GIF showing the full workflow -->
 
-If you configured YouTube API credentials:
+---
 
-1. **Select Archive.org items** you want to match
-2. **Click "Get YouTube Match"** to find all matching videos at once
-3. **Review suggestions** showing extracted band, venue, date info
-4. **Click "Apply to Metadata"** to add YouTube data to your form
-5. **Use "Add YouTube Links"** to only add YouTube URLs without other metadata
-6. **Watch real-time updates** as each item gets processed
+### 🔄 Step 1: Load Your Archive.org Collection
 
-### Smart Caching System
+1. **Click the big "Load My Items" button**  
+2. **Wait 5-10 seconds** while it fetches your uploads  
+3. **See all your Archive.org items** appear in the list ✅
 
-The app now uses a local SQLite database (`cache.db`) that:
-- **Stores YouTube search results** for 30 days (saves API quota)
-- **Caches Archive.org metadata** to reduce load times
-- **Automatically cleans up** expired entries
-- **Shows cache status** in the server console (e.g., "💾 Cache: 15 YouTube + 8 metadata entries")
+<!-- TODO: Add screenshot showing the Load My Items button and resulting list -->
 
-## Troubleshooting
+**What happens behind the scenes:**
+- 💾 **Smart caching:** First load takes ~10 seconds, future loads are instant (cached for 30 days)
+- 🔐 **Secure:** Only shows YOUR items (filtered by your email automatically)  
+- 🔄 **Refresh:** Use the "🔄 Refresh" button if you uploaded new items recently
 
-### "No items loading"
-- Check your Archive.org credentials in `.env`
-- Make sure your email matches your Archive.org account
-- Try clicking the "🔄 Refresh" button
-- Check the server console for error messages
+---
 
-### "YouTube match not found" or "Rate limit exceeded"
-- YouTube integration is optional - your main functionality still works
-- Check your YouTube API key and channel ID in `.env`
-- YouTube API has daily limits (10,000 units/day, 100 per search)
-- Wait 24 hours if you hit the rate limit, or cached results will be used automatically
-- Some items may not have matching YouTube videos
+### ✏️ Step 2: Basic Metadata Editing
 
-### "Server not starting"
-- Make sure Node.js is installed: `node --version` (need v18+)
-- Check that ports 3000 and 3001 aren't being used by other apps
-- Try `npm install` again to reinstall dependencies
-- Look for error messages about SQLite compilation issues
+**Want to update titles, descriptions, or other info? Here's how:**
 
-### "Permission errors during npm install"
-- Try: `npm install --cache /tmp/npm-cache`
-- Or run with `sudo` on Mac/Linux: `sudo npm install`
-- For SQLite errors, you may need build tools: `xcode-select --install` on Mac
+1. **☑️ Check the boxes** next to items you want to edit
+2. **➕ Click "Add Field"** and pick what to change (title, creator, description, etc.)
+3. **✏️ Type your new value** in the text box
+4. **🚀 Click "Update X Items"** button  
+5. **👀 Watch the magic!** Each item updates with live progress:
+   - 🔄 **Blue spinning** = currently updating
+   - ✅ **Green checkmark** = success!  
+   - ❌ **Red X** = error (shows why)
 
-### "Items stuck in processing" or "Real-time updates not working"
-- Refresh the page to reconnect the real-time stream
-- Check your internet connection
-- Look at the browser's developer console (F12) for errors
-- The server console shows detailed progress even if the UI gets disconnected
+<!-- TODO: Add screenshot showing the metadata editing interface -->
 
-### "Cache database errors"
-- Delete the `cache.db` file and restart the server to rebuild it
-- Make sure you have write permissions in the project directory
+**Pro Tips:**
+- ⚡ **Batch power:** Select 50+ items and update them all at once!
+- 🎯 **Replace mode:** Your new value completely replaces the old one
+- 📝 **Test first:** Try with 1-2 items before doing large batches
 
-## Security Notes
+---
 
-- **Never commit your `.env` file** - it contains your API credentials
-- **Don't share your API keys** - treat them like passwords
-- **Test on a few items first** before doing large batch updates
-- The app only updates metadata you explicitly choose to change
+### 🎥 Step 3: YouTube Auto-Matching (Optional)
 
-## Development
+**Have YouTube videos of the same content? Auto-match them!**
 
-### Project Structure
+**How it works:**
+1. **☑️ Select Archive.org items** you want to match
+2. **🔍 Click "Get YouTube Match"** button  
+3. **⏳ Wait while it searches** YouTube for matching videos
+4. **👁️ Review suggestions** - it extracts band names, venues, dates automatically!
+5. **Choose what to apply:**
+   - 🔗 **"Add YouTube Links"** = Just adds the YouTube URL  
+   - ✅ **"Apply All Selected Fields"** = Adds URL + extracted metadata
+
+<!-- TODO: Add screenshot showing YouTube matching interface with suggestions -->
+
+**What gets extracted:**
+- 🎸 **Band/Artist name** from video titles  
+- 🏛️ **Venue name** (like "The Fillmore")  
+- 📅 **Date** from video descriptions  
+- 🔗 **YouTube URL** for cross-referencing
+
+---
+
+### ⚡ Pro Features
+
+**🧠 Smart Caching System**
+- **YouTube searches:** Cached for 30 days (saves API quota)
+- **Archive.org data:** Cached for 30 days (loads faster)  
+- **Auto-cleanup:** Old cache entries deleted automatically
+- **Status:** See cache stats in the server terminal
+
+**📊 Real-Time Progress**
+- **Live updates:** Watch each item process in real-time
+- **Error handling:** See exactly which items failed and why
+- **Streaming:** Progress updates even if you have 100+ items
+
+**🔒 Security & Privacy**  
+- **Local only:** Runs on your computer, not in the cloud
+- **API keys:** Stored securely in .env file  
+- **No tracking:** Your data stays with you
+
+## 🚨 Help! Something's Not Working
+
+**Don't panic! Here are the most common fixes:**
+
+---
+
+### 😵 "No Items Loading" or Empty List
+
+**Most common fixes:**
+1. **Check your .env file:**
+   - Is your Archive.org email correct?
+   - Did you paste the right access/secret keys?  
+   - No extra spaces or quotes around your keys?
+
+2. **Try refreshing:**
+   - Click the **"🔄 Refresh"** button
+   - Wait 10-15 seconds for fresh data
+
+3. **Check the server terminal:**
+   - Look for red error messages  
+   - Common: "Invalid credentials" or "Access denied"
+
+**Still not working?** Your Archive.org account might not have any public items, or your credentials expired.
+
+---
+
+### 🎥 "YouTube Match Not Found" or "Rate Limit"
+
+**Don't worry - YouTube is optional!** Your main app still works perfectly.
+
+**Common YouTube issues:**
+- **Rate limit hit:** YouTube gives you 10,000 searches per day. Wait 24 hours and cached results will work
+- **No matches:** Not all Archive items have YouTube versions - totally normal!
+- **Wrong Channel ID:** Double-check it starts with `UC` and matches your actual channel
+
+**Quick fix:** Just use the app without YouTube matching - still super powerful!
+
+---
+
+### 💻 "Server Won't Start" or Terminal Errors
+
+**Check these basics:**
+1. **Node.js installed?** Type `node --version` - should show v18+
+2. **Wrong folder?** Make sure you're in the project folder
+3. **Ports busy?** Close other apps using ports 3000/3001
+4. **Try reinstalling:** Run `npm install` again
+
+**Mac users with SQLite errors:**
+```bash
+xcode-select --install
 ```
-├── src/                 # Frontend React application
-├── server/             # Backend Express server  
-├── .env               # Your credentials (DO NOT COMMIT)
-├── package.json       # Dependencies and scripts
-└── README.md         # This file
+
+**Still stuck?** Delete the whole folder, re-download, and start over - sometimes that's fastest!
+
+---
+
+### 🔄 "Items Stuck Processing" or Updates Not Showing
+
+**Quick fixes:**
+1. **Refresh the webpage** (F5 or Cmd+R)
+2. **Check your internet** - updates stream live
+3. **Look at server terminal** - shows detailed progress even if UI breaks
+4. **Wait it out** - large batches can take 5-10 minutes
+
+---
+
+### 🗄️ "Cache Database Errors"
+
+**Nuclear option (fixes 99% of cache issues):**
+1. **Close both terminals** (Ctrl+C)
+2. **Delete the `cache.db` file** in your project folder  
+3. **Restart everything:** `npm run server:dev` and `npm run dev`
+4. **Cache rebuilds automatically** ✅
+
+---
+
+### 🆘 Still Need Help?
+
+**Before asking for help, gather this info:**
+- What error message do you see exactly?
+- What step were you on when it broke?
+- Are both terminals still running?
+- What does your `.env` file look like? (**Don't share the actual keys!**)
+
+**Where to get help:**
+- Open a GitHub Issue with your error details
+- Check if others had the same problem in existing Issues
+
+---
+
+## 🔐 Important Security Reminders
+
+**Keep your API keys safe:**
+- 🚫 **Never share your `.env` file** - treat it like your password
+- 🚫 **Don't post screenshots** of your `.env` file  
+- 🚫 **Don't commit it to git** - the app automatically ignores it
+- ✅ **Test with 1-2 items first** before doing big batches
+
+**The app is secure by design:**
+- 🏠 **Runs locally** - your keys never leave your computer  
+- 🎯 **Surgical updates** - only changes the metadata you specify
+- 👁️ **Transparent** - you see exactly what changes before applying
+
+---
+
+## 🛠️ For Developers (Optional Reading)
+
+**Want to understand how it works or contribute? Here's the technical details:**
+
+### 📁 Project Structure
+```
+archivebatcheditor/
+├── 🖥️ src/             # Frontend React app (what you see in browser)
+├── ⚙️ server/          # Backend Express server (handles API calls)  
+├── 🔐 .env            # Your secret keys (never commit this!)
+├── 📦 package.json    # List of dependencies and scripts
+├── 🗄️ cache.db       # SQLite database (auto-created)
+└── 📖 README.md      # This guide
 ```
 
-### Available Scripts
-- `npm run dev` - Start frontend development server
-- `npm run server:dev` - Start backend development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
+### 🏗️ Tech Stack Used
+- **Frontend:** React 18 + TypeScript + Vite (modern web framework)
+- **Backend:** Node.js + Express + TypeScript (server technology)  
+- **Database:** SQLite + better-sqlite3 (local file database)
+- **Real-time:** Server-Sent Events (live progress updates)
+- **APIs:** Archive.org + YouTube Data API v3
 
-### Tech Stack
-- **Frontend:** React 18 + TypeScript + Vite
-- **Backend:** Node.js + Express + TypeScript
-- **Database:** SQLite with better-sqlite3 for local caching
-- **Real-time:** Server-Sent Events (SSE) for live progress updates
-- **APIs:** Archive.org Search/Metadata APIs + YouTube Data API v3
+### 🔧 Development Commands
+```bash
+npm run dev          # Start the website (port 3000)
+npm run server:dev   # Start the API server (port 3001)  
+npm run build        # Build for production hosting
+npm run preview      # Test the production build
+```
 
-## Contributing
+---
 
-Feel free to submit issues or pull requests to improve the tool!
+## 🤝 Contributing & Support
 
-## License
+**Found a bug or want a new feature?**
+- 🐛 **Report bugs:** [Open a GitHub Issue](../../issues)
+- 💡 **Request features:** [Open a GitHub Issue](../../issues) with "Feature Request"
+- 🔧 **Submit fixes:** [Open a Pull Request](../../pulls)
 
-MIT License - feel free to use and modify for your needs.
+**Before contributing:**
+- Test your changes with real Archive.org items
+- Don't include your `.env` file in commits
+- Add comments explaining complex code
+- Update this README if you change how things work
+
+---
+
+## 📄 License
+
+**MIT License** - This means:
+- ✅ Use it for personal projects  
+- ✅ Use it for commercial projects
+- ✅ Modify it however you want
+- ✅ Share your improvements back (but not required)
+
+---
+
+## 🎉 Final Notes
+
+**Congratulations on setting up your Archive.org Batch Editor!** 
+
+This tool can save you **hours** of manual work when managing large media collections. Whether you're organizing concert recordings, podcasts, or any other Archive.org uploads, you now have the power to update hundreds of items with just a few clicks.
+
+**Remember:**
+- 🧪 **Start small** - test with a few items first
+- 💾 **Cache is your friend** - second loads are much faster  
+- 📝 **Backup important data** before large changes
+- 🆘 **Ask for help** if you get stuck - we're here to help!
+
+**Happy archiving!** 🎵📚🎬
+
+---
+
+*Last updated: August 2024*  
+*Built with ❤️ for the Archive.org community*
