@@ -6,6 +6,8 @@ import { z } from 'zod'        // Zod - validates that data sent to our API has 
 import Database from 'better-sqlite3'  // SQLite database for caching
 import path from 'path'        // Path utilities for cache directory
 import multer from 'multer'    // Multer - handles file uploads
+import { google } from 'googleapis'  // Google APIs client library
+import { OAuth2Client } from 'google-auth-library'  // Google OAuth 2.0 authentication
 
 // Create our Express server app
 const app = express()
@@ -137,6 +139,27 @@ const initializeDatabase = () => {
       )
     `)
     
+    // YouTube OAuth tokens table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS youtube_tokens (
+        id INTEGER PRIMARY KEY,                  -- Always 1 (single user app)
+        access_token TEXT,                       -- Current access token
+        refresh_token TEXT,                      -- Refresh token (persistent)
+        expires_at INTEGER,                      -- Token expiry timestamp
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    // User items cache: stores user's Archive.org items to avoid repeated API calls
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS user_items_cache (
+        email TEXT PRIMARY KEY,                  -- User's Archive.org email (unique)
+        items TEXT NOT NULL,                     -- JSON string of user's items
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP  -- When this was cached
+      )
+    `)
+    
     // Create indexes for faster database lookups (like adding bookmarks to a book)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_youtube_cache_key ON youtube_cache(cache_key)`)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_youtube_created ON youtube_cache(created_at)`)
@@ -179,11 +202,12 @@ const cleanupExpiredCache = () => {
 }
 
 // Get YouTube result from cache
-const getYouTubeFromCache = (title: string, date: string | undefined, channelId: string): any => {
+const getYouTubeFromCache = (title: string, date: string | undefined, channelId: string, identifier?: string): any => {
   try {
     if (!db) return null
     
-    const cacheKey = generateCacheKey({ title, date, channelId })
+    // Include identifier in cache key to avoid conflicts between items with same title/date
+    const cacheKey = generateCacheKey({ title, date, channelId, identifier })
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - CACHE_EXPIRY_DAYS)
     
@@ -200,11 +224,12 @@ const getYouTubeFromCache = (title: string, date: string | undefined, channelId:
 }
 
 // Save YouTube result to cache
-const saveYouTubeToCache = (title: string, date: string | undefined, channelId: string, result: any): void => {
+const saveYouTubeToCache = (title: string, date: string | undefined, channelId: string, result: any, identifier?: string): void => {
   try {
     if (!db) return
     
-    const cacheKey = generateCacheKey({ title, date, channelId })
+    // Include identifier in cache key to avoid conflicts between items with same title/date
+    const cacheKey = generateCacheKey({ title, date, channelId, identifier })
     
     db.prepare(`
       INSERT OR REPLACE INTO youtube_cache (cache_key, title, date, channel_id, result)
@@ -251,18 +276,54 @@ const saveMetadataToCache = (identifier: string, metadata: any): void => {
   }
 }
 
+// Get user items from cache
+const getUserItemsFromCache = (email: string): any => {
+  try {
+    if (!db) return null
+    
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - CACHE_EXPIRY_DAYS)
+    
+    const row = db.prepare(`
+      SELECT items FROM user_items_cache 
+      WHERE email = ? AND created_at > ?
+    `).get(email, cutoffDate.toISOString()) as { items: string } | undefined
+    
+    return row ? JSON.parse(row.items) : null
+  } catch (error) {
+    console.warn('Failed to get user items cache:', error)
+    return null
+  }
+}
+
+// Save user items to cache
+const saveUserItemsToCache = (email: string, items: any[]): void => {
+  try {
+    if (!db) return
+    
+    db.prepare(`
+      INSERT OR REPLACE INTO user_items_cache (email, items)
+      VALUES (?, ?)
+    `).run(email, JSON.stringify(items))
+    
+  } catch (error) {
+    console.warn('Failed to save user items cache:', error)
+  }
+}
+
 // Get cache statistics
 const getCacheStats = () => {
   try {
-    if (!db) return { youtube: 0, metadata: 0 }
+    if (!db) return { youtube: 0, metadata: 0, userItems: 0 }
     
     const youtubeCount = (db.prepare(`SELECT COUNT(*) as count FROM youtube_cache`).get() as { count: number }).count
     const metadataCount = (db.prepare(`SELECT COUNT(*) as count FROM metadata_cache`).get() as { count: number }).count
+    const userItemsCount = (db.prepare(`SELECT COUNT(*) as count FROM user_items_cache`).get() as { count: number }).count
     
-    return { youtube: youtubeCount, metadata: metadataCount }
+    return { youtube: youtubeCount, metadata: metadataCount, userItems: userItemsCount }
   } catch (error) {
     console.warn('Failed to get cache stats:', error)
-    return { youtube: 0, metadata: 0 }
+    return { youtube: 0, metadata: 0, userItems: 0 }
   }
 }
 
@@ -300,10 +361,8 @@ const ARCHIVE_SEARCH_API = 'https://archive.org/services/search/v1/scrape'  // N
 const ARCHIVE_LEGACY_SEARCH_API = 'https://archive.org/advancedsearch.php'  // Older search API
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3'             // YouTube Data API
 
-// Simple in-memory cache to avoid repeatedly fetching the same user's items
-// This makes the app faster by storing results temporarily in server memory
-let userItemsCache: { items: any[], timestamp: number, email: string } | null = null
-const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes in milliseconds (30 * 60 seconds * 1000ms)
+// Cache duration - 30 days for both YouTube and Archive.org data
+const CACHE_DURATION = 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds (30 days * 24 hours * 60 minutes * 60 seconds * 1000ms)
 
 // Rate limiting constants to avoid getting throttled by Archive.org
 const API_DELAY_MS = 1000        // Wait 1 second between API calls
@@ -344,6 +403,86 @@ function getYouTubeCredentials() {
   }
   
   return { apiKey, channelId }
+}
+
+// Helper function to get YouTube OAuth 2.0 credentials for video editing
+// Returns null if not configured, which disables video editing features
+function getYouTubeOAuthCredentials() {
+  const clientId = process.env.YOUTUBE_CLIENT_ID
+  const clientSecret = process.env.YOUTUBE_CLIENT_SECRET
+  const redirectUri = process.env.YOUTUBE_REDIRECT_URI || 'http://localhost:3001/auth/youtube/callback'
+  
+  // OAuth is required for video editing features
+  if (!clientId || !clientSecret) {
+    return null
+  }
+  
+  return { clientId, clientSecret, redirectUri }
+}
+
+// Create OAuth2 client for YouTube API
+let oauth2Client: OAuth2Client | null = null
+
+function createOAuth2Client() {
+  const oauthConfig = getYouTubeOAuthCredentials()
+  if (!oauthConfig) return null
+  
+  oauth2Client = new google.auth.OAuth2(
+    oauthConfig.clientId,
+    oauthConfig.clientSecret,
+    oauthConfig.redirectUri
+  )
+  
+  return oauth2Client
+}
+
+// Get authenticated YouTube API client
+async function getAuthenticatedYouTubeClient() {
+  const oauthClient = createOAuth2Client()
+  if (!oauthClient || !db) return null
+  
+  try {
+    // Load tokens from database
+    const tokenRow = db.prepare(`SELECT * FROM youtube_tokens WHERE id = 1`).get() as any
+    
+    if (!tokenRow || !tokenRow.refresh_token) {
+      return null // Not authenticated
+    }
+    
+    // Set stored credentials
+    oauthClient.setCredentials({
+      access_token: tokenRow.access_token,
+      refresh_token: tokenRow.refresh_token,
+      expiry_date: tokenRow.expires_at
+    })
+    
+    // Check if token needs refresh
+    const now = Date.now()
+    if (tokenRow.expires_at && now > tokenRow.expires_at - 300000) { // Refresh 5 minutes before expiry
+      debugLog('Refreshing YouTube access token...')
+      const { credentials } = await oauthClient.refreshAccessToken()
+      
+      // Update database with new tokens
+      db.prepare(`
+        UPDATE youtube_tokens 
+        SET access_token = ?, expires_at = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = 1
+      `).run(credentials.access_token, credentials.expiry_date)
+      
+      debugLog('YouTube access token refreshed successfully')
+    }
+    
+    // Create YouTube API client
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: oauthClient
+    })
+    
+    return youtube
+  } catch (error) {
+    console.error('Failed to get authenticated YouTube client:', error)
+    return null
+  }
 }
 
 // Helper function to add delays between API calls (prevents rate limiting)
@@ -406,7 +545,7 @@ async function makeArchiveApiCall<T>(apiCall: () => Promise<T>, context: string)
 
 // This function tries to find a matching YouTube video for an Archive.org item
 // It's pretty smart - it tries multiple search strategies to find the best match
-async function searchYouTubeForMatch(title: string, date?: string) {
+async function searchYouTubeForMatch(title: string, date?: string, identifier?: string, force = false) {
   // First, check if YouTube integration is enabled
   const youtubeConfig = getYouTubeCredentials()
   if (!youtubeConfig) {
@@ -414,11 +553,16 @@ async function searchYouTubeForMatch(title: string, date?: string) {
     return null // Exit early if YouTube isn't set up
   }
   
-  // Check cache first to avoid hitting YouTube API
-  const cached = getYouTubeFromCache(title, date, youtubeConfig.channelId)
-  if (cached) {
-    debugLog(`📦 Using cached YouTube result for: "${title}"`)
-    return cached
+  // Check cache first to avoid hitting YouTube API (unless force=true)
+  if (!force) {
+    // Include identifier in cache key to avoid conflicts between items with same title/date
+    const cached = getYouTubeFromCache(title, date, youtubeConfig.channelId, identifier)
+    if (cached) {
+      debugLog(`📦 Using cached YouTube result for: "${title}" (${identifier || 'no-id'})`)
+      return cached
+    }
+  } else {
+    debugLog(`🔄 Force refresh requested - bypassing cache for: "${title}" (${identifier || 'no-id'})`)
   }
   
   // Check quota before making API call
@@ -488,7 +632,19 @@ async function searchYouTubeForMatch(title: string, date?: string) {
       if (!response.ok) {
         if (response.status === 403) {
           const quotaStatus = getQuotaStatus()
-          throw new Error(`YouTube API rate limit exceeded. Daily quota used: ${quotaStatus.used}/${quotaStatus.limit} (${quotaStatus.percentage}%). Try again tomorrow when quota resets.`)
+          // Try to parse the actual YouTube error response
+          let errorDetails = ''
+          try {
+            const errorData = await response.json()
+            errorDetails = errorData?.error?.message || errorData?.error?.details?.[0]?.reason || ''
+          } catch {}
+          
+          // Check if it's actually a quota issue or other 403 error
+          if (errorDetails.toLowerCase().includes('quota') || quotaStatus.used >= quotaStatus.limit) {
+            throw new Error(`YouTube API quota limit exceeded. Daily quota used: ${quotaStatus.used}/${quotaStatus.limit} (${quotaStatus.percentage}%). Try again tomorrow when quota resets.`)
+          } else {
+            throw new Error(`YouTube API access denied (403). This might be due to: 1) Billing not set up in Google Cloud Console, 2) YouTube Data API v3 not enabled, or 3) Invalid API credentials. Error: ${errorDetails || 'Forbidden'}`)
+          }
         }
         throw new Error(`YouTube API error: ${response.status} ${response.statusText}`)
       }
@@ -555,7 +711,7 @@ async function searchYouTubeForMatch(title: string, date?: string) {
             }
             
             // Cache the successful result
-            saveYouTubeToCache(title, date, youtubeConfig.channelId, result)
+            saveYouTubeToCache(title, date, youtubeConfig.channelId, result, identifier)
             console.log(`💾 Cached YouTube result for future use`)
             
             return result
@@ -577,7 +733,7 @@ async function searchYouTubeForMatch(title: string, date?: string) {
         }
         
         // Cache the fallback result
-        saveYouTubeToCache(title, date, youtubeConfig.channelId, fallbackResult)
+        saveYouTubeToCache(title, date, youtubeConfig.channelId, fallbackResult, identifier)
         console.log(`💾 Cached fallback YouTube result`)
         
         return fallbackResult
@@ -589,7 +745,7 @@ async function searchYouTubeForMatch(title: string, date?: string) {
     console.log('No YouTube matches found after trying all queries')
     
     // Cache the "no match" result to avoid repeated API calls
-    saveYouTubeToCache(title, date, youtubeConfig.channelId, null)
+    saveYouTubeToCache(title, date, youtubeConfig.channelId, null, identifier)
     console.log(`💾 Cached "no match" result to avoid future API calls`)
     
     return null
@@ -598,6 +754,11 @@ async function searchYouTubeForMatch(title: string, date?: string) {
     if (error instanceof Error) {
       console.error('YouTube API error message:', error.message)
     }
+    
+    // Don't cache API errors (quota/billing/network issues) - these might work later
+    // Only cache actual "no match" results (which are handled in the success path above)
+    console.log(`⚠️  Not caching error - API might work later when quota resets or issues resolve`)
+    
     return null
   }
 }
@@ -730,11 +891,32 @@ app.get('/search', async (req, res) => {
     
     console.log(`Search results: Found ${data.response?.numFound || 0} total, returning ${data.response?.docs?.length || 0} items`)
     
+    // Enrich search results with cached metadata when available
+    const enrichedItems = (data.response?.docs || []).map((item: any) => {
+      const cachedMetadata = getMetadataFromCache(item.identifier)
+      if (cachedMetadata) {
+        console.log(`📦 Using cached metadata for search result: ${item.identifier}`)
+        // Merge search result with cached metadata, prioritizing fresh search data
+        return {
+          ...cachedMetadata.metadata,  // Full cached metadata
+          ...item,  // Override with fresh search results (title, date, etc.)
+          _cached: true  // Mark as using cached data
+        }
+      }
+      return item
+    })
+    
+    const cacheHits = enrichedItems.filter((item: any) => item._cached).length
+    if (cacheHits > 0) {
+      console.log(`📊 Cache performance: ${cacheHits}/${enrichedItems.length} items served from cache`)
+    }
+    
     res.json({
-      items: data.response?.docs || [],
+      items: enrichedItems,
       total: data.response?.numFound || 0,
       query: combinedQuery,  // Return the actual query used for debugging
-      returned: data.response?.docs?.length || 0  // How many items we're actually returning
+      returned: enrichedItems.length,  // How many items we're actually returning
+      cacheHits  // Debug info about cache usage
     })
   } catch (error) {
     console.error('Search error:', error)
@@ -758,19 +940,22 @@ app.get('/user-items', async (req, res) => {
     const { email, accessKey, secretKey } = getArchiveCredentials()
     
     // Check if we can use cached results (faster than calling Archive.org API every time)
-    const now = Date.now()                           // Current time in milliseconds
     const forceRefresh = req.query.refresh === 'true' // User wants fresh data?
     
-    // If we have cached data and it's still fresh, return it instead of calling Archive.org
-    if (!forceRefresh && userItemsCache && 
-        userItemsCache.email === email &&                    // Cache is for the same user
-        (now - userItemsCache.timestamp) < CACHE_DURATION) { // Cache is still fresh (< 30 minutes old)
-      console.log(`Returning cached items (${userItemsCache.items.length} items)`)
-      return res.json({
-        items: userItemsCache.items,
-        total: userItemsCache.items.length,
-        cached: true  // Let frontend know this data is cached
-      })
+    // Check SQLite cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cachedItems = getUserItemsFromCache(email)
+      if (cachedItems) {
+        console.log(`✅ Returning cached items (${cachedItems.length} items) from SQLite database`)
+        return res.json({
+          items: cachedItems,
+          total: cachedItems.length,
+          cached: true  // Let frontend know this data is cached
+        })
+      }
+      console.log('No cached items found, fetching from Archive.org API')
+    } else {
+      console.log('Force refresh requested, bypassing cache')
     }
     
     console.log(`Searching for items by user email: ${email}`)
@@ -812,12 +997,8 @@ app.get('/user-items', async (req, res) => {
       if (totalFound > 0) {
         console.log(`Found ${totalFound} items using authenticated scrape API`)
         
-        // Cache the results
-        userItemsCache = {
-          items: items,
-          timestamp: now,
-          email: email
-        }
+        // Cache the results in SQLite database
+        saveUserItemsToCache(email, items)
         
         return res.json({
           items: items,
@@ -854,11 +1035,7 @@ app.get('/user-items', async (req, res) => {
       
       // Cache the legacy results too
       if (legacyFound > 0) {
-        userItemsCache = {
-          items: legacyItems,
-          timestamp: now,
-          email: email
-        }
+        saveUserItemsToCache(email, legacyItems)
       }
       
       res.json({
@@ -1487,13 +1664,13 @@ app.post('/update-metadata', async (req, res) => {
 
 app.post('/youtube-suggest', async (req, res) => {
   try {
-    const { title, date } = req.body
+    const { identifier, title, date, force } = req.body
     
     if (!title) {
       return res.status(400).json({ error: 'Title is required' })
     }
     
-    const youtubeMatch = await searchYouTubeForMatch(title, date)
+    const youtubeMatch = await searchYouTubeForMatch(title, date, identifier, force)
     
     if (youtubeMatch) {
       res.json({
@@ -1886,6 +2063,504 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// Test endpoint to verify callback route works
+app.get('/auth/youtube/test', (req, res) => {
+  res.send(`
+    <html>
+      <head><title>OAuth Test</title></head>
+      <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px;">
+        <h2>✅ OAuth Callback Route Test</h2>
+        <p>This confirms the /auth/youtube/* routes are working.</p>
+        <p>Query params: <code>${JSON.stringify(req.query)}</code></p>
+        <p><a href="http://localhost:3000">← Back to App</a></p>
+      </body>
+    </html>
+  `)
+})
+
+// YouTube OAuth 2.0 Authentication Routes
+// Step 1: Generate authorization URL and redirect user to Google
+app.get('/auth/youtube', (req, res) => {
+  const oauthClient = createOAuth2Client()
+  if (!oauthClient) {
+    // Return HTML page with error message instead of JSON
+    return res.status(500).send(`
+      <html>
+        <head><title>YouTube OAuth Not Configured</title></head>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px;">
+          <h2>❌ YouTube OAuth Not Configured</h2>
+          <p>To enable YouTube video recording date editing, you need to set up OAuth credentials:</p>
+          <ol>
+            <li>Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+            <li>Enable YouTube Data API v3</li>
+            <li>Create OAuth 2.0 credentials</li>
+            <li>Add these to your .env file:
+              <pre style="background: #f5f5f5; padding: 10px; margin: 10px 0;">
+YOUTUBE_CLIENT_ID=your_client_id_here
+YOUTUBE_CLIENT_SECRET=your_client_secret_here
+YOUTUBE_REDIRECT_URI=http://localhost:3001/auth/youtube/callback</pre>
+            </li>
+            <li>Restart the server</li>
+          </ol>
+          <p><button onclick="window.close()">Close Window</button></p>
+        </body>
+      </html>
+    `)
+  }
+  
+  const scopes = [
+    'https://www.googleapis.com/auth/youtube',
+    'https://www.googleapis.com/auth/youtube.force-ssl'
+  ]
+  
+  const authUrl = oauthClient.generateAuthUrl({
+    access_type: 'offline',  // Get refresh token
+    scope: scopes,
+    prompt: 'consent'  // Force consent screen to get refresh token
+  })
+  
+  debugLog('Generated YouTube OAuth URL:', authUrl)
+  res.redirect(authUrl)
+})
+
+// Step 2: Handle OAuth callback and store tokens
+app.get('/auth/youtube/callback', async (req, res) => {
+  debugLog('OAuth callback hit! Query params:', req.query)
+  const { code } = req.query
+  
+  if (!code) {
+    debugLog('ERROR: No authorization code provided')
+    return res.status(400).send(`
+      <html>
+        <head><title>OAuth Error</title></head>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px;">
+          <h2>❌ OAuth Error</h2>
+          <p>Authorization code not provided by Google.</p>
+          <p>Query parameters received: <code>${JSON.stringify(req.query)}</code></p>
+          <p><a href="http://localhost:3000">← Back to App</a></p>
+        </body>
+      </html>
+    `)
+  }
+  
+  const oauthClient = createOAuth2Client()
+  if (!oauthClient) {
+    return res.status(500).json({ error: 'YouTube OAuth not configured' })
+  }
+  
+  try {
+    const { tokens } = await oauthClient.getToken(code as string)
+    oauthClient.setCredentials(tokens)
+    
+    // Store tokens in database for persistence
+    if (db && tokens.refresh_token) {
+      db.prepare(`
+        INSERT OR REPLACE INTO youtube_tokens (id, access_token, refresh_token, expires_at)
+        VALUES (1, ?, ?, ?)
+      `).run(
+        tokens.access_token,
+        tokens.refresh_token,
+        tokens.expiry_date
+      )
+    }
+    
+    debugLog('YouTube OAuth tokens stored successfully')
+    
+    // Redirect back to the app with success
+    debugLog('Redirecting back to app with success')
+    res.redirect('http://localhost:3000?youtube_auth=success')
+  } catch (error) {
+    console.error('OAuth callback error:', error)
+    res.redirect('http://localhost:3000?youtube_auth=error')
+  }
+})
+
+// Check YouTube authentication status
+app.get('/auth/youtube/status', (req, res) => {
+  try {
+    if (!db) {
+      return res.json({ authenticated: false, error: 'Database not initialized' })
+    }
+    
+    const tokenRow = db.prepare(`SELECT * FROM youtube_tokens WHERE id = 1`).get() as any
+    
+    if (!tokenRow || !tokenRow.refresh_token) {
+      return res.json({ authenticated: false })
+    }
+    
+    // Check if tokens are expired
+    const now = Date.now()
+    const isExpired = tokenRow.expires_at && now > tokenRow.expires_at
+    
+    res.json({ 
+      authenticated: true, 
+      expires_at: tokenRow.expires_at,
+      expired: isExpired
+    })
+  } catch (error) {
+    console.error('Auth status check error:', error)
+    res.json({ authenticated: false, error: 'Failed to check auth status' })
+  }
+})
+
+// YouTube Recording Date Update Endpoint (Streaming)
+app.post('/youtube/update-recording-dates-stream', async (req, res) => {
+  const youtube = await getAuthenticatedYouTubeClient()
+  if (!youtube) {
+    return res.status(401).json({ 
+      error: 'YouTube authentication required. Please authenticate first.' 
+    })
+  }
+  
+  try {
+    const { updates } = req.body // Array of { videoId, recordingDate }
+    
+    if (!updates || !Array.isArray(updates)) {
+      return res.status(400).json({ error: 'Updates array required' })
+    }
+    
+    // Set up Server-Sent Events for real-time progress
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control'
+    })
+    
+    const sendEvent = (data: any) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`)
+    }
+    
+    sendEvent({ 
+      message: `🎵 Starting YouTube recording date update for ${updates.length} videos...` 
+    })
+    
+    let successCount = 0
+    let errorCount = 0
+    
+    for (let i = 0; i < updates.length; i++) {
+      const { videoId, recordingDate } = updates[i]
+      
+      try {
+        sendEvent({
+          videoId,
+          progress: i + 1,
+          total: updates.length,
+          message: `Processing video ${i + 1}/${updates.length}: ${videoId}`
+        })
+        
+        // First, get the current video data
+        const videoResponse = await youtube.videos.list({
+          part: ['snippet', 'recordingDetails'],
+          id: [videoId]
+        })
+        
+        if (!videoResponse.data.items || videoResponse.data.items.length === 0) {
+          throw new Error('Video not found')
+        }
+        
+        const video = videoResponse.data.items[0]
+        
+        // Update the recording date
+        const updateData = {
+          id: videoId,
+          snippet: video.snippet,
+          recordingDetails: {
+            ...video.recordingDetails,
+            recordingDate: recordingDate // ISO 8601 format: 2024-01-04T00:00:00.000Z
+          }
+        }
+        
+        await youtube.videos.update({
+          part: ['snippet', 'recordingDetails'],
+          requestBody: updateData
+        })
+        
+        successCount++
+        sendEvent({
+          videoId,
+          progress: i + 1,
+          total: updates.length,
+          message: `✅ Updated recording date for ${videoId}`
+        })
+        
+        // Add delay to respect rate limits (YouTube allows 10,000 quota units/day)
+        // Each video update costs ~50 quota units, so we're being conservative
+        if (i < updates.length - 1) {
+          await delay(2000) // 2 seconds between requests to be extra safe
+        }
+        
+      } catch (error) {
+        errorCount++
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        
+        sendEvent({
+          videoId,
+          progress: i + 1,
+          total: updates.length,
+          error: errorMessage,
+          message: `❌ Failed to update ${videoId}: ${errorMessage}`
+        })
+      }
+    }
+    
+    // Send completion summary
+    sendEvent({
+      summary: {
+        totalItems: updates.length,
+        successCount,
+        errorCount,
+        successRate: Math.round((successCount / updates.length) * 100)
+      },
+      message: `🎉 YouTube recording date update completed! ${successCount}/${updates.length} videos updated successfully`
+    })
+    
+    res.end()
+    
+  } catch (error) {
+    console.error('YouTube recording date update error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
+    res.write(`data: ${JSON.stringify({
+      fatal: true,
+      message: `YouTube recording date update failed: ${errorMessage}`
+    })}\n\n`)
+    
+    res.end()
+  }
+})
+
+// YouTube Get Descriptions Endpoint
+app.post('/youtube/get-descriptions', async (req, res) => {
+  const youtube = await getAuthenticatedYouTubeClient()
+  if (!youtube) {
+    return res.status(401).json({ 
+      error: 'YouTube authentication required. Please authenticate first.' 
+    })
+  }
+  
+  try {
+    const { videoIds } = req.body
+    
+    if (!videoIds || !Array.isArray(videoIds)) {
+      return res.status(400).json({ error: 'Video IDs array required' })
+    }
+    
+    debugLog(`Fetching descriptions for ${videoIds.length} videos`)
+    
+    // YouTube API allows fetching up to 50 videos at once
+    const descriptions: Record<string, string> = {}
+    
+    for (let i = 0; i < videoIds.length; i += 50) {
+      const batch = videoIds.slice(i, i + 50)
+      
+      const videoResponse = await youtube.videos.list({
+        part: ['snippet'],
+        id: batch
+      })
+      
+      if (videoResponse.data.items) {
+        for (const video of videoResponse.data.items) {
+          if (video.id && video.snippet?.description) {
+            descriptions[video.id] = video.snippet.description
+          }
+        }
+      }
+      
+      // Add delay between batches to respect rate limits
+      if (i + 50 < videoIds.length) {
+        await delay(1000)
+      }
+    }
+    
+    debugLog(`Fetched descriptions for ${Object.keys(descriptions).length} videos`)
+    res.json(descriptions)
+    
+  } catch (error) {
+    console.error('YouTube get descriptions error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    res.status(500).json({ error: `Failed to fetch descriptions: ${errorMessage}` })
+  }
+})
+
+// YouTube Update Descriptions Endpoint (Streaming)
+app.post('/youtube/update-descriptions-stream', async (req, res) => {
+  const youtube = await getAuthenticatedYouTubeClient()
+  if (!youtube) {
+    return res.status(401).json({ 
+      error: 'YouTube authentication required. Please authenticate first.' 
+    })
+  }
+  
+  try {
+    const { updates } = req.body // Array of { videoId, newDescription }
+    
+    if (!updates || !Array.isArray(updates)) {
+      return res.status(400).json({ error: 'Updates array required' })
+    }
+    
+    // Set up Server-Sent Events for real-time progress
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control'
+    })
+    
+    const sendEvent = (data: any) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`)
+    }
+    
+    sendEvent({ 
+      message: `🎵 Starting YouTube description updates for ${updates.length} videos...` 
+    })
+    
+    let successCount = 0
+    let errorCount = 0
+    
+    for (let i = 0; i < updates.length; i++) {
+      const { videoId, newDescription } = updates[i]
+      
+      try {
+        sendEvent({
+          videoId,
+          progress: i + 1,
+          total: updates.length,
+          message: `Processing description update ${i + 1}/${updates.length}: ${videoId}`
+        })
+        
+        // First, get the current video data
+        const videoResponse = await youtube.videos.list({
+          part: ['snippet'],
+          id: [videoId]
+        })
+        
+        if (!videoResponse.data.items || videoResponse.data.items.length === 0) {
+          throw new Error('Video not found')
+        }
+        
+        const video = videoResponse.data.items[0]
+        
+        // Update the description
+        const updateData = {
+          id: videoId,
+          snippet: {
+            ...video.snippet,
+            description: newDescription
+          }
+        }
+        
+        await youtube.videos.update({
+          part: ['snippet'],
+          requestBody: updateData
+        })
+        
+        successCount++
+        sendEvent({
+          videoId,
+          progress: i + 1,
+          total: updates.length,
+          message: `✅ Updated description for ${videoId}`
+        })
+        
+        // Add delay to respect rate limits
+        if (i < updates.length - 1) {
+          await delay(2000) // 2 seconds between requests
+        }
+        
+      } catch (error) {
+        errorCount++
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        
+        sendEvent({
+          videoId,
+          progress: i + 1,
+          total: updates.length,
+          error: errorMessage,
+          message: `❌ Failed to update ${videoId}: ${errorMessage}`
+        })
+      }
+    }
+    
+    // Send completion summary
+    sendEvent({
+      summary: {
+        totalItems: updates.length,
+        successCount,
+        errorCount,
+        successRate: Math.round((successCount / updates.length) * 100)
+      },
+      message: `🎉 YouTube description updates completed! ${successCount}/${updates.length} videos updated successfully`
+    })
+    
+    res.end()
+    
+  } catch (error) {
+    console.error('YouTube description update error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
+    res.write(`data: ${JSON.stringify({
+      fatal: true,
+      message: `YouTube description update failed: ${errorMessage}`
+    })}\n\n`)
+    
+    res.end()
+  }
+})
+
+// Cached metadata endpoint - serves Archive.org metadata with caching
+app.get('/metadata/:identifier', async (req, res) => {
+  const { identifier } = req.params
+  
+  if (!identifier) {
+    return res.status(400).json({ error: 'Item identifier required' })
+  }
+  
+  try {
+    // Check cache first
+    if (db) {
+      const cachedRow = db.prepare(`
+        SELECT metadata FROM metadata_cache 
+        WHERE identifier = ? AND created_at > datetime('now', '-30 days')
+      `).get(identifier) as { metadata: string } | undefined
+      
+      if (cachedRow) {
+        debugLog(`📦 Serving cached metadata for: ${identifier}`)
+        return res.json(JSON.parse(cachedRow.metadata))
+      }
+    }
+    
+    // Not in cache, fetch from Archive.org
+    debugLog(`🌐 Fetching fresh metadata for: ${identifier}`)
+    const response = await fetch(`https://archive.org/metadata/${identifier}`)
+    
+    if (!response.ok) {
+      throw new Error(`Archive.org responded with ${response.status}`)
+    }
+    
+    const metadata = await response.json()
+    
+    // Cache the result
+    if (db) {
+      db.prepare(`
+        INSERT OR REPLACE INTO metadata_cache (identifier, metadata)
+        VALUES (?, ?)
+      `).run(identifier, JSON.stringify(metadata))
+      debugLog(`💾 Cached metadata for: ${identifier}`)
+    }
+    
+    res.json(metadata)
+    
+  } catch (error) {
+    console.error(`Failed to fetch metadata for ${identifier}:`, error)
+    res.status(500).json({
+      error: `Failed to fetch metadata: ${error instanceof Error ? error.message : 'Unknown error'}`
+    })
+  }
+})
+
 // Cache management endpoints
 app.post('/cache/clear', async (req, res) => {
   try {
@@ -1974,5 +2649,5 @@ app.listen(PORT, async () => {
   
   // Show cache stats
   const stats = getCacheStats()
-  console.log(`💾 Cache: ${stats.youtube} YouTube + ${stats.metadata} metadata entries (expire after ${CACHE_EXPIRY_DAYS} days)`)
+  console.log(`💾 Cache: ${stats.youtube} YouTube + ${stats.metadata} metadata + ${stats.userItems} user items entries (expire after ${CACHE_EXPIRY_DAYS} days)`)
 })
