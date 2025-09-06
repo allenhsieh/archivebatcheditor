@@ -31,55 +31,6 @@ const CACHE_EXPIRY_DAYS = 365 // Cache entries expire after 1 year to keep data 
 // Initialize SQLite database
 let db: Database.Database
 
-// YouTube API quota tracking
-const YOUTUBE_API_QUOTA_LIMIT = 10000  // Daily limit
-const SEARCH_COST = 100  // Units per search
-
-// Get today's date in YYYY-MM-DD format
-const getTodayDateString = () => {
-  const today = new Date()
-  return today.getFullYear() + '-' + 
-         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-         String(today.getDate()).padStart(2, '0')
-}
-
-// Load quota usage from database
-const loadQuotaUsage = () => {
-  try {
-    if (!db) return 0
-    
-    const today = getTodayDateString()
-    const row = db.prepare(`SELECT quota_used FROM youtube_quota WHERE date = ?`).get(today) as { quota_used: number } | undefined
-    
-    return row ? row.quota_used : 0
-  } catch (error) {
-    console.warn('Failed to load quota usage:', error)
-    return 0
-  }
-}
-
-// Save quota usage to database
-const saveQuotaUsage = (quotaUsed: number) => {
-  try {
-    if (!db) return
-    
-    const today = getTodayDateString()
-    
-    db.prepare(`
-      INSERT OR REPLACE INTO youtube_quota (date, quota_used, updated_at)
-      VALUES (?, ?, CURRENT_TIMESTAMP)
-    `).run(today, quotaUsed)
-    
-  } catch (error) {
-    console.warn('Failed to save quota usage:', error)
-  }
-}
-
-// Check if we can make more API calls
-const canMakeAPICall = () => {
-  const currentUsage = loadQuotaUsage()
-  return currentUsage + SEARCH_COST <= YOUTUBE_API_QUOTA_LIMIT
-}
 
 // Normalize YouTube URLs to a consistent format for comparison
 const normalizeYouTubeURL = (url: string): string | null => {
@@ -102,24 +53,6 @@ const normalizeYouTubeURL = (url: string): string | null => {
   return null // Not a recognized YouTube URL
 }
 
-// Track API usage
-const recordAPIUsage = () => {
-  const currentUsage = loadQuotaUsage()
-  const newUsage = currentUsage + SEARCH_COST
-  saveQuotaUsage(newUsage)
-  console.log(`📊 YouTube API quota used: ${newUsage}/${YOUTUBE_API_QUOTA_LIMIT} (${Math.round((newUsage/YOUTUBE_API_QUOTA_LIMIT)*100)}%)`)
-}
-
-// Get current quota status
-const getQuotaStatus = () => {
-  const used = loadQuotaUsage()
-  return {
-    used: used,
-    limit: YOUTUBE_API_QUOTA_LIMIT,
-    remaining: YOUTUBE_API_QUOTA_LIMIT - used,
-    percentage: Math.round((used / YOUTUBE_API_QUOTA_LIMIT) * 100)
-  }
-}
 
 const initializeDatabase = () => {
   try {
@@ -127,7 +60,7 @@ const initializeDatabase = () => {
     db = new Database(CACHE_DB_PATH)
     
     // Create tables for storing cached data
-    // YouTube cache: stores search results to avoid repeated API calls (saves quota)
+    // YouTube cache: stores search results to avoid repeated API calls
     db.exec(`
       CREATE TABLE IF NOT EXISTS youtube_cache (
         id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Unique row identifier
@@ -149,16 +82,6 @@ const initializeDatabase = () => {
       )
     `)
     
-    // YouTube API quota tracking table
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS youtube_quota (
-        id INTEGER PRIMARY KEY,
-        date TEXT UNIQUE NOT NULL,               -- Date in YYYY-MM-DD format
-        quota_used INTEGER DEFAULT 0,           -- How much quota used this day
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
     
     // YouTube OAuth tokens table
     db.exec(`
@@ -205,7 +128,6 @@ const initializeDatabase = () => {
     db.exec(`CREATE INDEX IF NOT EXISTS idx_youtube_created ON youtube_cache(created_at)`)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_metadata_identifier ON metadata_cache(identifier)`)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_metadata_created ON metadata_cache(created_at)`)
-    db.exec(`CREATE INDEX IF NOT EXISTS idx_quota_date ON youtube_quota(date)`)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_api_logs_type ON api_logs(api_type)`)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_api_logs_identifier ON api_logs(item_identifier)`)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_api_logs_created ON api_logs(created_at)`)
@@ -841,17 +763,6 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
     debugLog(`🔄 Force refresh requested - bypassing cache for: "${title}" (${identifier || 'no-id'})`)
   }
   
-  // Check quota before making API call
-  if (!canMakeAPICall()) {
-    const quotaStatus = getQuotaStatus()
-    console.log(`⚠️  YouTube API quota limit reached: ${quotaStatus.used}/${quotaStatus.limit} - stopping search attempts`)
-    return {
-      success: false,
-      quotaExhausted: true,
-      quotaStatus,
-      message: `YouTube API quota exhausted: ${quotaStatus.used}/${quotaStatus.limit}. Resets tomorrow.`
-    }
-  }
   
   console.log(`🔍 Searching YouTube API for: "${title}" (not in cache)`)
   
@@ -908,10 +819,11 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
       const startTime = Date.now()
       const fullUrl = `${YOUTUBE_API_BASE}/search?${searchParams}`
       
+      console.log(`🔍 FULL YOUTUBE URL: ${fullUrl}`)
+      console.log(`🔑 API KEY: ${youtubeConfig.apiKey ? youtubeConfig.apiKey.substring(0, 10) + '...' : 'NOT SET'}`)
+      
       const response = await fetch(fullUrl)
       
-      // Record API usage regardless of success/failure
-      recordAPIUsage()
       
       const durationMs = Date.now() - startTime
       let responseBody = ''
@@ -919,23 +831,20 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
       
       if (!response.ok) {
         if (response.status === 403) {
-          const quotaStatus = getQuotaStatus()
           // Try to parse the actual YouTube error response
           let errorDetails = ''
           try {
             const errorData = await response.json()
             responseBody = JSON.stringify(errorData)
             errorDetails = errorData?.error?.message || errorData?.error?.details?.[0]?.reason || ''
-          } catch {}
-          
-          // Check if it's actually a quota issue or other 403 error
-          if (errorDetails.toLowerCase().includes('quota') || quotaStatus.used >= quotaStatus.limit) {
-            errorMessage = `YouTube API quota limit exceeded. Daily quota used: ${quotaStatus.used}/${quotaStatus.limit} (${quotaStatus.percentage}%). Try again tomorrow when quota resets.`
-            throw new Error(errorMessage)
-          } else {
-            errorMessage = `YouTube API access denied (403). This might be due to: 1) Billing not set up in Google Cloud Console, 2) YouTube Data API v3 not enabled, or 3) Invalid API credentials. Error: ${errorDetails || 'Forbidden'}`
-            throw new Error(errorMessage)
+            console.log(`🔍 FULL 403 ERROR RESPONSE:`, JSON.stringify(errorData, null, 2))
+          } catch (parseError) {
+            console.log(`⚠️ Failed to parse 403 error response:`, parseError)
           }
+          
+          errorMessage = `YouTube API access denied (403). This might be due to: 1) Billing not set up in Google Cloud Console, 2) YouTube Data API v3 not enabled, or 3) Invalid API credentials. Error: ${errorDetails || 'Forbidden'}`
+          console.log(`🚨 403 ERROR DETAILS:`, errorMessage)
+          throw new Error(errorMessage)
         }
         errorMessage = `YouTube API error: ${response.status} ${response.statusText}`
         
@@ -1075,9 +984,9 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
       console.error('YouTube API error message:', error.message)
     }
     
-    // Don't cache API errors (quota/billing/network issues) - these might work later
+    // Don't cache API errors (billing/network issues) - these might work later
     // Only cache actual "no match" results (which are handled in the success path above)
-    console.log(`⚠️  Not caching error - API might work later when quota resets or issues resolve`)
+    console.log(`⚠️  Not caching error - API might work later when issues resolve`)
     
     return null
   }
@@ -2041,26 +1950,10 @@ app.post('/youtube-suggest', async (req, res) => {
       return res.status(400).json({ error: 'Title is required' })
     }
 
-    // Check quota before attempting search
-    const quotaStatus = getQuotaStatus()
-    console.log(`[DEBUG] Quota check for ${identifier}: used=${quotaStatus.used}, limit=${quotaStatus.limit}, canMakeCall=${canMakeAPICall()}`)
-    
-    if (!canMakeAPICall()) {
-      console.log(`⚠️  BLOCKING YouTube API call - quota exhausted: ${quotaStatus.used}/${quotaStatus.limit}`)
-      return res.json({
-        success: false,
-        quotaExhausted: true,
-        message: `YouTube API quota exhausted: ${quotaStatus.used}/${quotaStatus.limit}. Try again tomorrow when quota resets.`,
-        quotaStatus
-      })
-    }
     
     const youtubeMatch = await searchYouTubeForMatch(title, date, identifier, force)
     
-    if (youtubeMatch && youtubeMatch.quotaExhausted) {
-      // Handle quota exhaustion from searchYouTubeForMatch
-      return res.json(youtubeMatch)
-    } else if (youtubeMatch && youtubeMatch.url) {
+    if (youtubeMatch && youtubeMatch.url) {
       res.json({
         success: true,
         match: youtubeMatch,
@@ -2084,15 +1977,6 @@ app.post('/youtube-suggest', async (req, res) => {
   }
 })
 
-// Endpoint to get current YouTube API quota status
-app.get('/youtube-quota', (_req, res) => {
-  const quotaStatus = getQuotaStatus()
-  res.json({
-    ...quotaStatus,
-    canMakeCall: canMakeAPICall(),
-    nextReset: new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0] + 'T00:00:00Z'
-  })
-})
 
 // Configure multer for file uploads
 const upload = multer({
@@ -2685,8 +2569,7 @@ app.post('/youtube/update-recording-dates-stream', async (req, res) => {
           message: `✅ Updated recording date for ${videoId}`
         })
         
-        // Add delay to respect rate limits (YouTube allows 10,000 quota units/day)
-        // Each video update costs ~50 quota units, so we're being conservative
+        // Add delay to respect rate limits and avoid overwhelming the API
         if (i < updates.length - 1) {
           await delay(2000) // 2 seconds between requests to be extra safe
         }
@@ -3040,9 +2923,6 @@ app.listen(PORT, async () => {
     console.log('YouTube integration enabled')
     console.log(`YouTube Channel ID: ${youtubeConfig.channelId}`)
     
-    // Show current quota status
-    const quotaStatus = getQuotaStatus()
-    console.log(`📊 YouTube API quota today: ${quotaStatus.used}/${quotaStatus.limit} (${quotaStatus.percentage}%) - ${quotaStatus.remaining} remaining`)
   } else {
     console.log('YouTube integration not configured (optional)')
   }

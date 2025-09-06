@@ -995,113 +995,115 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 addLog({ type: 'info', message: `🎯 Starting YouTube workflow for ${loadedItems.length} items...` })
                 
                 let processedCount = 0
+                let addedCount = 0
                 let skippedCount = 0
                 
-                addLog({ type: 'info', message: `🔍 Starting YouTube search phase - checking ${loadedItems.length} items for matches...` })
+                addLog({ type: 'info', message: `🔄 Starting sequential workflow - search YouTube → apply to Archive.org → next item` })
                 
-                // Phase 2: Get YouTube matches for all items that don't have suggestions yet
+                // Phase 2 & 3 Combined: Sequential processing (search → apply → next)
                 for (let i = 0; i < loadedItems.length; i++) {
                   const identifier = loadedItems[i].identifier
                   const itemTitle = loadedItems[i].title || 'Unknown Title'
+                  const itemData = loadedItems[i]
                   
                   // Debug logging to see what's happening
-                  console.log(`DEBUG: Processing ${identifier}, loadingYoutube[${identifier}]=${loadingYoutube[identifier]}, existing suggestion=${!!youtubeSuggestions[identifier]}`)
+                  console.log(`DEBUG: Processing ${identifier} sequentially (${i+1}/${loadedItems.length})`)
                   
-                  // All items in loadedItems need YouTube URLs (we filtered them already)
-                  if (!loadingYoutube[identifier]) {
+                  // Skip if no title
+                  if (!itemData.title) {
+                    addLog({ type: 'skipped', message: `[${i+1}/${loadedItems.length}] ⏭️  Skipping ${identifier} - no title` })
+                    skippedCount++
+                    continue
+                  }
+                  
+                  try {
+                    // Step 1: Search YouTube for this item
                     addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] 🔍 Searching YouTube for: ${identifier} (${itemTitle})` })
                     
-                    try {
-                      // Pass the item data directly since getYoutubeSuggestion expects items from props
-                      const itemData = loadedItems[i]
-                      if (!itemData.title) {
-                        addLog({ type: 'skipped', message: `[${i+1}/${loadedItems.length}] ⏭️  Skipping ${identifier} - no title` })
-                        skippedCount++
-                        continue
-                      }
-                      
-                      const response = await fetch('/api/youtube-suggest', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          identifier,
-                          title: itemData.title,
-                          date: itemData.date,
-                          force: true
-                        })
+                    const response = await fetch('/api/youtube-suggest', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        identifier,
+                        title: itemData.title,
+                        date: itemData.date,
+                        force: true
                       })
-                      
-                      if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-                      }
-                      
-                      const suggestion = await response.json()
-                      setYoutubeSuggestions(prev => ({ ...prev, [identifier]: suggestion }))
-                      
-                      // Check the result immediately after the call
-                      if (suggestion && !suggestion.success && (suggestion as any).quotaExhausted) {
-                        addLog({ type: 'error', message: `⚠️  QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
-                        console.log(`⚡ Daily workflow completed: processed ${processedCount} items before quota exhaustion`)
-                        alert(`⚡ Daily workflow completed! Processed ${processedCount} YouTube matches before reaching API quota. Check the results below and use "Add YouTube Links" to apply them.`)
-                        return
-                      } else if (suggestion && suggestion.success) {
-                        addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] ✅ Found YouTube match for ${identifier}` })
-                      } else if (suggestion && (suggestion as any).quotaExhausted) {
-                        addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] 🚫 YouTube API quota exhausted - stopping workflow` })
-                        console.log(`⚡ Daily workflow stopped: quota exhausted after processing ${processedCount} items`)
-                        alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
-                        return
-                      } else {
-                        addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] ❌ No YouTube match found for ${identifier}` })
-                      }
-                      
-                      processedCount++
-                      
-                    } catch (error) {
-                      addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] ❌ Error searching ${identifier}: ${error instanceof Error ? error.message : 'Unknown error'}` })
-                      console.error('Error in daily workflow:', error)
+                    })
+                    
+                    if (!response.ok) {
+                      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
                     }
                     
-                    // Natural rate limiting through async operations
-                  } else {
-                    addLog({ type: 'skipped', message: `[${i+1}/${loadedItems.length}] ⏭️  Skipping ${identifier} - currently loading` })
+                    const suggestion = await response.json()
+                    
+                    // Check for quota exhaustion - stop entire workflow immediately
+                    if (suggestion && !suggestion.success && (suggestion as any).quotaExhausted) {
+                      addLog({ type: 'error', message: `⚠️  QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
+                      console.log(`⚡ Daily workflow completed: processed ${processedCount} items before quota exhaustion`)
+                      alert(`⚡ Daily workflow completed! Processed ${processedCount} YouTube matches before reaching API quota limit.`)
+                      return
+                    } else if (suggestion && (suggestion as any).quotaExhausted) {
+                      addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] 🚫 YouTube API quota exhausted - stopping workflow` })
+                      console.log(`⚡ Daily workflow stopped: quota exhausted after processing ${processedCount} items`)
+                      alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
+                      return
+                    }
+                    
+                    // Also check if error message contains quota limit - stop immediately
+                    if (suggestion && !suggestion.success && suggestion.error && 
+                        suggestion.error.toLowerCase().includes('quota limit exceeded')) {
+                      addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] 🚫 YouTube quota limit reached - stopping entire workflow` })
+                      console.log(`⚡ Daily workflow stopped: quota limit reached after processing ${processedCount} items`)
+                      alert(`⚡ YouTube quota limit reached! Workflow stopped after processing ${processedCount} items to preserve quota. Try again tomorrow when quota resets.`)
+                      return
+                    }
+                    
+                    processedCount++
+                    
+                    // Step 2: If YouTube match found, immediately apply it to Archive.org
+                    if (suggestion && suggestion.success && suggestion.suggestions?.youtube) {
+                      addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] ✅ Found YouTube match: ${suggestion.suggestions.youtube}` })
+                      addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] 🔗 Applying YouTube link to Archive.org metadata...` })
+                      
+                      try {
+                        // Apply the YouTube link to Archive.org
+                        await onUpdate({
+                          items: [identifier],
+                          updates: [{
+                            field: 'youtube',
+                            value: suggestion.suggestions.youtube,
+                            operation: 'replace'
+                          }]
+                        })
+                        
+                        addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] ✅ Successfully added YouTube link to ${identifier}` })
+                        addedCount++
+                        
+                      } catch (updateError) {
+                        addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] ❌ Failed to update ${identifier}: ${updateError instanceof Error ? updateError.message : 'Unknown error'}` })
+                        console.error('Error updating Archive.org metadata:', updateError)
+                        // Continue with next item even if this update failed
+                      }
+                      
+                    } else {
+                      addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] ❌ No YouTube match found for ${identifier}` })
+                      skippedCount++
+                    }
+                    
+                  } catch (error) {
+                    addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] ❌ Error processing ${identifier}: ${error instanceof Error ? error.message : 'Unknown error'}` })
+                    console.error('Error in sequential workflow:', error)
                     skippedCount++
                   }
+                  
+                  // Small delay to avoid overwhelming APIs
+                  await new Promise(resolve => setTimeout(resolve, 100))
                 }
                 
-                addLog({ type: 'info', message: `📊 YouTube search phase completed: ${processedCount} processed, ${skippedCount} skipped` })
-                
-                // Phase 3: Automatically add all found YouTube links
-                addLog({ type: 'info', message: `🔗 Starting link addition phase - checking ${loadedItems.length} items for YouTube links to add...` })
-                
-                let addedCount = 0
-                let skippedLinksCount = 0
-                
-                loadedItems.forEach((item: ArchiveItem, index: number) => {
-                  const identifier = item.identifier
-                  const suggestion = youtubeSuggestions[identifier]
-                  console.log(`DEBUG: Phase 3 - ${identifier}, suggestion success=${suggestion?.success}, youtube=${suggestion?.suggestions?.youtube}`)
-                  
-                  if (suggestion?.success && suggestion?.suggestions?.youtube) {
-                    addLog({ type: 'success', message: `[${index+1}/${loadedItems.length}] 🔗 Adding YouTube link to ${identifier}: ${suggestion.suggestions.youtube}` })
-                    onUpdate({
-                      items: [identifier],
-                      updates: [{
-                        field: 'youtube',
-                        value: suggestion.suggestions.youtube,
-                        operation: 'replace'
-                      }]
-                    })
-                    addedCount++
-                  } else {
-                    addLog({ type: 'skipped', message: `[${index+1}/${loadedItems.length}] ⏭️  Skipping ${identifier} - no YouTube link found` })
-                    skippedLinksCount++
-                  }
-                })
-                
-                addLog({ type: 'info', message: `🎉 WORKFLOW COMPLETE! ✅ ${addedCount} links added, ⏭️ ${skippedLinksCount} items skipped` })
-                console.log(`✅ Daily workflow completed: ${processedCount} matches found, ${addedCount} links added`)
-                alert(`✅ Complete Daily YouTube workflow finished!\\n\\n📂 Loaded ${loadedItems.length} Archive.org items\\n📊 ${processedCount} items processed for YouTube matches\\n🔗 ${addedCount} YouTube links added to Archive.org\\n\\nAll done! Check the logs for details.`)
+                addLog({ type: 'info', message: `🎉 SEQUENTIAL WORKFLOW COMPLETE! ✅ ${addedCount} links added, ⏭️ ${skippedCount} items skipped` })
+                console.log(`✅ Daily workflow completed: ${processedCount} items processed, ${addedCount} links successfully added`)
+                alert(`✅ Complete Daily YouTube workflow finished!\\n\\n📂 Loaded ${loadedItems.length} Archive.org items\\n📊 ${processedCount} items processed sequentially\\n🔗 ${addedCount} YouTube links successfully added to Archive.org\\n\\nAll done! Check the logs for details.`)
                 
               } catch (error) {
                 console.error('Error in daily workflow:', error)
