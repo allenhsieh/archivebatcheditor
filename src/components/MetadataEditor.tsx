@@ -4,9 +4,11 @@ import { MetadataUpdate, UpdateRequest, ArchiveItem, YouTubeSuggestionResponse }
 interface MetadataEditorProps {
   selectedItems: string[]
   items: ArchiveItem[]
-  onUpdate: (updateData: UpdateRequest) => void
+  onUpdate: (updateData: UpdateRequest) => Promise<void>
   loading: boolean
-  addLog: (entry: { type: 'success' | 'error' | 'info', message: string, identifier?: string }) => void
+  addLog: (entry: { type: 'success' | 'error' | 'info' | 'skipped', message: string, identifier?: string }) => void
+  onLoadUserItems: () => Promise<void>
+  onSelectAllItems: () => void
 }
 
 const commonFields = [
@@ -34,7 +36,8 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
   items,
   onUpdate,
   loading,
-  addLog
+  addLog,
+  onSelectAllItems
 }) => {
   const [updates, setUpdates] = useState<MetadataUpdate[]>([
     { field: 'city', value: '', operation: 'replace' }
@@ -42,6 +45,12 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
   const [youtubeSuggestions, setYoutubeSuggestions] = useState<Record<string, YouTubeSuggestionResponse>>({})
   const [loadingYoutube, setLoadingYoutube] = useState<Record<string, boolean>>({})
   const [selectedFields, setSelectedFields] = useState<Record<string, Record<string, boolean>>>({})
+  const [editableFields, setEditableFields] = useState<Record<string, {
+    youtube?: string,
+    band?: string,
+    venue?: string,
+    date?: string
+  }>>({})
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
   const [uploadingImages, setUploadingImages] = useState(false)
   const [recordingDate, setRecordingDate] = useState('')
@@ -58,7 +67,6 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
     authenticated: false,
     loading: true
   })
-  const [descriptionTemplate, setDescriptionTemplate] = useState('')
   const [bandcampUrl, setBandcampUrl] = useState('')
   const [descriptionPreviews, setDescriptionPreviews] = useState<Array<{
     archiveId: string,
@@ -184,6 +192,17 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
             date: !!data.suggestions?.date,
           }
         }))
+        
+        // Initialize editable fields with the suggestion values
+        setEditableFields(prev => ({
+          ...prev,
+          [identifier]: {
+            youtube: data.suggestions?.youtube || '',
+            band: data.suggestions?.band || '',
+            venue: data.suggestions?.venue || '',
+            date: data.suggestions?.date || '',
+          }
+        }))
       }
       
       console.log('YouTube suggestion response:', data)
@@ -202,43 +221,43 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
   }
 
   const applyYoutubeSuggestions = (identifier: string, selectedFields: Record<string, boolean>) => {
-    const suggestion = youtubeSuggestions[identifier]
-    if (!suggestion?.suggestions) return
+    const editableValues = editableFields[identifier]
+    if (!editableValues) return
 
     const newUpdates = [...updates]
     
-    // Add YouTube URL if selected and found
-    if (selectedFields.youtube && suggestion.suggestions.youtube) {
+    // Add YouTube URL if selected and has value
+    if (selectedFields.youtube && editableValues.youtube) {
       newUpdates.push({
         field: 'youtube',
-        value: suggestion.suggestions.youtube,
+        value: editableValues.youtube,
         operation: 'replace'
       })
     }
     
-    // Add band if selected and found
-    if (selectedFields.band && suggestion.suggestions.band) {
+    // Add band if selected and has value
+    if (selectedFields.band && editableValues.band) {
       newUpdates.push({
         field: 'band',
-        value: suggestion.suggestions.band,
+        value: editableValues.band,
         operation: 'replace'
       })
     }
     
-    // Add venue if selected and found  
-    if (selectedFields.venue && suggestion.suggestions.venue) {
+    // Add venue if selected and has value  
+    if (selectedFields.venue && editableValues.venue) {
       newUpdates.push({
         field: 'venue',
-        value: suggestion.suggestions.venue,
+        value: editableValues.venue,
         operation: 'replace'
       })
     }
     
-    // Add date if selected and found
-    if (selectedFields.date && suggestion.suggestions.date) {
+    // Add date if selected and has value
+    if (selectedFields.date && editableValues.date) {
       newUpdates.push({
         field: 'date',
-        value: suggestion.suggestions.date,
+        value: editableValues.date,
         operation: 'replace'
       })
     }
@@ -479,7 +498,6 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
           ]
 
           let detectedDate = ''
-          let detectedFrom = ''
 
           for (const source of sources) {
             if (!source.text) continue
@@ -509,7 +527,6 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 const testDate = new Date(normalizedDate)
                 if (!isNaN(testDate.getTime()) && testDate.getFullYear() >= 1900 && testDate.getFullYear() <= new Date().getFullYear()) {
                   detectedDate = normalizedDate
-                  detectedFrom = `${source.type} (${match})`
                   break
                 }
               }
@@ -910,7 +927,199 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
     return (
       <div className="section">
         <h3>Metadata Editor</h3>
-        <p style={{ opacity: 0.7 }}>Select items above to edit their metadata</p>
+        
+        {/* Daily Workflow Button - Always visible for complete morning routine */}
+        <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(0, 255, 0, 0.1)', borderRadius: '8px', textAlign: 'center' }}>
+          <button
+            type="button"
+            className="button primary"
+            onClick={async () => {
+              console.log('🚀 Starting Complete Daily YouTube Workflow...')
+              
+              try {
+                // Phase 0a: Clear previous state to ensure fresh start
+                console.log('🔄 Clearing previous YouTube suggestion state...')
+                addLog({ type: 'info', message: '🔄 Clearing previous YouTube suggestion state...' })
+                setYoutubeSuggestions({})
+                setLoadingYoutube({})
+                setEditableFields({})
+                
+                // Wait for React state updates to complete
+                await new Promise<void>(resolve => {
+                  requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+                })
+                
+                // Phase 0b: Load all user items and get the data directly
+                console.log('📂 Loading all your Archive.org items...')
+                addLog({ type: 'info', message: '📂 Loading all your Archive.org items...' })
+                
+                // Get items directly from API instead of relying on state
+                const response = await fetch('/api/user-items')
+                if (!response.ok) {
+                  alert('❌ Failed to load items! Check your Archive.org credentials.')
+                  return
+                }
+                const data = await response.json()
+                const allItems = data.items || []
+                
+                console.log(`📊 Total items loaded: ${allItems.length}`)
+                if (allItems.length === 0) {
+                  alert('❌ No items found! Make sure your Archive.org credentials are configured correctly.')
+                  return
+                }
+                
+                // Filter to only items that DON'T have YouTube URLs yet
+                const itemsNeedingYouTube = allItems.filter((item: ArchiveItem) => !item.youtube)
+                console.log(`📊 Items needing YouTube URLs: ${itemsNeedingYouTube.length} out of ${allItems.length}`)
+                addLog({ type: 'info', message: `📊 Found ${itemsNeedingYouTube.length} items needing YouTube URLs (out of ${allItems.length} total)` })
+                
+                if (itemsNeedingYouTube.length === 0) {
+                  alert('✅ All items already have YouTube URLs! No work needed.')
+                  return
+                }
+                
+                const loadedItems = itemsNeedingYouTube
+                
+                // Phase 1: Select all items (trigger the hook to update UI state)
+                console.log(`✅ Selecting all ${loadedItems.length} items...`)
+                addLog({ type: 'info', message: `✅ Selecting all ${loadedItems.length} items...` })
+                onSelectAllItems()
+                
+                // Let React state update propagate
+                await new Promise<void>(resolve => {
+                  // Use requestAnimationFrame to wait for next render cycle
+                  requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+                })
+                
+                console.log(`🎯 Starting YouTube workflow for ${loadedItems.length} items...`)
+                addLog({ type: 'info', message: `🎯 Starting YouTube workflow for ${loadedItems.length} items...` })
+                
+                let processedCount = 0
+                let skippedCount = 0
+                
+                addLog({ type: 'info', message: `🔍 Starting YouTube search phase - checking ${loadedItems.length} items for matches...` })
+                
+                // Phase 2: Get YouTube matches for all items that don't have suggestions yet
+                for (let i = 0; i < loadedItems.length; i++) {
+                  const identifier = loadedItems[i].identifier
+                  const itemTitle = loadedItems[i].title || 'Unknown Title'
+                  
+                  // Debug logging to see what's happening
+                  console.log(`DEBUG: Processing ${identifier}, loadingYoutube[${identifier}]=${loadingYoutube[identifier]}, existing suggestion=${!!youtubeSuggestions[identifier]}`)
+                  
+                  // All items in loadedItems need YouTube URLs (we filtered them already)
+                  if (!loadingYoutube[identifier]) {
+                    addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] 🔍 Searching YouTube for: ${identifier} (${itemTitle})` })
+                    
+                    try {
+                      // Pass the item data directly since getYoutubeSuggestion expects items from props
+                      const itemData = loadedItems[i]
+                      if (!itemData.title) {
+                        addLog({ type: 'skipped', message: `[${i+1}/${loadedItems.length}] ⏭️  Skipping ${identifier} - no title` })
+                        skippedCount++
+                        continue
+                      }
+                      
+                      const response = await fetch('/api/youtube-suggest', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          identifier,
+                          title: itemData.title,
+                          date: itemData.date,
+                          force: true
+                        })
+                      })
+                      
+                      if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+                      }
+                      
+                      const suggestion = await response.json()
+                      setYoutubeSuggestions(prev => ({ ...prev, [identifier]: suggestion }))
+                      
+                      // Check the result immediately after the call
+                      if (suggestion && !suggestion.success && (suggestion as any).quotaExhausted) {
+                        addLog({ type: 'error', message: `⚠️  QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
+                        console.log(`⚡ Daily workflow completed: processed ${processedCount} items before quota exhaustion`)
+                        alert(`⚡ Daily workflow completed! Processed ${processedCount} YouTube matches before reaching API quota. Check the results below and use "Add YouTube Links" to apply them.`)
+                        return
+                      } else if (suggestion && suggestion.success) {
+                        addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] ✅ Found YouTube match for ${identifier}` })
+                      } else if (suggestion && (suggestion as any).quotaExhausted) {
+                        addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] 🚫 YouTube API quota exhausted - stopping workflow` })
+                        console.log(`⚡ Daily workflow stopped: quota exhausted after processing ${processedCount} items`)
+                        alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
+                        return
+                      } else {
+                        addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] ❌ No YouTube match found for ${identifier}` })
+                      }
+                      
+                      processedCount++
+                      
+                    } catch (error) {
+                      addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] ❌ Error searching ${identifier}: ${error instanceof Error ? error.message : 'Unknown error'}` })
+                      console.error('Error in daily workflow:', error)
+                    }
+                    
+                    // Natural rate limiting through async operations
+                  } else {
+                    addLog({ type: 'skipped', message: `[${i+1}/${loadedItems.length}] ⏭️  Skipping ${identifier} - currently loading` })
+                    skippedCount++
+                  }
+                }
+                
+                addLog({ type: 'info', message: `📊 YouTube search phase completed: ${processedCount} processed, ${skippedCount} skipped` })
+                
+                // Phase 3: Automatically add all found YouTube links
+                addLog({ type: 'info', message: `🔗 Starting link addition phase - checking ${loadedItems.length} items for YouTube links to add...` })
+                
+                let addedCount = 0
+                let skippedLinksCount = 0
+                
+                loadedItems.forEach((item: ArchiveItem, index: number) => {
+                  const identifier = item.identifier
+                  const suggestion = youtubeSuggestions[identifier]
+                  console.log(`DEBUG: Phase 3 - ${identifier}, suggestion success=${suggestion?.success}, youtube=${suggestion?.suggestions?.youtube}`)
+                  
+                  if (suggestion?.success && suggestion?.suggestions?.youtube) {
+                    addLog({ type: 'success', message: `[${index+1}/${loadedItems.length}] 🔗 Adding YouTube link to ${identifier}: ${suggestion.suggestions.youtube}` })
+                    onUpdate({
+                      items: [identifier],
+                      updates: [{
+                        field: 'youtube',
+                        value: suggestion.suggestions.youtube,
+                        operation: 'replace'
+                      }]
+                    })
+                    addedCount++
+                  } else {
+                    addLog({ type: 'skipped', message: `[${index+1}/${loadedItems.length}] ⏭️  Skipping ${identifier} - no YouTube link found` })
+                    skippedLinksCount++
+                  }
+                })
+                
+                addLog({ type: 'info', message: `🎉 WORKFLOW COMPLETE! ✅ ${addedCount} links added, ⏭️ ${skippedLinksCount} items skipped` })
+                console.log(`✅ Daily workflow completed: ${processedCount} matches found, ${addedCount} links added`)
+                alert(`✅ Complete Daily YouTube workflow finished!\\n\\n📂 Loaded ${loadedItems.length} Archive.org items\\n📊 ${processedCount} items processed for YouTube matches\\n🔗 ${addedCount} YouTube links added to Archive.org\\n\\nAll done! Check the logs for details.`)
+                
+              } catch (error) {
+                console.error('Error in daily workflow:', error)
+                alert(`❌ Daily workflow failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+              }
+            }}
+            style={{ padding: '15px 30px', fontSize: '18px', fontWeight: 'bold' }}
+            title="Complete one-click morning routine: Loads all items, selects all, gets matches, adds YouTube links"
+            disabled={loading}
+          >
+            ⚡ Complete Daily YouTube Workflow
+          </button>
+          <p style={{ marginTop: '8px', fontSize: '14px', opacity: 0.8 }}>
+            Complete automation: Loads all items → Selects all → Gets YouTube matches → Adds links
+          </p>
+        </div>
+        
+        <p style={{ opacity: 0.7 }}>Select items above to edit their metadata, or use the Daily Workflow button for your morning routine!</p>
       </div>
     )
   }
@@ -991,6 +1200,98 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
           <p style={{ marginBottom: '15px', fontSize: '14px', opacity: 0.9 }}>
             Get YouTube video matches and auto-extract metadata for selected items:
           </p>
+
+          <div style={{ marginBottom: '20px', textAlign: 'center', display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="button secondary"
+              onClick={async () => {
+                // Add delays between requests to avoid rate limiting
+                for (let i = 0; i < selectedItems.length; i++) {
+                  const identifier = selectedItems[i]
+                  if (!loadingYoutube[identifier]) {
+                    try {
+                      await getYoutubeSuggestion(identifier, true)
+                      // Check if quota was exhausted in the response
+                      const suggestion = youtubeSuggestions[identifier]
+                      if (suggestion && !suggestion.success && (suggestion as any).quotaExhausted) {
+                        console.log('YouTube API quota exhausted, stopping batch processing')
+                        break
+                      }
+                    } catch (error) {
+                      console.error('Error getting YouTube suggestion:', error)
+                    }
+                    // Natural rate limiting through async operations
+                  }
+                }
+              }}
+              style={{ padding: '10px 20px' }}
+            >
+              🔍 Get YouTube Matches for All
+            </button>
+            
+            <button
+              type="button"
+              className="button secondary"
+              onClick={async () => {
+                // Force refresh all items - bypass cache
+                for (let i = 0; i < selectedItems.length; i++) {
+                  const identifier = selectedItems[i]
+                  if (!loadingYoutube[identifier]) {
+                    try {
+                      await getYoutubeSuggestion(identifier, true) // force = true
+                      // Check if quota was exhausted in the response
+                      const suggestion = youtubeSuggestions[identifier]
+                      if (suggestion && !suggestion.success && (suggestion as any).quotaExhausted) {
+                        console.log('YouTube API quota exhausted, stopping batch processing')
+                        break
+                      }
+                    } catch (error) {
+                      console.error('Error getting YouTube suggestion:', error)
+                    }
+                    // Natural rate limiting through async operations
+                  }
+                }
+              }}
+              style={{ padding: '10px 20px' }}
+              title="Force refresh all items - bypasses cache to search again"
+            >
+              🔄 Force Refresh All
+            </button>
+            
+            <button
+              type="button"
+              className="button"
+              onClick={() => {
+                // Process each item individually with its own YouTube URL
+                let addedCount = 0
+                
+                selectedItems.forEach(identifier => {
+                  const editableValues = editableFields[identifier]
+                  if (editableValues?.youtube) {
+                    // Apply YouTube URL only to this specific item
+                    onUpdate({
+                      items: [identifier], // Only this item
+                      updates: [{
+                        field: 'youtube',
+                        value: editableValues.youtube,
+                        operation: 'replace'
+                      }]
+                    })
+                    addedCount++
+                  }
+                })
+                
+                if (addedCount === 0) {
+                  alert('❌ No YouTube matches found. Click "Get YouTube Matches for All" first.')
+                }
+              }}
+              style={{ padding: '10px 20px' }}
+              disabled={!Object.values(editableFields).some(fields => fields?.youtube)}
+            >
+              🔗 Add YouTube Links
+            </button>
+          </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '15px', marginBottom: '20px' }}>
             {selectedItems.map(identifier => {
@@ -1052,7 +1353,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                             Select fields to apply:
                           </div>
                           
-                          {suggestion.suggestions.youtube && (
+                          {editableFields[identifier]?.youtube && (
                             <div style={{ 
                               marginBottom: '8px', 
                               padding: '8px', 
@@ -1073,24 +1374,42 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                               />
                               <div style={{ flex: 1, lineHeight: '1.4' }}>
                                 <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>YouTube URL:</div>
+                                <input
+                                  type="text"
+                                  value={editableFields[identifier]?.youtube || ''}
+                                  onChange={(e) => setEditableFields(prev => ({
+                                    ...prev,
+                                    [identifier]: { ...prev[identifier], youtube: e.target.value }
+                                  }))}
+                                  style={{
+                                    width: '100%',
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '3px',
+                                    backgroundColor: '#fff',
+                                    color: '#333'
+                                  }}
+                                />
                                 <a 
-                                  href={suggestion.suggestions.youtube} 
+                                  href={editableFields[identifier]?.youtube} 
                                   target="_blank" 
                                   rel="noopener noreferrer" 
                                   style={{ 
                                     color: '#007bff', 
                                     textDecoration: 'none',
-                                    fontSize: '12px',
-                                    wordBreak: 'break-all'
+                                    fontSize: '11px',
+                                    display: 'inline-block',
+                                    marginTop: '4px'
                                   }}
                                 >
-                                  {suggestion.suggestions.youtube} 🔗
+                                  🔗 Preview Link
                                 </a>
                               </div>
                             </div>
                           )}
                           
-                          {suggestion.suggestions.band && (
+                          {editableFields[identifier]?.band && (
                             <div style={{ 
                               marginBottom: '8px', 
                               padding: '8px', 
@@ -1108,13 +1427,30 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                                   [identifier]: { ...prev[identifier], band: e.target.checked }
                                 }))}
                               />
-                              <div>
-                                <strong>Band:</strong> {suggestion.suggestions.band}
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Band:</div>
+                                <input
+                                  type="text"
+                                  value={editableFields[identifier]?.band || ''}
+                                  onChange={(e) => setEditableFields(prev => ({
+                                    ...prev,
+                                    [identifier]: { ...prev[identifier], band: e.target.value }
+                                  }))}
+                                  style={{
+                                    width: '100%',
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '3px',
+                                    backgroundColor: '#fff',
+                                    color: '#333'
+                                  }}
+                                />
                               </div>
                             </div>
                           )}
                           
-                          {suggestion.suggestions.venue && (
+                          {editableFields[identifier]?.venue && (
                             <div style={{ 
                               marginBottom: '8px', 
                               padding: '8px', 
@@ -1132,13 +1468,30 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                                   [identifier]: { ...prev[identifier], venue: e.target.checked }
                                 }))}
                               />
-                              <div>
-                                <strong>Venue:</strong> {suggestion.suggestions.venue}
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Venue:</div>
+                                <input
+                                  type="text"
+                                  value={editableFields[identifier]?.venue || ''}
+                                  onChange={(e) => setEditableFields(prev => ({
+                                    ...prev,
+                                    [identifier]: { ...prev[identifier], venue: e.target.value }
+                                  }))}
+                                  style={{
+                                    width: '100%',
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '3px',
+                                    backgroundColor: '#fff',
+                                    color: '#333'
+                                  }}
+                                />
                               </div>
                             </div>
                           )}
                           
-                          {suggestion.suggestions.date && (
+                          {editableFields[identifier]?.date && (
                             <div style={{ 
                               marginBottom: '8px', 
                               padding: '8px', 
@@ -1156,8 +1509,25 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                                   [identifier]: { ...prev[identifier], date: e.target.checked }
                                 }))}
                               />
-                              <div>
-                                <strong>Date:</strong> {suggestion.suggestions.date}
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Date:</div>
+                                <input
+                                  type="date"
+                                  value={editableFields[identifier]?.date || ''}
+                                  onChange={(e) => setEditableFields(prev => ({
+                                    ...prev,
+                                    [identifier]: { ...prev[identifier], date: e.target.value }
+                                  }))}
+                                  style={{
+                                    width: '100%',
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '3px',
+                                    backgroundColor: '#fff',
+                                    color: '#333'
+                                  }}
+                                />
                               </div>
                             </div>
                           )}
@@ -1183,125 +1553,49 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
             })}
           </div>
           
-          <div style={{ marginTop: '20px', textAlign: 'center', display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={async () => {
-                // Add delays between requests to avoid rate limiting
-                for (let i = 0; i < selectedItems.length; i++) {
-                  const identifier = selectedItems[i]
-                  if (!youtubeSuggestions[identifier] && !loadingYoutube[identifier]) {
-                    getYoutubeSuggestion(identifier)
-                    // Add 1 second delay between requests to respect rate limits
-                    if (i < selectedItems.length - 1) {
-                      await new Promise(resolve => setTimeout(resolve, 1000))
-                    }
-                  }
-                }
-              }}
-              style={{ padding: '10px 20px' }}
-            >
-              🔍 Get YouTube Matches for All
-            </button>
-            
-            <button
-              type="button"
-              className="button secondary"
-              onClick={async () => {
-                // Force refresh all items - bypass cache
-                for (let i = 0; i < selectedItems.length; i++) {
-                  const identifier = selectedItems[i]
-                  if (!loadingYoutube[identifier]) {
-                    getYoutubeSuggestion(identifier, true) // force = true
-                    // Add 1 second delay between requests to respect rate limits
-                    if (i < selectedItems.length - 1) {
-                      await new Promise(resolve => setTimeout(resolve, 1000))
-                    }
-                  }
-                }
-              }}
-              style={{ padding: '10px 20px' }}
-              title="Force refresh all items - bypasses cache to search again"
-            >
-              🔄 Force Refresh All
-            </button>
-            
-            <button
-              type="button"
-              className="button"
-              onClick={() => {
-                // Process each item individually with its own YouTube URL
-                let addedCount = 0
-                
-                selectedItems.forEach(identifier => {
-                  const suggestion = youtubeSuggestions[identifier]
-                  if (suggestion?.success && suggestion.suggestions?.youtube) {
-                    // Apply YouTube URL only to this specific item
-                    onUpdate({
-                      items: [identifier], // Only this item
-                      updates: [{
-                        field: 'youtube',
-                        value: suggestion.suggestions.youtube,
-                        operation: 'replace'
-                      }]
-                    })
-                    addedCount++
-                  }
-                })
-                
-                if (addedCount === 0) {
-                  alert('❌ No YouTube matches found. Click "Get YouTube Matches for All" first.')
-                }
-              }}
-              style={{ padding: '10px 20px' }}
-              disabled={!Object.values(youtubeSuggestions).some(s => s?.success)}
-            >
-              🔗 Add YouTube Links
-            </button>
-            
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <button
               type="button"
               className="button secondary"
               onClick={() => {
                 // Apply selected metadata individually for each item that has matches
                 selectedItems.forEach(identifier => {
-                  const suggestion = youtubeSuggestions[identifier]
-                  if (suggestion?.success && suggestion.suggestions) {
+                  const editableValues = editableFields[identifier]
+                  if (editableValues) {
                     // Check if fields are selected (default to true for YouTube)
                     const fields = selectedFields[identifier] || { youtube: true }
                     
                     // Build updates for this specific item
                     const itemUpdates = []
                     
-                    if (fields.youtube && suggestion.suggestions.youtube) {
+                    if (fields.youtube && editableValues.youtube) {
                       itemUpdates.push({
                         field: 'youtube',
-                        value: suggestion.suggestions.youtube,
+                        value: editableValues.youtube,
                         operation: 'replace' as const
                       })
                     }
                     
-                    if (fields.band && suggestion.suggestions.band) {
+                    if (fields.band && editableValues.band) {
                       itemUpdates.push({
                         field: 'band',
-                        value: suggestion.suggestions.band,
+                        value: editableValues.band,
                         operation: 'replace' as const
                       })
                     }
                     
-                    if (fields.venue && suggestion.suggestions.venue) {
+                    if (fields.venue && editableValues.venue) {
                       itemUpdates.push({
                         field: 'venue',
-                        value: suggestion.suggestions.venue,
+                        value: editableValues.venue,
                         operation: 'replace' as const
                       })
                     }
                     
-                    if (fields.date && suggestion.suggestions.date) {
+                    if (fields.date && editableValues.date) {
                       itemUpdates.push({
                         field: 'date',
-                        value: suggestion.suggestions.date,
+                        value: editableValues.date,
                         operation: 'replace' as const
                       })
                     }
@@ -1317,7 +1611,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 })
               }}
               style={{ padding: '10px 20px' }}
-              disabled={!Object.values(youtubeSuggestions).some(s => s?.success)}
+              disabled={!Object.values(editableFields).some(fields => fields?.youtube)}
             >
               ✅ Apply All Selected Fields
             </button>
@@ -1834,7 +2128,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 </div>
 
                 <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  {descriptionPreviews.map((preview, index) => (
+                  {descriptionPreviews.map((preview, _index) => (
                     <div key={preview.videoId} style={{
                       marginBottom: '15px',
                       padding: '10px',

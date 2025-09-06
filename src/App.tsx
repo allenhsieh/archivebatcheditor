@@ -82,7 +82,7 @@ function App() {
 
       <SearchSection
         onSearch={searchItems}
-        onLoadUserItems={getUserItems}
+        onLoadUserItems={() => getUserItems()}
         onRefreshUserItems={refreshUserItems}
         loading={loading}
       />
@@ -102,6 +102,8 @@ function App() {
         onUpdate={updateMetadata}
         loading={loading}
         addLog={addLog}
+        onLoadUserItems={getUserItems}
+        onSelectAllItems={selectAllItems}
       />
 
       <LogViewer
