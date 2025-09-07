@@ -5,6 +5,20 @@ import helmet from 'helmet'    // Helmet - adds security headers to protect agai
 import { z } from 'zod'        // Zod - validates that data sent to our API has the right format
 import multer from 'multer'    // Multer - handles file uploads
 import { OAuth2Client } from 'google-auth-library'  // Google OAuth 2.0 authentication
+import { 
+  standardizeDate, 
+  extractBandFromTitle, 
+  extractVenueFromTitle, 
+  extractDateFromTitle,
+  delay,
+  isRateLimitError,
+  isYouTubeQuotaError,
+  buildArchiveSearchUrl,
+  buildArchiveMetadataUrl,
+  buildYouTubeSearchUrl,
+  createYouTubeUrl,
+  generateFlyerFilename
+} from './utils.js'
 
 // Create our Express server app
 const app = express()
@@ -13,9 +27,7 @@ const PORT = process.env.PORT || 3001
 
 
 
-// API configuration
-const ARCHIVE_LEGACY_SEARCH_API = 'https://archive.org/advancedsearch.php'
-const ARCHIVE_METADATA_API = 'https://archive.org/metadata'
+// API configuration now uses utility functions
 
 // Zod schema for validating search requests
 const searchQuerySchema = z.object({
@@ -187,7 +199,7 @@ function createOAuth2Client() {
  */
 async function getAuthenticatedYouTubeClient() {
   try {
-    const _oauth2Client = createOAuth2Client()
+    createOAuth2Client()
     
     // For this simplified version, we'll need to implement token management differently
     // Since we removed the database, tokens would need to be managed another way
@@ -200,149 +212,7 @@ async function getAuthenticatedYouTubeClient() {
   }
 }
 
-/**
- * Simple delay function for rate limiting
- * @param ms Milliseconds to delay
- */
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-/**
- * Standardize date format for Archive.org
- * Converts various date formats to YYYY-MM-DD
- */
-function standardizeDate(dateStr: string): string {
-  if (!dateStr) return dateStr
-  
-  // Handle MM/DD/YY format (e.g., "03/12/14" -> "2014-03-12")
-  const mmddyyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/)
-  if (mmddyyMatch) {
-    const [, month, day, year] = mmddyyMatch
-    const fullYear = `20${year}` // Assuming 21st century
-    return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-  
-  // Handle MM/DD/YYYY format (e.g., "03/12/2014" -> "2014-03-12")
-  const mmddyyyyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-  if (mmddyyyyMatch) {
-    const [, month, day, year] = mmddyyyyMatch
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-  
-  // Handle DD.MM.YY format (e.g., "12.03.14" -> "2014-03-12")
-  const ddmmyyMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/)
-  if (ddmmyyMatch) {
-    const [, day, month, year] = ddmmyyMatch
-    const fullYear = `20${year}` // Assuming 21st century
-    return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-  
-  // Handle DD.MM.YYYY format (e.g., "12.03.2014" -> "2014-03-12")
-  const ddmmyyyyMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
-  if (ddmmyyyyMatch) {
-    const [, day, month, year] = ddmmyyyyMatch
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-  
-  // Handle YYYY-MM-DD format (already correct)
-  const yyyymmddMatch = dateStr.match(/^\d{4}-\d{2}-\d{2}$/)
-  if (yyyymmddMatch) {
-    return dateStr
-  }
-  
-  // Handle YYYY format (add 01-01)
-  const yyyyMatch = dateStr.match(/^\d{4}$/)
-  if (yyyyMatch) {
-    return `${dateStr}-01-01`
-  }
-  
-  console.warn(`Unrecognized date format: "${dateStr}", returning as-is`)
-  return dateStr
-}
-
-/**
- * Extract band name from title using common patterns
- */
-function extractBandFromTitle(title: string) {
-  if (!title) return null
-  
-  // Common patterns for band names in Archive.org titles
-  const patterns = [
-    /^([^-]+?)\s*-/,  // "Band Name - Song" 
-    /^([^:]+?):/,     // "Band Name: Song"
-    /^([^(]+?)\s*\(/  // "Band Name (details)"
-  ]
-  
-  for (const pattern of patterns) {
-    const match = title.match(pattern)
-    if (match && match[1]) {
-      return match[1].trim()
-    }
-  }
-  
-  return null
-}
-
-/**
- * Extract venue from title using common patterns
- */
-function extractVenueFromTitle(title: string) {
-  if (!title) return null
-  
-  // Look for venue patterns
-  const venuePatterns = [
-    /at\s+([^,()]+)/i,     // "at Venue Name"
-    /live\s+at\s+([^,()]+)/i, // "Live at Venue"  
-    /@\s*([^,()]+)/        // "@ Venue"
-  ]
-  
-  for (const pattern of venuePatterns) {
-    const match = title.match(pattern)
-    if (match && match[1]) {
-      return match[1].trim()
-    }
-  }
-  
-  return null
-}
-
-/**
- * Extract date from title using common patterns
- */
-function extractDateFromTitle(title: string) {
-  if (!title) return null
-  
-  // Date patterns in titles
-  const datePatterns = [
-    /(\d{4}-\d{2}-\d{2})/,        // YYYY-MM-DD
-    /(\d{1,2}\/\d{1,2}\/\d{2,4})/, // MM/DD/YY or MM/DD/YYYY
-    /(\d{1,2}\.\d{1,2}\.\d{2,4})/, // MM.DD.YY or MM.DD.YYYY
-    /(\d{4})/                      // Just year
-  ]
-  
-  for (const pattern of datePatterns) {
-    const match = title.match(pattern)
-    if (match && match[1]) {
-      return standardizeDate(match[1])
-    }
-  }
-  
-  return null
-}
-
-/**
- * Check if error indicates rate limiting
- */
-function isRateLimitError(error: any): boolean {
-  const message = error?.message?.toLowerCase() || ''
-  const status = error?.status || error?.response?.status
-  
-  return status === 429 || 
-         message.includes('rate limit') || 
-         message.includes('too many requests') ||
-         message.includes('quota exceeded')
-}
+// Utility functions are now imported from ./utils.js
 
 /**
  * Wrapper for Archive.org API calls with retry logic and rate limiting
@@ -408,18 +278,8 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
     
     console.log(`🔍 YouTube API search query: "${searchQuery}"`)
     
-    // Search YouTube API
-    const searchParams = new URLSearchParams({
-      part: 'snippet',
-      q: searchQuery,
-      channelId: channelId,
-      type: 'video',
-      maxResults: '20',
-      order: 'relevance',
-      key: apiKey
-    })
-    
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?${searchParams}`
+    // Build YouTube search URL using utility function
+    const searchUrl = buildYouTubeSearchUrl(apiKey, channelId, searchQuery)
     console.log(`🌐 YouTube API request: ${searchUrl}`)
     
     const response = await fetch(searchUrl)
@@ -427,8 +287,8 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
       const errorText = await response.text()
       console.error(`❌ YouTube API error ${response.status}:`, errorText)
       
-      // Check for quota exhaustion (403 status)
-      if (response.status === 403) {
+      // Check for quota exhaustion using utility function
+      if (isYouTubeQuotaError({ status: response.status })) {
         throw new Error(`QUOTA_EXHAUSTED: YouTube API quota exceeded`)
       }
       
@@ -487,7 +347,7 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
       return {
         ...video,
         score,
-        url: `https://youtu.be/${video.id.videoId}`,
+        url: createYouTubeUrl(video.id.videoId),
         matchReason: `Score: ${score} (title similarity + date proximity)`
       }
     })
@@ -519,7 +379,7 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
       extractedVenue,
       extractedDate,
       allMatches: scoredResults.slice(0, 5).map((result: ScoredVideo) => ({
-        url: `https://youtu.be/${result.id.videoId}`,
+        url: createYouTubeUrl(result.id.videoId),
         title: result.snippet.title,
         score: result.score,
         publishedAt: result.snippet.publishedAt
@@ -530,7 +390,7 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
     console.error('YouTube search error:', error)
     
     // Re-throw quota exhaustion errors so they can be handled by the calling endpoint
-    if (error instanceof Error && error.message.includes('QUOTA_EXHAUSTED')) {
+    if (isYouTubeQuotaError(error)) {
       throw error
     }
     
@@ -558,18 +418,13 @@ app.get('/search', async (req, res) => {
     
     console.log(`Searching user items with query: "${combinedQuery}"`)
     
-    // Build parameters for Archive.org's search API with authentication
-    const searchParams = new URLSearchParams({
-      q: combinedQuery,                                                               // Combined query (user search + uploader filter)
-      fl: 'identifier,title,creator,description,date,mediatype,collection,subject,uploader',  // Include uploader field
-      rows: '1000',                                                                   // Return up to 1000 results to handle large collections
-      output: 'json',                                                                 // Return results as JSON
-      sort: 'addeddate desc'                                                          // Sort by upload date (newest first) to ensure consistent results
-    })
+    // Build search URL using utility function
+    const fields = ['identifier', 'title', 'creator', 'description', 'date', 'mediatype', 'collection', 'subject', 'uploader']
+    const searchUrl = buildArchiveSearchUrl(combinedQuery, fields, 1000)
     
     // Use authenticated request to access uploader field
     const auth = btoa(`${accessKey}:${secretKey}`)
-    const response = await fetch(`${ARCHIVE_LEGACY_SEARCH_API}?${searchParams}`, {
+    const response = await fetch(searchUrl, {
       headers: {
         'Authorization': `Basic ${auth}`
       }
@@ -609,18 +464,13 @@ app.get('/user-items', async (_req, res) => {
     
     console.log(`🔍 Fetching fresh user items for ${email} from Archive.org API`)
     
-    // Build search parameters to find all items uploaded by this user
-    const searchParams = new URLSearchParams({
-      q: `uploader:${email}`,                                             // Search only items uploaded by this user
-      fl: 'identifier,title,creator,description,date,mediatype,collection,subject,uploader,youtube',  // Fields to return
-      rows: '10000',                                                      // High limit to get all user items
-      output: 'json',                                                     // Return as JSON
-      sort: 'addeddate desc'                                              // Sort by upload date (newest first)
-    })
+    // Build search URL using utility function
+    const fields = ['identifier', 'title', 'creator', 'description', 'date', 'mediatype', 'collection', 'subject', 'uploader', 'youtube']
+    const searchUrl = buildArchiveSearchUrl(`uploader:${email}`, fields, 10000)
     
     // Make authenticated request to Archive.org
     const auth = btoa(`${accessKey}:${secretKey}`)
-    const response = await fetch(`${ARCHIVE_LEGACY_SEARCH_API}?${searchParams}`, {
+    const response = await fetch(searchUrl, {
       headers: {
         'Authorization': `Basic ${auth}`
       }
@@ -699,14 +549,17 @@ app.post('/update-metadata-stream', async (req, res) => {
           const formData = new URLSearchParams()
           formData.append('-target', target)
           
-          // Add each metadata field to the form data
+          // Add each metadata field to the form data (standardize dates)
           Object.entries(metadata).forEach(([key, value]) => {
             if (value !== undefined && value !== null) {
-              formData.append(key, String(value))
+              // Standardize date fields
+              const processedValue = key === 'date' ? standardizeDate(String(value)) : String(value)
+              formData.append(key, processedValue)
             }
           })
           
-          const response = await fetch(`${ARCHIVE_METADATA_API}/${identifier}`, {
+          const metadataUrl = buildArchiveMetadataUrl(identifier)
+          const response = await fetch(metadataUrl, {
             method: 'POST',
             headers: {
               'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
@@ -815,14 +668,17 @@ app.post('/update-metadata', async (req, res) => {
       const formData = new URLSearchParams()
       formData.append('-target', target)
       
-      // Add each metadata field to the form data
+      // Add each metadata field to the form data (standardize dates)
       Object.entries(metadata).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          formData.append(key, String(value))
+          // Standardize date fields
+          const processedValue = key === 'date' ? standardizeDate(String(value)) : String(value)
+          formData.append(key, processedValue)
         }
       })
       
-      const response = await fetch(`${ARCHIVE_METADATA_API}/${identifier}`, {
+      const metadataUrl = buildArchiveMetadataUrl(identifier)
+      const response = await fetch(metadataUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
@@ -925,11 +781,7 @@ app.post('/youtube-suggest', async (req, res) => {
         console.error(`❌ Error processing ${item.identifier}:`, error)
         
         // Check if this is a quota exhaustion error
-        const isQuotaError = error instanceof Error && 
-          (error.message.includes('QUOTA_EXHAUSTED') || 
-           error.message.includes('403') ||
-           error.message.includes('quotaExceeded') ||
-           error.message.includes('quota'))
+        const isQuotaError = isYouTubeQuotaError(error)
         
         console.log(`🔍 DEBUG: Error message: "${error instanceof Error ? error.message : 'Unknown error'}"`)
         console.log(`🔍 DEBUG: Is quota error: ${isQuotaError}`)
@@ -977,7 +829,7 @@ app.post('/youtube-suggest', async (req, res) => {
     }
     
     // Check if this is a quota exhaustion error and return 403
-    if (error instanceof Error && error.message.includes('QUOTA_EXHAUSTED')) {
+    if (isYouTubeQuotaError(error)) {
       return res.status(403).json({ 
         error: 'YouTube API quota exceeded',
         quotaExhausted: true 
@@ -1047,12 +899,20 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
           
           console.log(`📤 Uploading ${metadata.identifier} (${i + 1}/${files.length})`)
           
+          // Generate standardized flyer filename
+          const standardizedFilename = generateFlyerFilename(
+            metadata.identifier,
+            metadata.metadata.title || metadata.identifier,
+            metadata.metadata.date,
+            file.originalname
+          )
+          
           // Prepare form data for Archive.org upload
           const formData = new FormData()
           
-          // Add the file
+          // Add the file with standardized name
           const blob = new Blob([new Uint8Array(file.buffer)], { type: file.mimetype })
-          formData.append('file', blob, file.originalname)
+          formData.append('file', blob, standardizedFilename)
           
           // Add metadata fields
           Object.entries(metadata.metadata).forEach(([key, value]) => {
@@ -1061,8 +921,8 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
             }
           })
           
-          // Upload to Archive.org
-          const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${file.originalname}`, {
+          // Upload to Archive.org with standardized filename
+          const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${standardizedFilename}`, {
             method: 'PUT',
             headers: {
               'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
@@ -1189,10 +1049,19 @@ app.post('/batch-upload-image', (req, res, _next) => {
         const file = files[i]
         const metadata = itemsMetadata[i]
         
+        // Generate standardized flyer filename (outside try block so it's available for error handling)
+        const standardizedFilename = generateFlyerFilename(
+          metadata.identifier,
+          metadata.metadata.title || metadata.identifier,
+          metadata.metadata.date,
+          file.originalname
+        )
+        
         try {
           console.log(`📤 Uploading ${metadata.identifier}`)
           
-          const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${file.originalname}`, {
+          
+          const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${standardizedFilename}`, {
             method: 'PUT',
             headers: {
               'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
@@ -1213,7 +1082,8 @@ app.post('/batch-upload-image', (req, res, _next) => {
           
           results.push({
             identifier: metadata.identifier,
-            filename: file.originalname,
+            filename: standardizedFilename,
+            originalFilename: file.originalname,
             success: true,
             message: 'File uploaded successfully'
           })
@@ -1224,7 +1094,8 @@ app.post('/batch-upload-image', (req, res, _next) => {
           console.error(`❌ Upload failed for ${metadata.identifier}:`, error)
           results.push({
             identifier: metadata.identifier,
-            filename: file.originalname,
+            filename: standardizedFilename,
+            originalFilename: file.originalname,
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error'
           })
@@ -1389,7 +1260,7 @@ app.post('/youtube/update-recording-dates-stream', async (req, res) => {
     sendProgress({ type: 'start', total: items.length })
     
     try {
-      const _youtube = await getAuthenticatedYouTubeClient()
+      await getAuthenticatedYouTubeClient()
       const results = []
       
       for (let i = 0; i < items.length; i++) {
@@ -1542,7 +1413,7 @@ app.post('/youtube/update-descriptions-stream', async (req, res) => {
     sendProgress({ type: 'start', total: items.length })
     
     try {
-      const _youtube = await getAuthenticatedYouTubeClient()
+      await getAuthenticatedYouTubeClient()
       const results = []
       
       for (let i = 0; i < items.length; i++) {
@@ -1638,7 +1509,7 @@ app.get('/metadata/:identifier', async (req, res) => {
     
     // Make direct API call to Archive.org
     const response = await makeArchiveApiCall(async () => {
-      const url = `${ARCHIVE_METADATA_API}/${identifier}`
+      const url = buildArchiveMetadataUrl(identifier)
       const response = await fetch(url)
       
       if (!response.ok) {
