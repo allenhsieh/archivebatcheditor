@@ -14,7 +14,7 @@ Easily edit metadata for hundreds of Archive.org items at once, with YouTube int
 ✅ **Batch edit metadata** - Update 50+ items with just a few clicks  
 ✅ **YouTube auto-matching** - Automatically find matching YouTube videos  
 ✅ **Real-time progress** - Watch each item update live with green ✅ or red ❌  
-✅ **Smart caching** - Saves API calls and loads faster (30-day cache)  
+✅ **Sequential processing** - Handles each item one by one for reliability  
 ✅ **Beginner-friendly** - No coding required, just point and click!  
 
 **Use cases:**
@@ -164,7 +164,7 @@ npm run server:dev
 ```
 **You should see:**
 - "Server running on port 3001" ✅
-- "SQLite cache database initialized" ✅  
+- "Server ready with quota-aware YouTube integration" ✅  
 - "Archive.org credentials loaded successfully" ✅
 
 ### Terminal 2: Start the Website  
@@ -201,9 +201,9 @@ npm run dev
 <!-- TODO: Add screenshot showing the Load My Items button and resulting list -->
 
 **What happens behind the scenes:**
-- 💾 **Smart caching:** First load takes ~10 seconds, future loads are instant (cached for 30 days)
+- 🔄 **Fresh data:** Loads your items directly from Archive.org each time
 - 🔐 **Secure:** Only shows YOUR items (filtered by your email automatically)  
-- 🔄 **Refresh:** Use the "🔄 Refresh" button if you uploaded new items recently
+- 📊 **Sequential:** Processes items one by one for reliability
 
 ---
 
@@ -254,16 +254,17 @@ npm run dev
 
 ### ⚡ Pro Features
 
-**🧠 Smart Caching System**
-- **YouTube searches:** Cached for 30 days (saves API quota)
-- **Archive.org data:** Cached for 30 days (loads faster)  
-- **Auto-cleanup:** Old cache entries deleted automatically
-- **Status:** See cache stats in the server terminal
+**🔄 Sequential Processing**
+- **One at a time:** Processes items sequentially for reliability
+- **Fail-fast:** Stops on first error to preserve API quota
+- **Fresh data:** Always fetches latest information from APIs
+- **Status:** See real-time processing updates in the server terminal
 
 **📊 Real-Time Progress**
 - **Live updates:** Watch each item process in real-time
 - **Error handling:** See exactly which items failed and why
 - **Streaming:** Progress updates even if you have 100+ items
+- **Quota-aware:** Stops immediately on YouTube API quota exhaustion to preserve usage
 
 **🔒 Security & Privacy**  
 - **Local only:** Runs on your computer, not in the cloud
@@ -301,7 +302,7 @@ npm run dev
 **Don't worry - YouTube is optional!** Your main app still works perfectly.
 
 **Common YouTube issues:**
-- **Rate limit hit:** YouTube gives you 10,000 searches per day. Wait 24 hours and cached results will work
+- **Quota exhausted:** YouTube API has daily limits. The app automatically detects quota exhaustion and stops immediately to preserve remaining quota
 - **No matches:** Not all Archive items have YouTube versions - totally normal!
 - **Wrong Channel ID:** Double-check it starts with `UC` and matches your actual channel
 
@@ -336,13 +337,13 @@ xcode-select --install
 
 ---
 
-### 🗄️ "Cache Database Errors"
+### 🗄️ "Database or Server Errors"
 
-**Nuclear option (fixes 99% of cache issues):**
+**Nuclear option (fixes most issues):**
 1. **Close both terminals** (Ctrl+C)
-2. **Delete the `cache.db` file** in your project folder  
+2. **Clear any temporary files:** Delete any old cache files if they exist
 3. **Restart everything:** `npm run server:dev` and `npm run dev`
-4. **Cache rebuilds automatically** ✅
+4. **Server starts fresh** ✅
 
 ---
 
@@ -386,14 +387,12 @@ archivebatcheditor/
 ├── ⚙️ server/          # Backend Express server (handles API calls)  
 ├── 🔐 .env            # Your secret keys (never commit this!)
 ├── 📦 package.json    # List of dependencies and scripts
-├── 🗄️ cache.db       # SQLite database (auto-created)
 └── 📖 README.md      # This guide
 ```
 
 ### 🏗️ Tech Stack Used
 - **Frontend:** React 18 + TypeScript + Vite (modern web framework)
-- **Backend:** Node.js + Express + TypeScript (server technology)  
-- **Database:** SQLite + better-sqlite3 (local file database)
+- **Backend:** Node.js + Express + TypeScript (server technology)
 - **Real-time:** Server-Sent Events (live progress updates)
 - **APIs:** Archive.org + YouTube Data API v3
 
@@ -440,7 +439,7 @@ This tool can save you **hours** of manual work when managing large media collec
 
 **Remember:**
 - 🧪 **Start small** - test with a few items first
-- 💾 **Cache is your friend** - second loads are much faster  
+- 🔄 **Sequential processing** - items are handled one by one for reliability
 - 📝 **Backup important data** before large changes
 - 🆘 **Ask for help** if you get stuck - we're here to help!
 
@@ -448,5 +447,5 @@ This tool can save you **hours** of manual work when managing large media collec
 
 ---
 
-*Last updated: August 2024*  
+*Last updated: September 2024*  
 *Built with ❤️ for the Archive.org community*

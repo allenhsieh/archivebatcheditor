@@ -32,7 +32,7 @@ export interface ApiResponse {
 }
 
 export interface LogEntry {
-  type: 'success' | 'error' | 'info'
+  type: 'success' | 'error' | 'info' | 'skipped'
   message: string
   identifier?: string
   timestamp: Date
@@ -58,4 +58,11 @@ export interface YouTubeSuggestionResponse {
     date: string | null
   }
   message?: string
+  quotaExhausted?: boolean
+  quotaStatus?: {
+    used: number
+    limit: number
+    remaining: number
+    percentage: number
+  }
 }
