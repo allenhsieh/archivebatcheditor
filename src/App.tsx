@@ -1,4 +1,3 @@
-import React from 'react'
 import { useArchive } from './hooks/useArchive'
 import { SearchSection } from './components/SearchSection'
 import { ItemSelector } from './components/ItemSelector'

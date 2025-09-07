@@ -156,7 +156,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
     setUpdates(updates.filter((_, i) => i !== index))
   }
 
-  const getYoutubeSuggestion = async (identifier: string, force = false) => {
+  const getYoutubeSuggestion = async (identifier: string) => {
     const item = items.find(i => i.identifier === identifier)
     if (!item || !item.title) return
 
@@ -167,10 +167,11 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          identifier,
-          title: item.title,
-          date: item.date,
-          force
+          items: [{
+            identifier,
+            title: item.title,
+            ...(item.date ? { date: item.date } : {})
+          }]
         })
       })
       
@@ -178,7 +179,9 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
       
-      const data: YouTubeSuggestionResponse = await response.json()
+      const responseData = await response.json()
+      // Extract the first result since we sent one item
+      const data: YouTubeSuggestionResponse = responseData.results?.[0] || responseData
       setYoutubeSuggestions(prev => ({ ...prev, [identifier]: data }))
       
       // Initialize selected fields - all checked by default
@@ -304,7 +307,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       addLog({ type: 'info', message: recordingStartMessage })
 
       // Fetch metadata for each selected item to get YouTube URLs
-      // Use our server's cached metadata endpoint to avoid hammering Archive.org
+      // Use our server's metadata endpoint
       const updates = []
       for (const identifier of selectedItems) {
         try {
@@ -477,7 +480,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
 
       for (const identifier of selectedItems) {
         try {
-          // Get metadata from our cached endpoint
+          // Get metadata from our server endpoint
           const metadataResponse = await fetch(`/api/metadata/${identifier}`)
           const metadata = await metadataResponse.json()
           
@@ -968,6 +971,14 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                   return
                 }
                 
+                // Debug: Check what items look like
+                console.log('🔍 DEBUG: Sample items:', allItems.slice(0, 3).map(item => ({ 
+                  identifier: item.identifier, 
+                  title: item.title?.substring(0, 50), 
+                  youtube: item.youtube,
+                  hasYoutube: !!item.youtube
+                })))
+                
                 // Filter to only items that DON'T have YouTube URLs yet
                 const itemsNeedingYouTube = allItems.filter((item: ArchiveItem) => !item.youtube)
                 console.log(`📊 Items needing YouTube URLs: ${itemsNeedingYouTube.length} out of ${allItems.length}`)
@@ -978,7 +989,10 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                   return
                 }
                 
+                // Process all items needing YouTube URLs (quota-safe with fail-fast)
                 const loadedItems = itemsNeedingYouTube
+                console.log(`📊 Ready to process ${loadedItems.length} items needing YouTube URLs`)
+                addLog({ type: 'info', message: `📊 Ready to process ${loadedItems.length} items needing YouTube URLs (with quota protection)` })
                 
                 // Phase 1: Select all items (trigger the hook to update UI state)
                 console.log(`✅ Selecting all ${loadedItems.length} items...`)
@@ -1024,38 +1038,52 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
-                        identifier,
-                        title: itemData.title,
-                        date: itemData.date,
-                        force: true
+                        items: [{
+                          identifier,
+                          title: itemData.title,
+                          ...(itemData.date ? { date: itemData.date } : {})
+                        }]
                       })
                     })
                     
                     if (!response.ok) {
+                      // Check if this is a quota exhaustion error at HTTP level
+                      if (response.status === 403) {
+                        addLog({ type: 'error', message: `🚫 QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
+                        console.log(`⚡ YouTube quota exhausted: HTTP 403 error, stopping workflow after processing ${processedCount} items`)
+                        alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
+                        return
+                      }
                       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
                     }
                     
-                    const suggestion = await response.json()
+                    const responseData = await response.json()
                     
-                    // Check for quota exhaustion - stop entire workflow immediately
-                    if (suggestion && !suggestion.success && (suggestion as any).quotaExhausted) {
-                      addLog({ type: 'error', message: `⚠️  QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
-                      console.log(`⚡ Daily workflow completed: processed ${processedCount} items before quota exhaustion`)
-                      alert(`⚡ Daily workflow completed! Processed ${processedCount} YouTube matches before reaching API quota limit.`)
-                      return
-                    } else if (suggestion && (suggestion as any).quotaExhausted) {
-                      addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] 🚫 YouTube API quota exhausted - stopping workflow` })
-                      console.log(`⚡ Daily workflow stopped: quota exhausted after processing ${processedCount} items`)
+                    // Check for quota exhaustion at response body level first
+                    if (responseData.quotaExhausted) {
+                      addLog({ type: 'error', message: `🚫 QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
+                      console.log(`⚡ YouTube quota exhausted: stopping workflow after processing ${processedCount} items`)
                       alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
                       return
                     }
                     
-                    // Also check if error message contains quota limit - stop immediately
+                    // Extract the first result since we sent one item
+                    const suggestion = responseData.results?.[0] || responseData
+                    
+                    // Check for quota exhaustion in individual result - stop entire workflow immediately
+                    if (suggestion && suggestion.quotaExhausted) {
+                      addLog({ type: 'error', message: `🚫 QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
+                      console.log(`⚡ YouTube quota exhausted: stopping workflow after processing ${processedCount} items`)
+                      alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
+                      return
+                    }
+                    
+                    // Also check if error message contains quota exhausted - stop immediately
                     if (suggestion && !suggestion.success && suggestion.error && 
-                        suggestion.error.toLowerCase().includes('quota limit exceeded')) {
-                      addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] 🚫 YouTube quota limit reached - stopping entire workflow` })
-                      console.log(`⚡ Daily workflow stopped: quota limit reached after processing ${processedCount} items`)
-                      alert(`⚡ YouTube quota limit reached! Workflow stopped after processing ${processedCount} items to preserve quota. Try again tomorrow when quota resets.`)
+                        (suggestion.error.includes('QUOTA_EXHAUSTED') || suggestion.error.toLowerCase().includes('quota'))) {
+                      addLog({ type: 'error', message: `🚫 YouTube quota exhausted - stopping entire workflow` })
+                      console.log(`⚡ YouTube quota exhausted: stopping workflow after processing ${processedCount} items`)
+                      alert(`⚡ YouTube quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
                       return
                     }
                     
@@ -1083,18 +1111,42 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                       } catch (updateError) {
                         addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] ❌ Failed to update ${identifier}: ${updateError instanceof Error ? updateError.message : 'Unknown error'}` })
                         console.error('Error updating Archive.org metadata:', updateError)
-                        // Continue with next item even if this update failed
+                        
+                        // HALT WORKFLOW IMMEDIATELY ON UPDATE FAILURE
+                        addLog({ type: 'error', message: `🛑 WORKFLOW HALTED: Archive.org update failed for ${identifier}. Stopping to prevent further issues.` })
+                        console.log(`🛑 Sequential workflow stopped: Archive.org update failed for ${identifier} after processing ${processedCount} items`)
+                        alert(`🛑 Workflow stopped after Archive.org update failure for ${identifier}.\\n\\nProcessed: ${processedCount} items\\nAdded: ${addedCount} YouTube links\\n\\nCheck logs for error details.`)
+                        return
                       }
                       
                     } else {
-                      addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] ❌ No YouTube match found for ${identifier}` })
+                      // Check if this is actually a quota/error issue vs genuine no match
+                      if (suggestion && !suggestion.success && suggestion.error) {
+                        if (suggestion.error.includes('QUOTA_EXHAUSTED') || suggestion.error.toLowerCase().includes('quota')) {
+                          // This should already be caught above, but double-check
+                          addLog({ type: 'error', message: `🚫 YouTube quota exhausted - stopping workflow` })
+                          console.log(`⚡ YouTube quota exhausted: stopping workflow`)
+                          alert(`⚡ YouTube quota exhausted! Workflow stopped to preserve quota.`)
+                          return
+                        } else {
+                          addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] ❌ Error processing ${identifier}: ${suggestion.error}` })
+                        }
+                      } else {
+                        // Genuine no match found
+                        addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] ⏭️ No YouTube match found for ${identifier}` })
+                      }
                       skippedCount++
                     }
                     
                   } catch (error) {
                     addLog({ type: 'error', message: `[${i+1}/${loadedItems.length}] ❌ Error processing ${identifier}: ${error instanceof Error ? error.message : 'Unknown error'}` })
                     console.error('Error in sequential workflow:', error)
-                    skippedCount++
+                    
+                    // HALT WORKFLOW IMMEDIATELY ON ANY ERROR
+                    addLog({ type: 'error', message: `🛑 WORKFLOW HALTED: Error encountered during processing of ${identifier}. Stopping to prevent further issues.` })
+                    console.log(`🛑 Sequential workflow stopped: error encountered while processing ${identifier} after processing ${processedCount} items`)
+                    alert(`🛑 Workflow stopped after encountering an error while processing ${identifier}.\\n\\nProcessed: ${processedCount} items\\nAdded: ${addedCount} YouTube links\\n\\nError: ${error instanceof Error ? error.message : 'Unknown error'}\\n\\nCheck logs for details.`)
+                    return
                   }
                   
                   // Small delay to avoid overwhelming APIs
@@ -1117,7 +1169,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
             ⚡ Complete Daily YouTube Workflow
           </button>
           <p style={{ marginTop: '8px', fontSize: '14px', opacity: 0.8 }}>
-            Complete automation: Loads all items → Selects all → Gets YouTube matches → Adds links
+            🛡️ QUOTA-SAFE: Processes all items without YouTube links → Gets matches → Adds links (halts immediately on quota/errors)
           </p>
         </div>
         
@@ -1213,7 +1265,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                   const identifier = selectedItems[i]
                   if (!loadingYoutube[identifier]) {
                     try {
-                      await getYoutubeSuggestion(identifier, true)
+                      await getYoutubeSuggestion(identifier)
                       // Check if quota was exhausted in the response
                       const suggestion = youtubeSuggestions[identifier]
                       if (suggestion && !suggestion.success && (suggestion as any).quotaExhausted) {
@@ -1230,35 +1282,6 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
               style={{ padding: '10px 20px' }}
             >
               🔍 Get YouTube Matches for All
-            </button>
-            
-            <button
-              type="button"
-              className="button secondary"
-              onClick={async () => {
-                // Force refresh all items - bypass cache
-                for (let i = 0; i < selectedItems.length; i++) {
-                  const identifier = selectedItems[i]
-                  if (!loadingYoutube[identifier]) {
-                    try {
-                      await getYoutubeSuggestion(identifier, true) // force = true
-                      // Check if quota was exhausted in the response
-                      const suggestion = youtubeSuggestions[identifier]
-                      if (suggestion && !suggestion.success && (suggestion as any).quotaExhausted) {
-                        console.log('YouTube API quota exhausted, stopping batch processing')
-                        break
-                      }
-                    } catch (error) {
-                      console.error('Error getting YouTube suggestion:', error)
-                    }
-                    // Natural rate limiting through async operations
-                  }
-                }
-              }}
-              style={{ padding: '10px 20px' }}
-              title="Force refresh all items - bypasses cache to search again"
-            >
-              🔄 Force Refresh All
             </button>
             
             <button
@@ -1332,16 +1355,6 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                       style={{ flex: 1 }}
                     >
                       {isLoading ? 'Searching...' : 'Get YouTube Match'}
-                    </button>
-                    <button
-                      type="button"
-                      className="button secondary"
-                      onClick={() => getYoutubeSuggestion(identifier, true)}
-                      disabled={isLoading}
-                      style={{ minWidth: '120px' }}
-                      title="Force refresh - bypasses cache to search again"
-                    >
-                      🔄 Force Refresh
                     </button>
                   </div>
                   

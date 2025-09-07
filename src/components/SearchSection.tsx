@@ -54,7 +54,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
           className="button secondary" 
           onClick={onRefreshUserItems}
           disabled={loading}
-          title="Force refresh items from Archive.org (ignores cache)"
+          title="Refresh items from Archive.org (fetches fresh data)"
         >
           🔄 Refresh
         </button>

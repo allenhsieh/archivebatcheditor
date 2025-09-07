@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@types/multer": "^2.0.0",
-    "better-sqlite3": "^11.3.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "google-auth-library": "^10.3.0",
@@ -28,7 +27,6 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.11",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^22.5.4",

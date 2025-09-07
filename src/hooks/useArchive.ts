@@ -94,13 +94,10 @@ export const useArchive = () => {
       const data = await response.json()
       setItems(data.items || [])  // Update our items with user's uploads
       
-      // Show user whether this data came from cache or was freshly loaded
-      const cacheStatus = data.cached ? ' (cached)' : ' (fresh)'
-      
-      // Log success message with cache status
+      // Log success message
       addLog({
         type: 'info',
-        message: `Loaded ${data.items?.length || 0} items from your account${cacheStatus}`
+        message: `Loaded ${data.items?.length || 0} items from your account`
       })
     } catch (error) {
       // Handle any errors that occurred
@@ -116,7 +113,7 @@ export const useArchive = () => {
     }
   }, [addLog])  // Recreate this function if addLog changes
 
-  // HELPER FUNCTION: Refresh user items (bypasses cache)
+  // HELPER FUNCTION: Refresh user items (fetches fresh data)
   // This is just a shortcut for getUserItems(true)
   const refreshUserItems = useCallback(() => getUserItems(true), [getUserItems])
 
