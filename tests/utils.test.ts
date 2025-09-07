@@ -51,6 +51,12 @@ describe('Date Standardization', () => {
       expect(standardizeDate('2022-01-05')).toBe('2022-01-05')
     })
 
+    test('handles ISO date format correctly', () => {
+      expect(standardizeDate('2016-02-28T00:00:00Z')).toBe('2016-02-28')
+      expect(standardizeDate('2023-12-25T15:30:45.123Z')).toBe('2023-12-25')
+      expect(standardizeDate('2022-01-05T08:00:00')).toBe('2022-01-05')
+    })
+
     test('handles year-only format', () => {
       expect(standardizeDate('2023')).toBe('2023-01-01')
       expect(standardizeDate('1999')).toBe('1999-01-01')

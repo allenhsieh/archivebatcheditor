@@ -23,7 +23,20 @@ import {
 // Create our Express server app
 const app = express()
 // Get the port number from environment variables, or use 3001 as default
-const PORT = process.env.PORT || 3001
+// Configuration constants
+const DEFAULT_PORT = 3001
+const PORT = process.env.PORT || DEFAULT_PORT
+
+// API timing constants
+const API_DELAY_MS = 1000 // 1 second between Archive.org API calls to avoid rate limiting
+const SEARCH_DELAY_MS = 500 // Shorter delay for search operations  
+const MAX_SEARCH_RESULTS = 1000 // Maximum results for general searches
+const MAX_USER_ITEMS = 10000 // Maximum results for user's own items
+
+// YouTube video date matching thresholds (business logic)
+const YOUTUBE_DATE_MATCH_CLOSE_DAYS = 30   // High score for videos within 30 days
+const YOUTUBE_DATE_MATCH_MEDIUM_DAYS = 90  // Medium score for videos within 90 days  
+const YOUTUBE_DATE_MATCH_FAR_DAYS = 365    // Low score for videos within 365 days
 
 
 
@@ -334,12 +347,12 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
         const targetDate = new Date(date)
         const daysDiff = Math.abs((videoDate.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24))
         
-        // Bonus for videos published within 30 days of recording
-        if (daysDiff <= 30) {
+        // Bonus for videos published close to recording date
+        if (daysDiff <= YOUTUBE_DATE_MATCH_CLOSE_DAYS) {
           score += 20
-        } else if (daysDiff <= 90) {
+        } else if (daysDiff <= YOUTUBE_DATE_MATCH_MEDIUM_DAYS) {
           score += 10
-        } else if (daysDiff <= 365) {
+        } else if (daysDiff <= YOUTUBE_DATE_MATCH_FAR_DAYS) {
           score += 5
         }
       }
@@ -404,7 +417,7 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
 // API ENDPOINT: GET /search
 // This endpoint searches within the authenticated user's uploaded items only
 // Example: GET /search?q=radiohead will search for "radiohead" in YOUR items on Archive.org
-app.get('/search', async (req, res) => {
+app.get('/api/search', async (req, res) => {
   try {
     // Validate that the request has a proper 'q' (query) parameter
     const { q } = searchQuerySchema.parse(req.query)  // Zod validates the format
@@ -420,7 +433,7 @@ app.get('/search', async (req, res) => {
     
     // Build search URL using utility function
     const fields = ['identifier', 'title', 'creator', 'description', 'date', 'mediatype', 'collection', 'subject', 'uploader']
-    const searchUrl = buildArchiveSearchUrl(combinedQuery, fields, 1000)
+    const searchUrl = buildArchiveSearchUrl(combinedQuery, fields, MAX_SEARCH_RESULTS)
     
     // Use authenticated request to access uploader field
     const auth = btoa(`${accessKey}:${secretKey}`)
@@ -457,7 +470,7 @@ app.get('/search', async (req, res) => {
 // API ENDPOINT: GET /user-items  
 // This endpoint fetches all items uploaded by the authenticated user
 // Example: GET /user-items
-app.get('/user-items', async (_req, res) => {
+app.get('/api/user-items', async (_req, res) => {
   try {
     // Get user's Archive.org credentials to authenticate the request
     const { email, accessKey, secretKey } = getArchiveCredentials()
@@ -466,7 +479,7 @@ app.get('/user-items', async (_req, res) => {
     
     // Build search URL using utility function
     const fields = ['identifier', 'title', 'creator', 'description', 'date', 'mediatype', 'collection', 'subject', 'uploader', 'youtube']
-    const searchUrl = buildArchiveSearchUrl(`uploader:${email}`, fields, 10000)
+    const searchUrl = buildArchiveSearchUrl(`uploader:${email}`, fields, MAX_USER_ITEMS)
     
     // Make authenticated request to Archive.org
     const auth = btoa(`${accessKey}:${secretKey}`)
@@ -503,7 +516,7 @@ app.get('/user-items', async (_req, res) => {
 // API ENDPOINT: POST /update-metadata-stream
 // This endpoint handles batch metadata updates using Server-Sent Events for real-time progress
 // Example: POST /update-metadata-stream with JSON body containing array of items to update
-app.post('/update-metadata-stream', async (req, res) => {
+app.post('/api/update-metadata-stream', async (req, res) => {
   try {
     // Validate the request body contains properly formatted items
     const { items } = metadataUpdateStreamSchema.parse(req.body)
@@ -595,7 +608,7 @@ app.post('/update-metadata-stream', async (req, res) => {
         
         // Small delay to avoid overwhelming Archive.org
         if (i < items.length - 1) {
-          await delay(1000)
+          await delay(API_DELAY_MS)
         }
         
       } catch (error) {
@@ -653,7 +666,7 @@ app.post('/update-metadata-stream', async (req, res) => {
 // API ENDPOINT: POST /update-metadata
 // This endpoint handles single metadata updates (simpler than the batch version)
 // Example: POST /update-metadata with JSON body containing identifier and metadata
-app.post('/update-metadata', async (req, res) => {
+app.post('/api/update-metadata', async (req, res) => {
   try {
     // Validate the request body
     const { identifier, metadata, target = 'metadata' } = metadataUpdateSchema.parse(req.body)
@@ -720,7 +733,7 @@ app.post('/update-metadata', async (req, res) => {
 // API ENDPOINT: POST /youtube-suggest  
 // This endpoint finds YouTube matches for Archive.org items
 // Example: POST /youtube-suggest with JSON body containing array of items
-app.post('/youtube-suggest', async (req, res) => {
+app.post('/api/youtube-suggest', async (req, res) => {
   try {
     // Handle both old format (single item) and new format (items array)
     let items
@@ -775,7 +788,7 @@ app.post('/youtube-suggest', async (req, res) => {
         }
         
         // Rate limiting: small delay between requests
-        await delay(500)
+        await delay(SEARCH_DELAY_MS)
         
       } catch (error) {
         console.error(`❌ Error processing ${item.identifier}:`, error)
@@ -783,8 +796,6 @@ app.post('/youtube-suggest', async (req, res) => {
         // Check if this is a quota exhaustion error
         const isQuotaError = isYouTubeQuotaError(error)
         
-        console.log(`🔍 DEBUG: Error message: "${error instanceof Error ? error.message : 'Unknown error'}"`)
-        console.log(`🔍 DEBUG: Is quota error: ${isQuotaError}`)
         
         results.push({
           identifier: item.identifier,
@@ -842,12 +853,14 @@ app.post('/youtube-suggest', async (req, res) => {
 
 // API ENDPOINT: POST /batch-upload-image-stream
 // This endpoint handles batch image uploads using Server-Sent Events for real-time progress
-app.post('/batch-upload-image-stream', (req, res, _next) => {
+app.post('/api/batch-upload-image-stream', (req, res, _next) => {
+  
   upload.array('files')(req, res, async (err) => {
     if (err) {
       console.error('File upload error:', err)
       return res.status(400).json({ error: 'File upload failed' })
     }
+
 
     try {
       // Get user's Archive.org credentials
@@ -858,16 +871,19 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
       const files = req.files as Express.Multer.File[]
       
       if (!files || files.length === 0) {
-        return res.status(400).json({ error: 'No files uploaded' })
+        return res.status(400).json({ error: 'No image file uploaded' })
       }
       
-      if (files.length !== itemsMetadata.length) {
-        return res.status(400).json({ 
-          error: `File count (${files.length}) doesn't match metadata count (${itemsMetadata.length})` 
-        })
+      if (files.length !== 1) {
+        return res.status(400).json({ error: 'Expected exactly one image file' })
       }
       
-      console.log(`🔄 Starting batch image upload for ${files.length} items`)
+      if (!itemsMetadata || itemsMetadata.length === 0) {
+        return res.status(400).json({ error: 'No items specified for upload' })
+      }
+      
+      
+      console.log(`🔄 Starting batch image upload: uploading "${files[0].originalname}" to ${itemsMetadata.length} items`)
       
       // Set up Server-Sent Events
       res.setHeader('Content-Type', 'text/event-stream')
@@ -879,25 +895,25 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
         res.write(`data: ${JSON.stringify(data)}\n\n`)
       }
       
-      sendProgress({ type: 'start', total: files.length })
+      sendProgress({ type: 'start', total: itemsMetadata.length })
       
       const results = []
       
-      // Process each file sequentially
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+      // Process each item (uploading the same image file to each item)
+      for (let i = 0; i < itemsMetadata.length; i++) {
+        const file = files[0] // Always use the single uploaded file
         const metadata = itemsMetadata[i]
         
         try {
           sendProgress({ 
             type: 'progress', 
             current: i + 1, 
-            total: files.length, 
+            total: itemsMetadata.length, 
             identifier: metadata.identifier,
             status: 'uploading'
           })
           
-          console.log(`📤 Uploading ${metadata.identifier} (${i + 1}/${files.length})`)
+          console.log(`📤 Uploading ${metadata.identifier} (${i + 1}/${itemsMetadata.length})`)
           
           // Generate standardized flyer filename
           const standardizedFilename = generateFlyerFilename(
@@ -925,9 +941,8 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
           const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${standardizedFilename}`, {
             method: 'PUT',
             headers: {
-              'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
-              'x-archive-auto-make-bucket': '1',
-              'x-archive-meta-mediatype': 'image',
+              'authorization': `LOW ${accessKey}:${secretKey}`,
+              'x-amz-auto-make-bucket': '1',
               ...Object.fromEntries(
                 Object.entries(metadata.metadata).map(([key, value]) => [
                   `x-archive-meta-${key}`, String(value)
@@ -939,6 +954,23 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
           
           if (!uploadResponse.ok) {
             throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`)
+          }
+          
+          // Also upload the _rules.conf file with derivation rules
+          const rulesContent = 'CAT.ALL'
+          const rulesResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/_rules.conf`, {
+            method: 'PUT',
+            headers: {
+              'authorization': `LOW ${accessKey}:${secretKey}`,
+              'x-archive-meta-format': 'Derivation Rules'
+            },
+            body: rulesContent
+          })
+          
+          if (!rulesResponse.ok) {
+            console.warn(`⚠️  Failed to upload _rules.conf to ${metadata.identifier}: ${rulesResponse.status} ${rulesResponse.statusText}`)
+          } else {
+            console.log(`📋 Uploaded _rules.conf to ${metadata.identifier}`)
           }
           
           console.log(`✅ Successfully uploaded ${metadata.identifier}`)
@@ -960,7 +992,7 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
           
           // Small delay between uploads
           if (i < files.length - 1) {
-            await delay(1000)
+            await delay(API_DELAY_MS)
           }
           
         } catch (error) {
@@ -1017,7 +1049,7 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
 
 // API ENDPOINT: POST /batch-upload-image
 // This endpoint handles batch image uploads (non-streaming version)
-app.post('/batch-upload-image', (req, res, _next) => {
+app.post('/api/batch-upload-image', (req, res, _next) => {
   upload.array('files')(req, res, async (err) => {
     if (err) {
       console.error('File upload error:', err)
@@ -1031,22 +1063,24 @@ app.post('/batch-upload-image', (req, res, _next) => {
       const files = req.files as Express.Multer.File[]
       
       if (!files || files.length === 0) {
-        return res.status(400).json({ error: 'No files uploaded' })
+        return res.status(400).json({ error: 'No image file uploaded' })
       }
       
-      if (files.length !== itemsMetadata.length) {
-        return res.status(400).json({ 
-          error: `File count (${files.length}) doesn't match metadata count (${itemsMetadata.length})` 
-        })
+      if (files.length !== 1) {
+        return res.status(400).json({ error: 'Expected exactly one image file' })
       }
       
-      console.log(`🔄 Processing ${files.length} image uploads`)
+      if (!itemsMetadata || itemsMetadata.length === 0) {
+        return res.status(400).json({ error: 'No items specified for upload' })
+      }
+      
+      console.log(`🔄 Processing batch upload: uploading "${files[0].originalname}" to ${itemsMetadata.length} items`)
       
       const results = []
       
-      // Process all uploads
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+      // Process all items (uploading the same image file to each item)
+      for (let i = 0; i < itemsMetadata.length; i++) {
+        const file = files[0] // Always use the single uploaded file
         const metadata = itemsMetadata[i]
         
         // Generate standardized flyer filename (outside try block so it's available for error handling)
@@ -1064,9 +1098,8 @@ app.post('/batch-upload-image', (req, res, _next) => {
           const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${standardizedFilename}`, {
             method: 'PUT',
             headers: {
-              'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
-              'x-archive-auto-make-bucket': '1',
-              'x-archive-meta-mediatype': 'image',
+              'authorization': `LOW ${accessKey}:${secretKey}`,
+              'x-amz-auto-make-bucket': '1',
               ...Object.fromEntries(
                 Object.entries(metadata.metadata).map(([key, value]) => [
                   `x-archive-meta-${key}`, String(value)
@@ -1080,6 +1113,23 @@ app.post('/batch-upload-image', (req, res, _next) => {
             throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`)
           }
           
+          // Also upload the _rules.conf file with derivation rules
+          const rulesContent = 'CAT.ALL'
+          const rulesResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/_rules.conf`, {
+            method: 'PUT',
+            headers: {
+              'authorization': `LOW ${accessKey}:${secretKey}`,
+              'x-archive-meta-format': 'Derivation Rules'
+            },
+            body: rulesContent
+          })
+          
+          if (!rulesResponse.ok) {
+            console.warn(`⚠️  Failed to upload _rules.conf to ${metadata.identifier}: ${rulesResponse.status} ${rulesResponse.statusText}`)
+          } else {
+            console.log(`📋 Uploaded _rules.conf to ${metadata.identifier}`)
+          }
+          
           results.push({
             identifier: metadata.identifier,
             filename: standardizedFilename,
@@ -1088,7 +1138,7 @@ app.post('/batch-upload-image', (req, res, _next) => {
             message: 'File uploaded successfully'
           })
           
-          await delay(1000)
+          await delay(API_DELAY_MS)
           
         } catch (error) {
           console.error(`❌ Upload failed for ${metadata.identifier}:`, error)
@@ -1127,7 +1177,7 @@ app.post('/batch-upload-image', (req, res, _next) => {
 
 // API ENDPOINT: GET /health
 // Simple health check endpoint to verify the server is running
-app.get('/health', (_req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
@@ -1241,7 +1291,7 @@ app.get('/auth/youtube/status', (_req, res) => {
 
 // API ENDPOINT: POST /youtube/update-recording-dates-stream
 // This endpoint updates YouTube video recording dates using Server-Sent Events
-app.post('/youtube/update-recording-dates-stream', async (req, res) => {
+app.post('/api/youtube/update-recording-dates-stream', async (req, res) => {
   try {
     const { items } = youtubeUpdateRecordingDatesStreamSchema.parse(req.body)
     
@@ -1345,7 +1395,7 @@ app.post('/youtube/update-recording-dates-stream', async (req, res) => {
 
 // API ENDPOINT: POST /youtube/get-descriptions
 // This endpoint fetches YouTube video descriptions
-app.post('/youtube/get-descriptions', async (req, res) => {
+app.post('/api/youtube/get-descriptions', async (req, res) => {
   try {
     const { items } = youtubeGetDescriptionsSchema.parse(req.body)
     
@@ -1394,7 +1444,7 @@ app.post('/youtube/get-descriptions', async (req, res) => {
 
 // API ENDPOINT: POST /youtube/update-descriptions-stream
 // This endpoint updates YouTube video descriptions using Server-Sent Events
-app.post('/youtube/update-descriptions-stream', async (req, res) => {
+app.post('/api/youtube/update-descriptions-stream', async (req, res) => {
   try {
     const { items } = youtubeUpdateDescriptionsStreamSchema.parse(req.body)
     
@@ -1497,7 +1547,7 @@ app.post('/youtube/update-descriptions-stream', async (req, res) => {
 
 // API ENDPOINT: GET /metadata/:identifier
 // This endpoint fetches metadata for a specific Archive.org item
-app.get('/metadata/:identifier', async (req, res) => {
+app.get('/api/metadata/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params
     
@@ -1534,6 +1584,7 @@ app.get('/metadata/:identifier', async (req, res) => {
     })
   }
 })
+
 
 // Start the server
 app.listen(PORT, async () => {

@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { MetadataUpdate, UpdateRequest, ArchiveItem, YouTubeSuggestionResponse } from '../types'
 
+// Configuration constants
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB in bytes
+const MAX_FILE_SIZE_MB = 10
+
 interface MetadataEditorProps {
   selectedItems: string[]
   items: ArchiveItem[]
@@ -377,7 +381,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       }
 
       // Call the streaming endpoint
-      const response = await fetch('/youtube/update-recording-dates-stream', {
+      const response = await fetch('/api/youtube/update-recording-dates-stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -612,7 +616,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       }
 
       // Call the streaming endpoint (same as before)
-      const response = await fetch('/youtube/update-recording-dates-stream', {
+      const response = await fetch('/api/youtube/update-recording-dates-stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -736,7 +740,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       }
 
       // Now get current YouTube descriptions
-      const response = await fetch('/youtube/get-descriptions', {
+      const response = await fetch('/api/youtube/get-descriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -837,7 +841,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
     }
 
     try {
-      const response = await fetch('/youtube/update-descriptions-stream', {
+      const response = await fetch('/api/youtube/update-descriptions-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1658,9 +1662,9 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                     }
                     
                     // Validate file size (10MB limit)
-                    const maxSize = 10 * 1024 * 1024 // 10MB in bytes
+                    const maxSize = MAX_FILE_SIZE_BYTES
                     if (file.size > maxSize) {
-                      alert(`File is too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`)
+                      alert(`File is too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is ${MAX_FILE_SIZE_MB}MB.`)
                       e.target.value = '' // Clear the input
                       return
                     }
@@ -1695,9 +1699,35 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                   setUploadingImages(true)
                   
                   try {
+                    // Construct proper metadata structure for the server
+                    const itemsMetadata = selectedItems.map(identifier => {
+                      const item = items.find(item => item.identifier === identifier)
+                      return {
+                        identifier,
+                        metadata: item ? {
+                          title: item.title,
+                          description: item.description,
+                          creator: item.creator,
+                          date: item.date,
+                          mediatype: item.mediatype || 'image',
+                          collection: item.collection,
+                          subject: item.subject,
+                          ...Object.fromEntries(
+                            Object.entries(item).filter(([key, value]) => 
+                              !['identifier', 'title', 'description', 'creator', 'date', 'mediatype', 'collection', 'subject'].includes(key) && 
+                              value !== undefined && value !== null
+                            )
+                          )
+                        } : {
+                          title: identifier,
+                          mediatype: 'image'
+                        }
+                      }
+                    })
+                    
                     const formData = new FormData()
-                    formData.append('image', selectedImageFile)
-                    formData.append('items', JSON.stringify(selectedItems))
+                    formData.append('files', selectedImageFile)
+                    formData.append('itemsMetadata', JSON.stringify(itemsMetadata))
                     
                     // Log start of batch upload to both console and activity log
                     const uploadStartMessage = `🖼️ Starting image upload "${selectedImageFile.name}" for ${selectedItems.length} items...`

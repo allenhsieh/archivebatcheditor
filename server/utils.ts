@@ -48,6 +48,12 @@ export function standardizeDate(dateStr: string): string {
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
   }
   
+  // Handle ISO date format (e.g., "2016-02-28T00:00:00Z" -> "2016-02-28")
+  const isoDateMatch = dateStr.match(/^(\d{4}-\d{2}-\d{2})T/)
+  if (isoDateMatch) {
+    return isoDateMatch[1]
+  }
+  
   // Handle YYYY-MM-DD format (already correct)
   const yyyymmddMatch = dateStr.match(/^\d{4}-\d{2}-\d{2}$/)
   if (yyyymmddMatch) {

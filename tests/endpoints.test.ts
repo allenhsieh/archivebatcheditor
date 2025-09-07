@@ -2,8 +2,8 @@
  * Tests for API endpoints
  * These tests ensure all endpoints work correctly and follow expected patterns
  * 
- * CRITICAL: This documents the actual endpoint paths to prevent future hallucinations
- * Endpoints DO NOT start with /api/ - they are direct routes like /search, /user-items, etc.
+ * UPDATED: All API endpoints now use /api/ prefix for consistency between client and server
+ * This eliminates the magic path rewriting that caused confusion and bugs
  */
 
 import request from 'supertest';
@@ -18,26 +18,26 @@ describe('API Endpoint Documentation', () => {
     // Based on server/index.ts analysis, these are the real endpoints:
     const actualEndpoints = [
       // Search and data retrieval
-      { method: 'GET', path: '/search', description: 'Search Archive.org items with query parameter' },
-      { method: 'GET', path: '/user-items', description: 'Get user Archive.org items' },
-      { method: 'GET', path: '/metadata/:identifier', description: 'Get metadata for specific item' },
+      { method: 'GET', path: '/api/search', description: 'Search Archive.org items with query parameter' },
+      { method: 'GET', path: '/api/user-items', description: 'Get user Archive.org items' },
+      { method: 'GET', path: '/api/metadata/:identifier', description: 'Get metadata for specific item' },
       
       // Metadata updates
-      { method: 'POST', path: '/update-metadata', description: 'Update single item metadata' },
-      { method: 'POST', path: '/update-metadata-stream', description: 'Batch update metadata with SSE progress' },
+      { method: 'POST', path: '/api/update-metadata', description: 'Update single item metadata' },
+      { method: 'POST', path: '/api/update-metadata-stream', description: 'Batch update metadata with SSE progress' },
       
       // YouTube integration
-      { method: 'POST', path: '/youtube-suggest', description: 'Get YouTube match suggestions for items' },
-      { method: 'POST', path: '/youtube/get-descriptions', description: 'Get YouTube video descriptions' },
-      { method: 'POST', path: '/youtube/update-descriptions-stream', description: 'Update YouTube descriptions with SSE' },
-      { method: 'POST', path: '/youtube/update-recording-dates-stream', description: 'Update YouTube recording dates with SSE' },
+      { method: 'POST', path: '/api/youtube-suggest', description: 'Get YouTube match suggestions for items' },
+      { method: 'POST', path: '/api/youtube/get-descriptions', description: 'Get YouTube video descriptions' },
+      { method: 'POST', path: '/api/youtube/update-descriptions-stream', description: 'Update YouTube descriptions with SSE' },
+      { method: 'POST', path: '/api/youtube/update-recording-dates-stream', description: 'Update YouTube recording dates with SSE' },
       
       // Image uploads
-      { method: 'POST', path: '/batch-upload-image', description: 'Single batch image upload' },
-      { method: 'POST', path: '/batch-upload-image-stream', description: 'Batch image upload with SSE progress' },
+      { method: 'POST', path: '/api/batch-upload-image', description: 'Single batch image upload' },
+      { method: 'POST', path: '/api/batch-upload-image-stream', description: 'Batch image upload with SSE progress' },
       
       // Authentication and health
-      { method: 'GET', path: '/health', description: 'Health check endpoint' },
+      { method: 'GET', path: '/api/health', description: 'Health check endpoint' },
       { method: 'GET', path: '/auth/youtube', description: 'Start YouTube OAuth flow' },
       { method: 'GET', path: '/auth/youtube/callback', description: 'YouTube OAuth callback' },
       { method: 'GET', path: '/auth/youtube/status', description: 'Check YouTube auth status' },
@@ -47,9 +47,9 @@ describe('API Endpoint Documentation', () => {
     // Document endpoint patterns
     expect(actualEndpoints.length).toBe(16); // Total endpoints found
     
-    // No endpoints start with /api/
+    // All API endpoints now start with /api/ (except auth endpoints)
     const apiPrefixedEndpoints = actualEndpoints.filter(ep => ep.path.startsWith('/api/'));
-    expect(apiPrefixedEndpoints.length).toBe(0);
+    expect(apiPrefixedEndpoints.length).toBe(12); // All non-auth endpoints have /api/ prefix
     
     // Most endpoints are direct routes
     const directRoutes = actualEndpoints.filter(ep => !ep.path.includes('/:') || ep.path === '/metadata/:identifier');
@@ -354,10 +354,10 @@ describe('Common Endpoint Behaviors', () => {
   test('streaming endpoints should use Server-Sent Events', () => {
     // Documents SSE pattern for batch operations
     const streamingEndpoints = [
-      '/update-metadata-stream',
-      '/batch-upload-image-stream', 
-      '/youtube/update-descriptions-stream',
-      '/youtube/update-recording-dates-stream'
+      '/api/update-metadata-stream',
+      '/api/batch-upload-image-stream', 
+      '/api/youtube/update-descriptions-stream',
+      '/api/youtube/update-recording-dates-stream'
     ];
     
     expect(streamingEndpoints.length).toBe(4);
