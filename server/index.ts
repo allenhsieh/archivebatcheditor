@@ -770,6 +770,7 @@ app.post('/api/youtube-suggest', async (req, res) => {
         
         if (youtubeMatch) {
           console.log(`✅ Found YouTube match: ${youtubeMatch.title}`)
+          console.log(`🔗 YouTube URL: ${youtubeMatch.url}`)
           results.push({
             identifier: item.identifier,
             title: item.title,
@@ -822,6 +823,15 @@ app.post('/api/youtube-suggest', async (req, res) => {
     
     const successful = results.filter(r => r.success).length
     console.log(`🏁 YouTube suggestions complete: ${successful}/${items.length} matches found`)
+    
+    // Log detailed summary of all found URLs
+    const successfulResults = results.filter(r => r.success)
+    if (successfulResults.length > 0) {
+      console.log(`📋 Summary of found YouTube URLs:`)
+      successfulResults.forEach((result, index) => {
+        console.log(`   ${index + 1}. ${result.identifier} -> ${result.youtubeMatch?.url}`)
+      })
+    }
     
     res.json({
       results,

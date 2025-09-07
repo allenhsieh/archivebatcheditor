@@ -994,9 +994,10 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 }
                 
                 // Process all items needing YouTube URLs (quota-safe with fail-fast)
-                const loadedItems = itemsNeedingYouTube
-                console.log(`📊 Ready to process ${loadedItems.length} items needing YouTube URLs`)
-                addLog({ type: 'info', message: `📊 Ready to process ${loadedItems.length} items needing YouTube URLs (with quota protection)` })
+                // Limit to 5 items for quota management
+                const loadedItems = itemsNeedingYouTube.slice(0, 5)
+                console.log(`📊 Ready to process ${loadedItems.length} items needing YouTube URLs (limited from ${itemsNeedingYouTube.length})`)
+                addLog({ type: 'info', message: `📊 Ready to process ${loadedItems.length} items needing YouTube URLs (limited from ${itemsNeedingYouTube.length} for quota protection)` })
                 
                 // Phase 1: Select all items (trigger the hook to update UI state)
                 console.log(`✅ Selecting all ${loadedItems.length} items...`)
@@ -1038,6 +1039,13 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                     // Step 1: Search YouTube for this item
                     addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] 🔍 Searching YouTube for: ${identifier} (${itemTitle})` })
                     
+                    // DEBUG: Log the API call details
+                    console.log(`🔍 [DEBUG] Making YouTube API call for item ${i+1}/${loadedItems.length}:`, {
+                      identifier,
+                      title: itemData.title,
+                      date: itemData.date
+                    })
+                    
                     const response = await fetch('/api/youtube-suggest', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -1049,6 +1057,9 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                         }]
                       })
                     })
+                    
+                    // DEBUG: Log response details
+                    console.log(`🔍 [DEBUG] YouTube API response status:`, response.status, response.statusText)
                     
                     if (!response.ok) {
                       // Check if this is a quota exhaustion error at HTTP level
@@ -1063,19 +1074,45 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                     
                     const responseData = await response.json()
                     
+                    // DEBUG: Log full response data structure
+                    console.log(`🔍 [DEBUG] Full YouTube API response data:`, {
+                      quotaExhausted: responseData.quotaExhausted,
+                      results: responseData.results?.length || 0,
+                      firstResultQuotaFlag: responseData.results?.[0]?.quotaExhausted,
+                      keys: Object.keys(responseData)
+                    })
+                    
                     // Check for quota exhaustion at response body level first
                     if (responseData.quotaExhausted) {
+                      console.log(`🚫 [DEBUG] QUOTA DETECTED at response level - stopping workflow`)
                       addLog({ type: 'error', message: `🚫 QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
                       console.log(`⚡ YouTube quota exhausted: stopping workflow after processing ${processedCount} items`)
                       alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
                       return
+                    } else {
+                      console.log(`✅ [DEBUG] No quota exhaustion detected at response level`)
                     }
                     
                     // Extract the first result since we sent one item
                     const suggestion = responseData.results?.[0] || responseData
                     
+                    // DEBUG: Log the extracted suggestion details
+                    console.log(`🔍 [DEBUG] Extracted suggestion for item ${i+1}:`, {
+                      hasResults: !!responseData.results,
+                      resultsLength: responseData.results?.length,
+                      suggestion: {
+                        success: suggestion?.success,
+                        quotaExhausted: suggestion?.quotaExhausted,
+                        error: suggestion?.error,
+                        hasYouTubeSuggestions: !!suggestion?.suggestions?.youtube,
+                        hasYouTubeMatch: !!suggestion?.youtubeMatch
+                      }
+                    })
+                    
                     // Check for quota exhaustion in individual result - stop entire workflow immediately
                     if (suggestion && suggestion.quotaExhausted) {
+                      // DEBUG: Log quota exhaustion detection
+                      console.log(`🔍 [DEBUG] QUOTA EXHAUSTED detected in suggestion.quotaExhausted for item ${i+1}`)
                       addLog({ type: 'error', message: `🚫 QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
                       console.log(`⚡ YouTube quota exhausted: stopping workflow after processing ${processedCount} items`)
                       alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
@@ -1085,17 +1122,25 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                     // Also check if error message contains quota exhausted - stop immediately
                     if (suggestion && !suggestion.success && suggestion.error && 
                         (suggestion.error.includes('QUOTA_EXHAUSTED') || suggestion.error.toLowerCase().includes('quota'))) {
+                      // DEBUG: Log error-based quota exhaustion detection
+                      console.log(`🔍 [DEBUG] QUOTA EXHAUSTED detected in error message for item ${i+1}:`, suggestion.error)
                       addLog({ type: 'error', message: `🚫 YouTube quota exhausted - stopping entire workflow` })
                       console.log(`⚡ YouTube quota exhausted: stopping workflow after processing ${processedCount} items`)
                       alert(`⚡ YouTube quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
                       return
+                    } else {
+                      // DEBUG: Log when no quota exhaustion is detected and processing continues
+                      console.log(`✅ [DEBUG] No quota exhaustion detected for item ${i+1}, continuing with processing`)
                     }
                     
                     processedCount++
                     
                     // Step 2: If YouTube match found, immediately apply it to Archive.org
-                    if (suggestion && suggestion.success && suggestion.suggestions?.youtube) {
-                      addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] ✅ Found YouTube match: ${suggestion.suggestions.youtube}` })
+                    if (suggestion && suggestion.success && suggestion.youtubeMatch) {
+                      const youtubeUrl = suggestion.youtubeMatch.url
+                      const youtubeTitle = suggestion.youtubeMatch.title
+                      addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] ✅ Found YouTube match: "${youtubeTitle}"` })
+                      addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] 🔗 YouTube URL: ${youtubeUrl}` })
                       addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] 🔗 Applying YouTube link to Archive.org metadata...` })
                       
                       try {
@@ -1104,7 +1149,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                           items: [identifier],
                           updates: [{
                             field: 'youtube',
-                            value: suggestion.suggestions.youtube,
+                            value: youtubeUrl,
                             operation: 'replace'
                           }]
                         })
