@@ -993,11 +993,10 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                   return
                 }
                 
-                // Process all items needing YouTube URLs (quota-safe with fail-fast)
-                // Limit to 5 items for quota management
-                const loadedItems = itemsNeedingYouTube.slice(0, 5)
-                console.log(`📊 Ready to process ${loadedItems.length} items needing YouTube URLs (limited from ${itemsNeedingYouTube.length})`)
-                addLog({ type: 'info', message: `📊 Ready to process ${loadedItems.length} items needing YouTube URLs (limited from ${itemsNeedingYouTube.length} for quota protection)` })
+                // Process all items needing YouTube URLs
+                const loadedItems = itemsNeedingYouTube
+                console.log(`📊 Ready to process all ${loadedItems.length} items needing YouTube URLs`)
+                addLog({ type: 'info', message: `📊 Ready to process all ${loadedItems.length} items needing YouTube URLs` })
                 
                 // Phase 1: Select all items (trigger the hook to update UI state)
                 console.log(`✅ Selecting all ${loadedItems.length} items...`)
@@ -1020,27 +1019,30 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 addLog({ type: 'info', message: `🔄 Starting sequential workflow - search YouTube → apply to Archive.org → next item` })
                 
                 // Phase 2 & 3 Combined: Sequential processing (search → apply → next)
-                for (let i = 0; i < loadedItems.length; i++) {
+                const maxItems = loadedItems.length
+                addLog({ type: 'info', message: `🔄 Processing all ${maxItems} items` })
+                
+                for (let i = 0; i < maxItems; i++) {
                   const identifier = loadedItems[i].identifier
                   const itemTitle = loadedItems[i].title || 'Unknown Title'
                   const itemData = loadedItems[i]
                   
                   // Debug logging to see what's happening
-                  console.log(`DEBUG: Processing ${identifier} sequentially (${i+1}/${loadedItems.length})`)
+                  console.log(`DEBUG: Processing ${identifier} sequentially (${i+1}/${maxItems})`)
                   
                   // Skip if no title
                   if (!itemData.title) {
-                    addLog({ type: 'skipped', message: `[${i+1}/${loadedItems.length}] ⏭️  Skipping ${identifier} - no title` })
+                    addLog({ type: 'skipped', message: `[${i+1}/${maxItems}] ⏭️  Skipping ${identifier} - no title` })
                     skippedCount++
                     continue
                   }
                   
                   try {
                     // Step 1: Search YouTube for this item
-                    addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] 🔍 Searching YouTube for: ${identifier} (${itemTitle})` })
+                    addLog({ type: 'info', message: `[${i+1}/${maxItems}] 🔍 Searching YouTube for: ${identifier} (${itemTitle})` })
                     
                     // DEBUG: Log the API call details
-                    console.log(`🔍 [DEBUG] Making YouTube API call for item ${i+1}/${loadedItems.length}:`, {
+                    console.log(`🔍 [DEBUG] Making YouTube API call for item ${i+1}/${maxItems}:`, {
                       identifier,
                       title: itemData.title,
                       date: itemData.date
@@ -1150,7 +1152,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                           updates: [{
                             field: 'youtube',
                             value: youtubeUrl,
-                            operation: 'replace'
+                            operation: 'add'
                           }]
                         })
                         
@@ -1817,17 +1819,48 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                             try {
                               const data = JSON.parse(line.substring(6))
                               
-                              // Handle individual item results
-                              if (data.identifier && data.error) {
-                                const errorMsg = `Image upload failed: ${data.error}`
-                                console.error(`📷 ❌ ${data.identifier}: ${errorMsg}`)
+                              // Handle progress events based on type
+                              if (data.type === 'start') {
+                                console.log(`📷 🚀 Started uploading to ${data.total} items`)
                                 addLog({
-                                  type: 'error',
-                                  message: errorMsg,
-                                  identifier: data.identifier
+                                  type: 'info',
+                                  message: `Started uploading to ${data.total} items`
                                 })
                               }
-                              // Handle server messages (including completion summary)
+                              else if (data.type === 'progress') {
+                                if (data.status === 'uploading') {
+                                  console.log(`📷 📤 Uploading ${data.identifier} (${data.current}/${data.total})`)
+                                  addLog({
+                                    type: 'info',
+                                    message: `Uploading ${data.identifier} (${data.current}/${data.total})`,
+                                    identifier: data.identifier
+                                  })
+                                }
+                                else if (data.status === 'completed') {
+                                  console.log(`📷 ✅ Completed ${data.identifier} (${data.current}/${data.total})`)
+                                  addLog({
+                                    type: 'success',
+                                    message: `Successfully uploaded ${data.identifier} (${data.current}/${data.total})`,
+                                    identifier: data.identifier
+                                  })
+                                }
+                                else if (data.status === 'error') {
+                                  console.error(`📷 ❌ Failed ${data.identifier} (${data.current}/${data.total}): ${data.error}`)
+                                  addLog({
+                                    type: 'error',
+                                    message: `Upload failed for ${data.identifier}: ${data.error} (${data.current}/${data.total})`,
+                                    identifier: data.identifier
+                                  })
+                                }
+                              }
+                              else if (data.type === 'complete') {
+                                console.log(`📷 🏁 Upload complete: ${data.successful} successful, ${data.failed} failed`)
+                                addLog({
+                                  type: 'info',
+                                  message: `Upload complete: ${data.successful} successful, ${data.failed} failed out of ${data.total} items`
+                                })
+                              }
+                              // Fallback for legacy message format
                               else if (data.message) {
                                 console.log(`📷 ${data.message}`)
                                 addLog({

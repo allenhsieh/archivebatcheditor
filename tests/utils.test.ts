@@ -16,6 +16,7 @@ import {
   buildArchiveMetadataUrl,
   buildYouTubeSearchUrl,
   createYouTubeUrl,
+  standardizeYouTubeUrl,
   generateFlyerFilename,
   CONSTANTS
 } from '../server/utils'
@@ -258,8 +259,8 @@ describe('URL Building Functions', () => {
   })
 
   describe('createYouTubeUrl', () => {
-    test('creates correct YouTube video URL', () => {
-      expect(createYouTubeUrl('abc123')).toBe('https://www.youtube.com/watch?v=abc123')
+    test('creates correct YouTube video URL (short format)', () => {
+      expect(createYouTubeUrl('abc123')).toBe('https://youtu.be/abc123')
     })
   })
 
@@ -348,6 +349,80 @@ describe('URL Building Functions', () => {
       // Should still process through standardizeDate
       expect(filename).toMatch(/\d{4}-\d{2}-\d{2}-flyer_itemimage\.jpg/)
     })
+  })
+})
+
+describe('standardizeYouTubeUrl', () => {
+  test('converts youtube.com/watch?v= format to youtu.be', () => {
+    const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtu.be/dQw4w9WgXcQ')
+  })
+
+  test('converts youtube.com/watch?v= format with additional params', () => {
+    const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30s&list=PLxyz'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtu.be/dQw4w9WgXcQ')
+  })
+
+  test('converts youtube.com/embed/ format to youtu.be', () => {
+    const url = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtu.be/dQw4w9WgXcQ')
+  })
+
+  test('converts youtube.com/v/ format to youtu.be', () => {
+    const url = 'https://www.youtube.com/v/dQw4w9WgXcQ'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtu.be/dQw4w9WgXcQ')
+  })
+
+  test('preserves youtu.be format when already correct', () => {
+    const url = 'https://youtu.be/dQw4w9WgXcQ'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtu.be/dQw4w9WgXcQ')
+  })
+
+  test('handles http:// protocol in youtube.com URLs', () => {
+    const url = 'http://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtu.be/dQw4w9WgXcQ')
+  })
+
+  test('handles youtube.com without www', () => {
+    const url = 'https://youtube.com/watch?v=dQw4w9WgXcQ'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtu.be/dQw4w9WgXcQ')
+  })
+
+  test('handles m.youtube.com mobile URLs', () => {
+    const url = 'https://m.youtube.com/watch?v=dQw4w9WgXcQ'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtu.be/dQw4w9WgXcQ')
+  })
+
+  test('handles video IDs with underscores and hyphens', () => {
+    const url = 'https://www.youtube.com/watch?v=abc_123-xyz'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtu.be/abc_123-xyz')
+  })
+
+  test('returns original URL for non-YouTube URLs', () => {
+    const url = 'https://example.com/video?v=abc123'
+    expect(standardizeYouTubeUrl(url)).toBe('https://example.com/video?v=abc123')
+  })
+
+  test('returns original URL for malformed YouTube URLs', () => {
+    const url = 'https://youtube.com/notavideo'
+    expect(standardizeYouTubeUrl(url)).toBe('https://youtube.com/notavideo')
+  })
+
+  test('handles empty string input', () => {
+    expect(standardizeYouTubeUrl('')).toBe('')
+  })
+
+  test('handles null/undefined input gracefully', () => {
+    expect(standardizeYouTubeUrl(null as any)).toBe(null)
+    expect(standardizeYouTubeUrl(undefined as any)).toBe(undefined)
+  })
+
+  test('regression test: ensures consistency with createYouTubeUrl format', () => {
+    const videoId = 'dQw4w9WgXcQ'
+    const longUrl = 'https://www.youtube.com/watch?v=' + videoId
+    const standardized = standardizeYouTubeUrl(longUrl)
+    const created = createYouTubeUrl(videoId)
+    expect(standardized).toBe(created)
   })
 })
 

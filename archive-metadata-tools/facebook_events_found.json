@@ -1,0 +1,290 @@
+{
+  "search_metadata": {
+    "total_items_found": 16,
+    "search_timestamp": "2025-09-07T23:13:33.456051",
+    "search_description": "Archive.org items containing Facebook event links"
+  },
+  "items_with_facebook_events": [
+    {
+      "item": {
+        "band": "Mauler",
+        "date": "2015-09-19T00:00:00Z",
+        "description": "Mauler @ New Funky Jungle on 09.19.15 w/  AMERICAN HATE (OK),  COCHINA (IL),  MAULER (NY),  ANCIENT FILTH,  SAVAGE BLIND GOD 9:00 PM $6",
+        "fb": "https://www.facebook.com/events/788860424563928/",
+        "identifier": "09.19.15_Mauler",
+        "title": "Mauler @ New Funky Jungle on 09.19.15",
+        "venue": "New Funky Jungle"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/788860424563928"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "Lunglust",
+        "date": "2015-09-04T00:00:00Z",
+        "fb": "https://www.facebook.com/events/1018112338222880/",
+        "identifier": "09.04.15_Lunglust",
+        "title": "Lunglust @ The Boiler Room on 09.04.15",
+        "venue": "The Boiler Room"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/1018112338222880"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "Dress Code",
+        "date": "2014-06-14T00:00:00Z",
+        "description": "Dress Code @ Mango's Cafe (Houston, TX) on 06.14.14 w/ Stagnant Youth, Drug Dogs, and Back To Back 9:00 PM $5",
+        "fb": "https://www.facebook.com/events/718636914838487/",
+        "identifier": "06.14.14_DressCode",
+        "title": "Dress Code @ Mango's Cafe (Houston, TX) on 06.14.14",
+        "venue": "Mango's Cafe"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/718636914838487"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "Catharsis",
+        "date": "2015-10-30T00:00:00Z",
+        "description": "Catharsis @ Market St. on 10.30.15 w/  THOU + BODY,  HEAT DUST,  AGE OF COLLAPSE,  TRASH AXIS 7:30 PM $12",
+        "fb": "https://www.facebook.com/events/1123722047657358/",
+        "identifier": "10.30.15_Catharsis",
+        "title": "Catharsis @ Market St. on 10.30.15",
+        "venue": "Market St"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/1123722047657358"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "Landfill",
+        "date": "2014-02-15T00:00:00Z",
+        "description": "Landfill @ The Doctor's Office for Badass Weekend on 02.15.14 Full show info @ https://www.facebook.com/events/186186798238380/",
+        "identifier": "02.15.14_Landfill",
+        "title": "Landfill @ The Doctor's Office for Badass Weekend 2014 on 02.15.14",
+        "venue": "The Doctor's Office for Badass Weekend"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/186186798238380"
+      ],
+      "found_in_fields": [
+        "description"
+      ],
+      "summary": "Found 1 Facebook link(s) in: description"
+    },
+    {
+      "item": {
+        "band": "Gehenna",
+        "date": "2015-10-29T00:00:00Z",
+        "description": "Gehenna @ The Che Cafe on 10.29.15 w/ THEORIES, CRIME DESIRE, CAVE BASTARD",
+        "fb": "https://www.facebook.com/events/161329464208553/",
+        "identifier": "10.29.15_Gehenna",
+        "title": "Gehenna @ The Che Cafe on 10.29.15",
+        "venue": "The Che Cafe"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/161329464208553"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "Age Of Collapse",
+        "date": "2015-10-30T00:00:00Z",
+        "description": "Age of Collapse @ Market St. on 10.30.15 w/  CATHARSIS,  THOU + BODY,  HEAT DUST,   TRASH AXIS 7:30 PM $12",
+        "fb": "https://www.facebook.com/events/1123722047657358/",
+        "identifier": "10.30.15_AgeOfCollapse",
+        "title": "Age of Collapse @ Market St. on 10.30.15",
+        "venue": "Market St"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/1123722047657358"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "Give",
+        "date": "2014-06-11T00:00:00Z",
+        "description": "Give @ Walters Downtown (Houston, TX) on 06.11.14 w/  BANE,  HOLLOW EARTH,  AXIS,  PRIMAL LEAGUE Walter's Downtown 1120 Naylor St.  Doors @ 8:00 All Ages $12",
+        "fb": "https://www.facebook.com/events/762029657163380/",
+        "identifier": "06.11.14_Give",
+        "title": "Give @ Walters Downtown (Houston, TX) on 06.11.14",
+        "venue": "Walter's Downtown"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/762029657163380"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "United Races",
+        "date": "2014-12-14T00:00:00Z",
+        "description": "United Races @ Mango's on 12.14.14 w/  SOUL SEARCH,  SKINFATHER,  FURY,  CHIPPED TEETH,  BLASE 7:30 PM $10",
+        "fb": "https://www.facebook.com/events/305403956318526/",
+        "identifier": "12.14.14_UnitedRaces",
+        "title": "United Races @ Mango's on 12.14.14",
+        "venue": "Mango's Cafe"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/305403956318526"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "GAG",
+        "date": "2016-02-28T00:00:00Z",
+        "description": "GAG @ The Satellite Bar on 02.28.16 Bad Ass Weekend 2016 https://www.facebook.com/events/446448195561250/",
+        "identifier": "02.28.16_GAG",
+        "title": "GAG @ The Satellite Bar on 02.28.16",
+        "venue": "The Satellite Bar"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/446448195561250"
+      ],
+      "found_in_fields": [
+        "description"
+      ],
+      "summary": "Found 1 Facebook link(s) in: description"
+    },
+    {
+      "item": {
+        "band": "xUna Vez Masx",
+        "date": "2014-10-25T00:00:00Z",
+        "description": "DIA 2 (YOUTHCREW) fecha: sabado 25 de Octubre 2014 HORA: 01:00pm cover: Q.40 lugar: Lanchos 19 calle 11-40 zona 10 Bandas: Minority Of One  (ESP) Revancha (CR) PERSEVERANCIA (SV) XunavezmasX Toma El Riesgo  (SV) Accionar (SV) Reaxion  (SV) Se Vos Mismo",
+        "fb": "https://www.facebook.com/events/1503172576566672/",
+        "identifier": "10.25.14_UnaVezMas",
+        "title": "xUna Vez Masx @ Lancho's [Edgeday 2014] on 10.25.14",
+        "venue": "Lancho's"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/1503172576566672"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "American Hate",
+        "date": "2015-09-19T00:00:00Z",
+        "fb": "https://www.facebook.com/events/788860424563928/",
+        "identifier": "09.19.15_AmericanHate",
+        "title": "American Hate @ New Funky Jungle on 09.19.15",
+        "venue": "New Funky Jungle"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/788860424563928"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "Drug Dogs",
+        "date": "2014-06-14T00:00:00Z",
+        "description": "Drug Dogs @ Mango's Cafe (Houston, TX) on 06.14.14 w/ Stagnant Youth, Dress Code, and Back To Back 9:00 PM $5",
+        "fb": "https://www.facebook.com/events/718636914838487/",
+        "identifier": "06.14.14_DrugDogs",
+        "title": "Drug Dogs @ Mango's Cafe (Houston, TX) on 06.14.14",
+        "venue": "Mango's Cafe"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/718636914838487"
+      ],
+      "found_in_fields": [
+        "fb"
+      ],
+      "summary": "Found 1 Facebook link(s) in: fb"
+    },
+    {
+      "item": {
+        "band": "Breakout",
+        "date": "2014-04-04T00:00:00Z",
+        "description": "Breakout @ Red Blood Club (Dallas, TX) for Blood Fest 2014 on 04.04.14 Show info @ https://www.facebook.com/events/628642403874932/",
+        "identifier": "04.04.14_Breakout",
+        "title": "Breakout @ Red Blood Club (Dallas, TX) for Blood Fest 2014 on 04.04.14",
+        "venue": "Red Blood Club"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/628642403874932"
+      ],
+      "found_in_fields": [
+        "description"
+      ],
+      "summary": "Found 1 Facebook link(s) in: description"
+    },
+    {
+      "item": {
+        "band": "Sin Motivo",
+        "date": "2014-04-04T00:00:00Z",
+        "description": "Sin Motivo @ Red Blood Club (Dallas, TX) for Blood Fest 2014 on 04.04.14 Show info @ https://www.facebook.com/events/628642403874932/",
+        "identifier": "04.04.14_SinMotivo",
+        "title": "Sin Motivo @ Red Blood Club (Dallas, TX) for Blood Fest 2014 on 04.04.14",
+        "venue": "Red Blood Club"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/628642403874932"
+      ],
+      "found_in_fields": [
+        "description"
+      ],
+      "summary": "Found 1 Facebook link(s) in: description"
+    },
+    {
+      "item": {
+        "band": "Tolar",
+        "date": "2014-04-05T00:00:00Z",
+        "description": "Tolar @ Red Blood Club (Blood Fest 2014) on 2014-04-05 Show info @ https://www.facebook.com/events/628642403874932/",
+        "identifier": "04.05.14_Tolar",
+        "title": "Tolar @ Red Blood Club (Blood Fest 2014) on 2014-04-05",
+        "venue": "Red Blood Club"
+      },
+      "facebook_links_found": [
+        "https://www.facebook.com/events/628642403874932"
+      ],
+      "found_in_fields": [
+        "description"
+      ],
+      "summary": "Found 1 Facebook link(s) in: description"
+    }
+  ]
+}

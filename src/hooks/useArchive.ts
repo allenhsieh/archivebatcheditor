@@ -138,7 +138,10 @@ export const useArchive = () => {
     })
 
     try {
-      // Use Server-Sent Events for real-time progress updates
+      // ===== CLIENT-SIDE SERVER-SENT EVENTS (SSE) HANDLING =====
+      //
+      // Make a POST request to the streaming endpoint. The server will keep this connection
+      // open and send us real-time progress updates as each item is processed.
       const response = await fetch('/api/update-metadata-stream', {
         method: 'POST',
         headers: {
@@ -151,16 +154,19 @@ export const useArchive = () => {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
-      // Check if the browser supports streaming responses
+      // Check if the browser supports streaming responses (all modern browsers do)
       if (!response.body) {
         throw new Error('Streaming not supported, falling back to standard endpoint')
       }
       
-      // Set up streaming data reader
-      // This allows us to process data as it arrives instead of waiting for everything
-      const reader = response.body.getReader()  // Browser API to read streaming data
-      const decoder = new TextDecoder()         // Converts bytes to text
-      let buffer = ''                           // Stores incomplete messages
+      // ===== STREAMING DATA PROCESSING =====
+      //
+      // Set up a stream reader to process data as it arrives from the server.
+      // This is different from a normal fetch() which waits for the complete response.
+      // Here we process each chunk of data immediately as the server sends it.
+      const reader = response.body.getReader()  // Browser API to read streaming data chunk by chunk
+      const decoder = new TextDecoder()         // Converts raw bytes to readable text
+      let buffer = ''                           // Accumulates partial messages until complete
       
       // Process the real-time streaming response
       // This loop runs continuously while the server sends us updates

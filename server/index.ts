@@ -17,6 +17,7 @@ import {
   buildArchiveMetadataUrl,
   buildYouTubeSearchUrl,
   createYouTubeUrl,
+  standardizeYouTubeUrl,
   generateFlyerFilename
 } from './utils.js'
 
@@ -59,6 +60,16 @@ const metadataUpdateStreamSchema = z.object({
     identifier: z.string().min(1).max(100),
     metadata: z.record(z.any()),
     target: z.enum(['metadata', 'files']).optional().default('metadata')
+  })).min(1).max(100)
+})
+
+// New schema matching the TypeScript UpdateRequest interface (items: string[], updates: MetadataUpdate[])
+const updateRequestSchema = z.object({
+  items: z.array(z.string().min(1).max(100)).min(1).max(100),
+  updates: z.array(z.object({
+    field: z.string().min(1).max(100),
+    value: z.string().max(1000),
+    operation: z.enum(['add', 'replace', 'remove']).optional()
   })).min(1).max(100)
 })
 
@@ -514,27 +525,100 @@ app.get('/api/user-items', async (_req, res) => {
 })
 
 // API ENDPOINT: POST /update-metadata-stream
-// This endpoint handles batch metadata updates using Server-Sent Events for real-time progress
+// 
+// ===== SERVER-SENT EVENTS (SSE) EXPLANATION =====
+// 
+// This endpoint uses Server-Sent Events (SSE) to provide real-time progress updates to the browser.
+// 
+// WHAT IS SSE?
+// Server-Sent Events is a web standard that allows a server to push real-time data to a web page
+// without the page needing to constantly refresh or make repeated requests.
+//
+// HOW SSE WORKS:
+// 1. Browser makes one request to this endpoint
+// 2. Server keeps the HTTP connection open (doesn't close it immediately)
+// 3. As the server processes each item, it sends progress updates in this format:
+//    data: {"type":"progress","current":1,"total":100,"identifier":"item1","status":"updating"}
+//    data: {"type":"progress","current":1,"total":100,"identifier":"item1","status":"completed"}
+// 4. Browser receives each update instantly and can show live progress to the user
+// 5. When all items are processed, server sends final summary and closes the connection
+//
+// WHY WE USE SSE HERE:
+// - Batch metadata updates can take several minutes for 100+ items
+// - Without SSE: User sees loading spinner for minutes with no feedback
+// - With SSE: User sees "Processing item 5 of 100... ✅ Item 5 complete..." in real-time
+//
+// SSE VS OTHER APPROACHES:
+// - WebSockets: Two-way communication (we only need server → browser)
+// - Polling: Browser repeatedly asks "are you done yet?" (inefficient)
+// - SSE: Server pushes updates as they happen (perfect for progress updates)
+//
+// REAL-WORLD EXAMPLE:
+// User selects 100 Archive.org items to update with YouTube links.
+// 
+// WITHOUT SSE (traditional approach):
+// - User clicks "Update" button
+// - Page shows loading spinner
+// - User waits 5+ minutes with no feedback
+// - Page finally shows "Done!" or "Error" (no details about which items failed)
+//
+// WITH SSE (our approach):
+// - User clicks "Update" button  
+// - User immediately sees: "Starting update for 100 items..."
+// - User sees live updates: "Processing item 1/100... ✅ Item 1 complete"
+// - User sees live updates: "Processing item 2/100... ✅ Item 2 complete" 
+// - If item 50 fails: "❌ Item 50 failed: YouTube link not found"
+// - User sees final summary: "🎉 Complete! 98/100 successful, 2 failed"
+//
+// BENEFITS:
+// - User knows the system is working (not frozen)
+// - User can see progress and estimate completion time
+// - User gets immediate feedback on failures (can cancel if needed)
+// - Much better user experience for long-running operations
+//
 // Example: POST /update-metadata-stream with JSON body containing array of items to update
 app.post('/api/update-metadata-stream', async (req, res) => {
   try {
-    // Validate the request body contains properly formatted items
-    const { items } = metadataUpdateStreamSchema.parse(req.body)
+    // Validate the request body contains properly formatted UpdateRequest
+    const { items: identifiers, updates } = updateRequestSchema.parse(req.body)
+    
+    // Transform UpdateRequest format to the format expected by processing logic
+    const items = identifiers.map(identifier => {
+      // Convert updates array to metadata object
+      const metadata: Record<string, any> = {}
+      updates.forEach(update => {
+        metadata[update.field] = update.value
+      })
+      
+      return {
+        identifier,
+        metadata,
+        target: 'metadata' as const
+      }
+    })
     
     // Get user's Archive.org credentials for authentication
     const { accessKey, secretKey } = getArchiveCredentials()
     
     console.log(`🔄 Starting batch metadata update for ${items.length} items`)
     
-    // Set up Server-Sent Events for real-time progress updates
-    res.setHeader('Content-Type', 'text/event-stream')
-    res.setHeader('Cache-Control', 'no-cache') 
-    res.setHeader('Connection', 'keep-alive')
-    res.setHeader('Access-Control-Allow-Origin', '*')
+    // ===== SET UP SERVER-SENT EVENTS (SSE) =====
+    //
+    // These HTTP headers tell the browser this is a streaming response (SSE format):
+    res.setHeader('Content-Type', 'text/event-stream')  // Browser knows to expect SSE format
+    res.setHeader('Cache-Control', 'no-cache')          // Don't cache the streaming response  
+    res.setHeader('Connection', 'keep-alive')           // Keep the HTTP connection open
+    res.setHeader('Access-Control-Allow-Origin', '*')   // Allow requests from any domain
     
-    // Helper function to send progress updates to the client
+    // ===== SSE DATA FORMAT =====
+    //
+    // Helper function to send progress updates to the client in SSE format.
+    // SSE format requires each message to be: "data: {JSON}\n\n"
+    // The browser's EventSource API automatically parses this format.
     const sendProgress = (data: ProgressData) => {
+      // Write data in SSE format: "data: " + JSON + two newlines
       res.write(`data: ${JSON.stringify(data)}\n\n`)
+      // Browser immediately receives this update and can display progress to user
     }
     
     sendProgress({ type: 'start', total: items.length })
@@ -557,36 +641,88 @@ app.post('/api/update-metadata-stream', async (req, res) => {
         
         console.log(`📝 Updating metadata for ${identifier} (${i + 1}/${items.length})`)
         
-        // Make API call to update Archive.org metadata
+        // Make API call to update Archive.org metadata using JSON Patch format
+        // Use add-first-then-replace pattern to handle both new and existing fields
         const result = await makeArchiveApiCall(async () => {
-          const formData = new URLSearchParams()
-          formData.append('-target', target)
-          
-          // Add each metadata field to the form data (standardize dates)
-          Object.entries(metadata).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-              // Standardize date fields
-              const processedValue = key === 'date' ? standardizeDate(String(value)) : String(value)
-              formData.append(key, processedValue)
-            }
-          })
-          
           const metadataUrl = buildArchiveMetadataUrl(identifier)
-          const response = await fetch(metadataUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: formData
-          })
           
-          if (!response.ok) {
-            const errorText = await response.text()
-            throw new Error(`Archive.org API error: ${response.status} ${response.statusText} - ${errorText}`)
+          // Helper function to try a patch operation
+          const tryPatchOperation = async (operation: 'add' | 'replace') => {
+            const formData = new URLSearchParams()
+            formData.append('-target', target)
+            
+            // Create JSON Patch operations for metadata updates
+            const patches = []
+            Object.entries(metadata).forEach(([key, value]) => {
+              if (value !== undefined && value !== null) {
+                // Standardize special fields
+                let processedValue = String(value)
+                if (key === 'date') {
+                  processedValue = standardizeDate(processedValue)
+                } else if (key === 'youtube') {
+                  processedValue = standardizeYouTubeUrl(processedValue)
+                }
+                
+                // Use the specified operation from the update request if available, otherwise use the operation parameter
+                const update = updates.find(u => u.field === key)
+                const op = update?.operation || operation
+                
+                patches.push({
+                  op,
+                  path: `/${key}`,
+                  value: processedValue
+                })
+              }
+            })
+            
+            // Add the JSON patch to form data
+            formData.append('-patch', JSON.stringify(patches))
+            
+            const response = await fetch(metadataUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `LOW ${accessKey}:${secretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: formData
+            })
+            
+            const result = await response.json()
+            
+            if (!response.ok) {
+              // Return error with parsed result for better error handling
+              const error = new Error(`Archive.org API error: ${response.status} ${response.statusText}`)
+              error.response = { status: response.status, result }
+              throw error
+            }
+            
+            return result
           }
           
-          return await response.json()
+          // Check if all operations are explicitly specified
+          const allOperationsSpecified = Object.keys(metadata).every(key => 
+            updates.find(u => u.field === key)?.operation
+          )
+          
+          if (allOperationsSpecified) {
+            // Use the operations as specified in the request
+            return await tryPatchOperation('add') // Default doesn't matter since operations are specified
+          } else {
+            // Use add-first-then-replace pattern for general metadata updates
+            try {
+              return await tryPatchOperation('add')
+            } catch (error: any) {
+              // If "add" fails because field already exists, try "replace"
+              const errorMsg = error.response?.result?.error || error.message || ''
+              if (errorMsg.includes('already exists') || errorMsg.includes('exists')) {
+                console.log(`🔄 Field exists, retrying with replace operation for ${identifier}`)
+                return await tryPatchOperation('replace')
+              }
+              
+              // Re-throw other errors
+              throw error
+            }
+          }
         }, `Metadata update for ${identifier}`)
         
         console.log(`✅ Successfully updated ${identifier}`)
@@ -963,7 +1099,24 @@ app.post('/api/batch-upload-image-stream', (req, res, _next) => {
           })
           
           if (!uploadResponse.ok) {
-            throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`)
+            // Get detailed error information from Archive.org
+            let errorDetails = `${uploadResponse.status} ${uploadResponse.statusText}`
+            try {
+              const responseText = await uploadResponse.text()
+              if (responseText) {
+                console.error(`❌ Archive.org response body for ${metadata.identifier}:`, responseText)
+                errorDetails += ` - ${responseText}`
+              }
+            } catch (textError) {
+              console.error(`❌ Could not read response body for ${metadata.identifier}:`, textError)
+            }
+            
+            console.error(`❌ Archive.org upload failed for ${metadata.identifier}:`)
+            console.error(`   URL: https://s3.us.archive.org/${metadata.identifier}/${standardizedFilename}`)
+            console.error(`   Status: ${uploadResponse.status}`)
+            console.error(`   Headers:`, Object.fromEntries(uploadResponse.headers.entries()))
+            
+            throw new Error(`Upload failed: ${errorDetails}`)
           }
           
           // Also upload the _rules.conf file with derivation rules
@@ -995,13 +1148,13 @@ app.post('/api/batch-upload-image-stream', (req, res, _next) => {
           sendProgress({ 
             type: 'progress', 
             current: i + 1, 
-            total: files.length, 
+            total: itemsMetadata.length, 
             identifier: metadata.identifier,
             status: 'completed'
           })
           
           // Small delay between uploads
-          if (i < files.length - 1) {
+          if (i < itemsMetadata.length - 1) {
             await delay(API_DELAY_MS)
           }
           
@@ -1019,7 +1172,7 @@ app.post('/api/batch-upload-image-stream', (req, res, _next) => {
           sendProgress({ 
             type: 'progress', 
             current: i + 1, 
-            total: files.length, 
+            total: itemsMetadata.length, 
             identifier: metadata.identifier,
             status: 'error',
             error: errorMessage
@@ -1033,7 +1186,7 @@ app.post('/api/batch-upload-image-stream', (req, res, _next) => {
       
       sendProgress({ 
         type: 'complete', 
-        total: files.length,
+        total: itemsMetadata.length,
         successful,
         failed,
         results 
@@ -1596,27 +1749,33 @@ app.get('/api/metadata/:identifier', async (req, res) => {
 })
 
 
-// Start the server
-app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`)
-  
-  try {
-    getArchiveCredentials()
-    console.log('Archive.org credentials loaded successfully')
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.warn('Warning:', errorMessage)
-    console.warn('Please configure your Archive.org credentials in the .env file')
-  }
-  
-  // Check YouTube credentials
-  const youtubeConfig = getYouTubeCredentials()
-  if (youtubeConfig) {
-    console.log('YouTube integration enabled')
-    console.log(`YouTube Channel ID: ${youtubeConfig.channelId}`)
-  } else {
-    console.log('YouTube integration not configured (optional)')
-  }
-  
-  console.log('🚀 Server ready - all cache functionality removed, direct API calls enabled')
-})
+// Export the app for testing
+export default app
+
+// Start the server only if this file is run directly (not imported)  
+// Only start server when not in test environment and running directly
+if (process.env.NODE_ENV !== 'test' && process.argv[1]?.includes('server/index.ts')) {
+  app.listen(PORT, async () => {
+    console.log(`Server running on port ${PORT}`)
+    
+    try {
+      getArchiveCredentials()
+      console.log('Archive.org credentials loaded successfully')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.warn('Warning:', errorMessage)
+      console.warn('Please configure your Archive.org credentials in the .env file')
+    }
+    
+    // Check YouTube credentials
+    const youtubeConfig = getYouTubeCredentials()
+    if (youtubeConfig) {
+      console.log('YouTube integration enabled')
+      console.log(`YouTube Channel ID: ${youtubeConfig.channelId}`)
+    } else {
+      console.log('YouTube integration not configured (optional)')
+    }
+    
+    console.log('🚀 Server ready - all cache functionality removed, direct API calls enabled')
+  })
+}

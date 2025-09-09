@@ -214,10 +214,34 @@ export function buildYouTubeSearchUrl(apiKey: string, channelId: string, query: 
 }
 
 /**
- * Create YouTube video URL from video ID
+ * Create YouTube video URL from video ID (short format)
  */
 export function createYouTubeUrl(videoId: string): string {
-  return `https://www.youtube.com/watch?v=${videoId}`
+  return `https://youtu.be/${videoId}`
+}
+
+/**
+ * Standardize YouTube URL to short youtu.be format
+ * Converts various YouTube URL formats to https://youtu.be/VIDEO_ID
+ */
+export function standardizeYouTubeUrl(url: string): string {
+  if (!url) return url
+  
+  // Extract video ID from various YouTube URL formats
+  const videoIdPatterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]+)/,
+    /youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]+)/
+  ]
+  
+  for (const pattern of videoIdPatterns) {
+    const match = url.match(pattern)
+    if (match && match[1]) {
+      return `https://youtu.be/${match[1]}`
+    }
+  }
+  
+  // If already in youtu.be format or no match found, return as-is
+  return url
 }
 
 /**
