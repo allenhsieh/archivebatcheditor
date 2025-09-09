@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { MetadataUpdate, UpdateRequest, ArchiveItem, YouTubeSuggestionResponse } from '../types'
 
+// Configuration constants
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB in bytes
+const MAX_FILE_SIZE_MB = 10
+
 interface MetadataEditorProps {
   selectedItems: string[]
   items: ArchiveItem[]
@@ -377,7 +381,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       }
 
       // Call the streaming endpoint
-      const response = await fetch('/youtube/update-recording-dates-stream', {
+      const response = await fetch('/api/youtube/update-recording-dates-stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -612,7 +616,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       }
 
       // Call the streaming endpoint (same as before)
-      const response = await fetch('/youtube/update-recording-dates-stream', {
+      const response = await fetch('/api/youtube/update-recording-dates-stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -736,7 +740,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       }
 
       // Now get current YouTube descriptions
-      const response = await fetch('/youtube/get-descriptions', {
+      const response = await fetch('/api/youtube/get-descriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -837,7 +841,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
     }
 
     try {
-      const response = await fetch('/youtube/update-descriptions-stream', {
+      const response = await fetch('/api/youtube/update-descriptions-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -972,7 +976,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 }
                 
                 // Debug: Check what items look like
-                console.log('🔍 DEBUG: Sample items:', allItems.slice(0, 3).map(item => ({ 
+                console.log('🔍 DEBUG: Sample items:', allItems.slice(0, 3).map((item: ArchiveItem) => ({ 
                   identifier: item.identifier, 
                   title: item.title?.substring(0, 50), 
                   youtube: item.youtube,
@@ -989,10 +993,10 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                   return
                 }
                 
-                // Process all items needing YouTube URLs (quota-safe with fail-fast)
+                // Process all items needing YouTube URLs
                 const loadedItems = itemsNeedingYouTube
-                console.log(`📊 Ready to process ${loadedItems.length} items needing YouTube URLs`)
-                addLog({ type: 'info', message: `📊 Ready to process ${loadedItems.length} items needing YouTube URLs (with quota protection)` })
+                console.log(`📊 Ready to process all ${loadedItems.length} items needing YouTube URLs`)
+                addLog({ type: 'info', message: `📊 Ready to process all ${loadedItems.length} items needing YouTube URLs` })
                 
                 // Phase 1: Select all items (trigger the hook to update UI state)
                 console.log(`✅ Selecting all ${loadedItems.length} items...`)
@@ -1015,24 +1019,34 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 addLog({ type: 'info', message: `🔄 Starting sequential workflow - search YouTube → apply to Archive.org → next item` })
                 
                 // Phase 2 & 3 Combined: Sequential processing (search → apply → next)
-                for (let i = 0; i < loadedItems.length; i++) {
+                const maxItems = loadedItems.length
+                addLog({ type: 'info', message: `🔄 Processing all ${maxItems} items` })
+                
+                for (let i = 0; i < maxItems; i++) {
                   const identifier = loadedItems[i].identifier
                   const itemTitle = loadedItems[i].title || 'Unknown Title'
                   const itemData = loadedItems[i]
                   
                   // Debug logging to see what's happening
-                  console.log(`DEBUG: Processing ${identifier} sequentially (${i+1}/${loadedItems.length})`)
+                  console.log(`DEBUG: Processing ${identifier} sequentially (${i+1}/${maxItems})`)
                   
                   // Skip if no title
                   if (!itemData.title) {
-                    addLog({ type: 'skipped', message: `[${i+1}/${loadedItems.length}] ⏭️  Skipping ${identifier} - no title` })
+                    addLog({ type: 'skipped', message: `[${i+1}/${maxItems}] ⏭️  Skipping ${identifier} - no title` })
                     skippedCount++
                     continue
                   }
                   
                   try {
                     // Step 1: Search YouTube for this item
-                    addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] 🔍 Searching YouTube for: ${identifier} (${itemTitle})` })
+                    addLog({ type: 'info', message: `[${i+1}/${maxItems}] 🔍 Searching YouTube for: ${identifier} (${itemTitle})` })
+                    
+                    // DEBUG: Log the API call details
+                    console.log(`🔍 [DEBUG] Making YouTube API call for item ${i+1}/${maxItems}:`, {
+                      identifier,
+                      title: itemData.title,
+                      date: itemData.date
+                    })
                     
                     const response = await fetch('/api/youtube-suggest', {
                       method: 'POST',
@@ -1045,6 +1059,9 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                         }]
                       })
                     })
+                    
+                    // DEBUG: Log response details
+                    console.log(`🔍 [DEBUG] YouTube API response status:`, response.status, response.statusText)
                     
                     if (!response.ok) {
                       // Check if this is a quota exhaustion error at HTTP level
@@ -1059,19 +1076,45 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                     
                     const responseData = await response.json()
                     
+                    // DEBUG: Log full response data structure
+                    console.log(`🔍 [DEBUG] Full YouTube API response data:`, {
+                      quotaExhausted: responseData.quotaExhausted,
+                      results: responseData.results?.length || 0,
+                      firstResultQuotaFlag: responseData.results?.[0]?.quotaExhausted,
+                      keys: Object.keys(responseData)
+                    })
+                    
                     // Check for quota exhaustion at response body level first
                     if (responseData.quotaExhausted) {
+                      console.log(`🚫 [DEBUG] QUOTA DETECTED at response level - stopping workflow`)
                       addLog({ type: 'error', message: `🚫 QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
                       console.log(`⚡ YouTube quota exhausted: stopping workflow after processing ${processedCount} items`)
                       alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
                       return
+                    } else {
+                      console.log(`✅ [DEBUG] No quota exhaustion detected at response level`)
                     }
                     
                     // Extract the first result since we sent one item
                     const suggestion = responseData.results?.[0] || responseData
                     
+                    // DEBUG: Log the extracted suggestion details
+                    console.log(`🔍 [DEBUG] Extracted suggestion for item ${i+1}:`, {
+                      hasResults: !!responseData.results,
+                      resultsLength: responseData.results?.length,
+                      suggestion: {
+                        success: suggestion?.success,
+                        quotaExhausted: suggestion?.quotaExhausted,
+                        error: suggestion?.error,
+                        hasYouTubeSuggestions: !!suggestion?.suggestions?.youtube,
+                        hasYouTubeMatch: !!suggestion?.youtubeMatch
+                      }
+                    })
+                    
                     // Check for quota exhaustion in individual result - stop entire workflow immediately
                     if (suggestion && suggestion.quotaExhausted) {
+                      // DEBUG: Log quota exhaustion detection
+                      console.log(`🔍 [DEBUG] QUOTA EXHAUSTED detected in suggestion.quotaExhausted for item ${i+1}`)
                       addLog({ type: 'error', message: `🚫 QUOTA EXHAUSTED - Stopping workflow after processing ${processedCount} items` })
                       console.log(`⚡ YouTube quota exhausted: stopping workflow after processing ${processedCount} items`)
                       alert(`⚡ YouTube API quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
@@ -1081,17 +1124,25 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                     // Also check if error message contains quota exhausted - stop immediately
                     if (suggestion && !suggestion.success && suggestion.error && 
                         (suggestion.error.includes('QUOTA_EXHAUSTED') || suggestion.error.toLowerCase().includes('quota'))) {
+                      // DEBUG: Log error-based quota exhaustion detection
+                      console.log(`🔍 [DEBUG] QUOTA EXHAUSTED detected in error message for item ${i+1}:`, suggestion.error)
                       addLog({ type: 'error', message: `🚫 YouTube quota exhausted - stopping entire workflow` })
                       console.log(`⚡ YouTube quota exhausted: stopping workflow after processing ${processedCount} items`)
                       alert(`⚡ YouTube quota exhausted! Processed ${processedCount} items before hitting daily limit. Workflow stopped to preserve quota. Try again tomorrow when quota resets.`)
                       return
+                    } else {
+                      // DEBUG: Log when no quota exhaustion is detected and processing continues
+                      console.log(`✅ [DEBUG] No quota exhaustion detected for item ${i+1}, continuing with processing`)
                     }
                     
                     processedCount++
                     
                     // Step 2: If YouTube match found, immediately apply it to Archive.org
-                    if (suggestion && suggestion.success && suggestion.suggestions?.youtube) {
-                      addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] ✅ Found YouTube match: ${suggestion.suggestions.youtube}` })
+                    if (suggestion && suggestion.success && suggestion.youtubeMatch) {
+                      const youtubeUrl = suggestion.youtubeMatch.url
+                      const youtubeTitle = suggestion.youtubeMatch.title
+                      addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] ✅ Found YouTube match: "${youtubeTitle}"` })
+                      addLog({ type: 'success', message: `[${i+1}/${loadedItems.length}] 🔗 YouTube URL: ${youtubeUrl}` })
                       addLog({ type: 'info', message: `[${i+1}/${loadedItems.length}] 🔗 Applying YouTube link to Archive.org metadata...` })
                       
                       try {
@@ -1100,8 +1151,8 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                           items: [identifier],
                           updates: [{
                             field: 'youtube',
-                            value: suggestion.suggestions.youtube,
-                            operation: 'replace'
+                            value: youtubeUrl,
+                            operation: 'add'
                           }]
                         })
                         
@@ -1658,9 +1709,9 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                     }
                     
                     // Validate file size (10MB limit)
-                    const maxSize = 10 * 1024 * 1024 // 10MB in bytes
+                    const maxSize = MAX_FILE_SIZE_BYTES
                     if (file.size > maxSize) {
-                      alert(`File is too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`)
+                      alert(`File is too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is ${MAX_FILE_SIZE_MB}MB.`)
                       e.target.value = '' // Clear the input
                       return
                     }
@@ -1695,9 +1746,35 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                   setUploadingImages(true)
                   
                   try {
+                    // Construct proper metadata structure for the server
+                    const itemsMetadata = selectedItems.map(identifier => {
+                      const item = items.find(item => item.identifier === identifier)
+                      return {
+                        identifier,
+                        metadata: item ? {
+                          title: item.title,
+                          description: item.description,
+                          creator: item.creator,
+                          date: item.date,
+                          mediatype: item.mediatype || 'image',
+                          collection: item.collection,
+                          subject: item.subject,
+                          ...Object.fromEntries(
+                            Object.entries(item).filter(([key, value]) => 
+                              !['identifier', 'title', 'description', 'creator', 'date', 'mediatype', 'collection', 'subject'].includes(key) && 
+                              value !== undefined && value !== null
+                            )
+                          )
+                        } : {
+                          title: identifier,
+                          mediatype: 'image'
+                        }
+                      }
+                    })
+                    
                     const formData = new FormData()
-                    formData.append('image', selectedImageFile)
-                    formData.append('items', JSON.stringify(selectedItems))
+                    formData.append('files', selectedImageFile)
+                    formData.append('itemsMetadata', JSON.stringify(itemsMetadata))
                     
                     // Log start of batch upload to both console and activity log
                     const uploadStartMessage = `🖼️ Starting image upload "${selectedImageFile.name}" for ${selectedItems.length} items...`
@@ -1742,17 +1819,48 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                             try {
                               const data = JSON.parse(line.substring(6))
                               
-                              // Handle individual item results
-                              if (data.identifier && data.error) {
-                                const errorMsg = `Image upload failed: ${data.error}`
-                                console.error(`📷 ❌ ${data.identifier}: ${errorMsg}`)
+                              // Handle progress events based on type
+                              if (data.type === 'start') {
+                                console.log(`📷 🚀 Started uploading to ${data.total} items`)
                                 addLog({
-                                  type: 'error',
-                                  message: errorMsg,
-                                  identifier: data.identifier
+                                  type: 'info',
+                                  message: `Started uploading to ${data.total} items`
                                 })
                               }
-                              // Handle server messages (including completion summary)
+                              else if (data.type === 'progress') {
+                                if (data.status === 'uploading') {
+                                  console.log(`📷 📤 Uploading ${data.identifier} (${data.current}/${data.total})`)
+                                  addLog({
+                                    type: 'info',
+                                    message: `Uploading ${data.identifier} (${data.current}/${data.total})`,
+                                    identifier: data.identifier
+                                  })
+                                }
+                                else if (data.status === 'completed') {
+                                  console.log(`📷 ✅ Completed ${data.identifier} (${data.current}/${data.total})`)
+                                  addLog({
+                                    type: 'success',
+                                    message: `Successfully uploaded ${data.identifier} (${data.current}/${data.total})`,
+                                    identifier: data.identifier
+                                  })
+                                }
+                                else if (data.status === 'error') {
+                                  console.error(`📷 ❌ Failed ${data.identifier} (${data.current}/${data.total}): ${data.error}`)
+                                  addLog({
+                                    type: 'error',
+                                    message: `Upload failed for ${data.identifier}: ${data.error} (${data.current}/${data.total})`,
+                                    identifier: data.identifier
+                                  })
+                                }
+                              }
+                              else if (data.type === 'complete') {
+                                console.log(`📷 🏁 Upload complete: ${data.successful} successful, ${data.failed} failed`)
+                                addLog({
+                                  type: 'info',
+                                  message: `Upload complete: ${data.successful} successful, ${data.failed} failed out of ${data.total} items`
+                                })
+                              }
+                              // Fallback for legacy message format
                               else if (data.message) {
                                 console.log(`📷 ${data.message}`)
                                 addLog({

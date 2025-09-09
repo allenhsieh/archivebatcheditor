@@ -66,3 +66,19 @@ export interface YouTubeSuggestionResponse {
     percentage: number
   }
 }
+
+// JSON Patch operation interface for metadata updates
+export interface JsonPatchOperation {
+  op: 'add' | 'replace' | 'remove'
+  path: string
+  value: string
+}
+
+// Enhanced error type for API responses
+export interface ApiError extends Error {
+  response?: {
+    status: number
+    result?: unknown
+  }
+  status?: number
+}

@@ -5,17 +5,44 @@ import helmet from 'helmet'    // Helmet - adds security headers to protect agai
 import { z } from 'zod'        // Zod - validates that data sent to our API has the right format
 import multer from 'multer'    // Multer - handles file uploads
 import { OAuth2Client } from 'google-auth-library'  // Google OAuth 2.0 authentication
+import { 
+  standardizeDate, 
+  extractBandFromTitle, 
+  extractVenueFromTitle, 
+  extractDateFromTitle,
+  delay,
+  isRateLimitError,
+  isYouTubeQuotaError,
+  buildArchiveSearchUrl,
+  buildArchiveMetadataUrl,
+  buildYouTubeSearchUrl,
+  createYouTubeUrl,
+  standardizeYouTubeUrl,
+  generateFlyerFilename
+} from './utils.js'
+import type { JsonPatchOperation, ApiError } from '../src/types.js'
 
 // Create our Express server app
 const app = express()
 // Get the port number from environment variables, or use 3001 as default
-const PORT = process.env.PORT || 3001
+// Configuration constants
+const DEFAULT_PORT = 3001
+const PORT = process.env.PORT || DEFAULT_PORT
+
+// API timing constants
+const API_DELAY_MS = 1000 // 1 second between Archive.org API calls to avoid rate limiting
+const SEARCH_DELAY_MS = 500 // Shorter delay for search operations  
+const MAX_SEARCH_RESULTS = 1000 // Maximum results for general searches
+const MAX_USER_ITEMS = 10000 // Maximum results for user's own items
+
+// YouTube video date matching thresholds (business logic)
+const YOUTUBE_DATE_MATCH_CLOSE_DAYS = 30   // High score for videos within 30 days
+const YOUTUBE_DATE_MATCH_MEDIUM_DAYS = 90  // Medium score for videos within 90 days  
+const YOUTUBE_DATE_MATCH_FAR_DAYS = 365    // Low score for videos within 365 days
 
 
 
-// API configuration
-const ARCHIVE_LEGACY_SEARCH_API = 'https://archive.org/advancedsearch.php'
-const ARCHIVE_METADATA_API = 'https://archive.org/metadata'
+// API configuration now uses utility functions
 
 // Zod schema for validating search requests
 const searchQuerySchema = z.object({
@@ -29,12 +56,15 @@ const metadataUpdateSchema = z.object({
   target: z.enum(['metadata', 'files']).optional().default('metadata')
 })
 
-const metadataUpdateStreamSchema = z.object({
-  items: z.array(z.object({
-    identifier: z.string().min(1).max(100),
-    metadata: z.record(z.any()),
-    target: z.enum(['metadata', 'files']).optional().default('metadata')
-  })).min(1).max(100)
+
+// New schema matching the TypeScript UpdateRequest interface (items: string[], updates: MetadataUpdate[])
+const updateRequestSchema = z.object({
+  items: z.array(z.string().min(1).max(100)).min(1).max(100),
+  updates: z.array(z.object({
+    field: z.string().min(1).max(100),
+    value: z.string().max(1000),
+    operation: z.enum(['add', 'replace', 'remove']).optional()
+  })).min(0).max(100) // Allow empty updates array for graceful handling
 })
 
 const youtubeSuggestSchema = z.object({
@@ -187,7 +217,7 @@ function createOAuth2Client() {
  */
 async function getAuthenticatedYouTubeClient() {
   try {
-    const _oauth2Client = createOAuth2Client()
+    createOAuth2Client()
     
     // For this simplified version, we'll need to implement token management differently
     // Since we removed the database, tokens would need to be managed another way
@@ -200,149 +230,7 @@ async function getAuthenticatedYouTubeClient() {
   }
 }
 
-/**
- * Simple delay function for rate limiting
- * @param ms Milliseconds to delay
- */
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-/**
- * Standardize date format for Archive.org
- * Converts various date formats to YYYY-MM-DD
- */
-function standardizeDate(dateStr: string): string {
-  if (!dateStr) return dateStr
-  
-  // Handle MM/DD/YY format (e.g., "03/12/14" -> "2014-03-12")
-  const mmddyyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/)
-  if (mmddyyMatch) {
-    const [, month, day, year] = mmddyyMatch
-    const fullYear = `20${year}` // Assuming 21st century
-    return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-  
-  // Handle MM/DD/YYYY format (e.g., "03/12/2014" -> "2014-03-12")
-  const mmddyyyyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-  if (mmddyyyyMatch) {
-    const [, month, day, year] = mmddyyyyMatch
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-  
-  // Handle DD.MM.YY format (e.g., "12.03.14" -> "2014-03-12")
-  const ddmmyyMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/)
-  if (ddmmyyMatch) {
-    const [, day, month, year] = ddmmyyMatch
-    const fullYear = `20${year}` // Assuming 21st century
-    return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-  
-  // Handle DD.MM.YYYY format (e.g., "12.03.2014" -> "2014-03-12")
-  const ddmmyyyyMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
-  if (ddmmyyyyMatch) {
-    const [, day, month, year] = ddmmyyyyMatch
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-  
-  // Handle YYYY-MM-DD format (already correct)
-  const yyyymmddMatch = dateStr.match(/^\d{4}-\d{2}-\d{2}$/)
-  if (yyyymmddMatch) {
-    return dateStr
-  }
-  
-  // Handle YYYY format (add 01-01)
-  const yyyyMatch = dateStr.match(/^\d{4}$/)
-  if (yyyyMatch) {
-    return `${dateStr}-01-01`
-  }
-  
-  console.warn(`Unrecognized date format: "${dateStr}", returning as-is`)
-  return dateStr
-}
-
-/**
- * Extract band name from title using common patterns
- */
-function extractBandFromTitle(title: string) {
-  if (!title) return null
-  
-  // Common patterns for band names in Archive.org titles
-  const patterns = [
-    /^([^-]+?)\s*-/,  // "Band Name - Song" 
-    /^([^:]+?):/,     // "Band Name: Song"
-    /^([^(]+?)\s*\(/  // "Band Name (details)"
-  ]
-  
-  for (const pattern of patterns) {
-    const match = title.match(pattern)
-    if (match && match[1]) {
-      return match[1].trim()
-    }
-  }
-  
-  return null
-}
-
-/**
- * Extract venue from title using common patterns
- */
-function extractVenueFromTitle(title: string) {
-  if (!title) return null
-  
-  // Look for venue patterns
-  const venuePatterns = [
-    /at\s+([^,()]+)/i,     // "at Venue Name"
-    /live\s+at\s+([^,()]+)/i, // "Live at Venue"  
-    /@\s*([^,()]+)/        // "@ Venue"
-  ]
-  
-  for (const pattern of venuePatterns) {
-    const match = title.match(pattern)
-    if (match && match[1]) {
-      return match[1].trim()
-    }
-  }
-  
-  return null
-}
-
-/**
- * Extract date from title using common patterns
- */
-function extractDateFromTitle(title: string) {
-  if (!title) return null
-  
-  // Date patterns in titles
-  const datePatterns = [
-    /(\d{4}-\d{2}-\d{2})/,        // YYYY-MM-DD
-    /(\d{1,2}\/\d{1,2}\/\d{2,4})/, // MM/DD/YY or MM/DD/YYYY
-    /(\d{1,2}\.\d{1,2}\.\d{2,4})/, // MM.DD.YY or MM.DD.YYYY
-    /(\d{4})/                      // Just year
-  ]
-  
-  for (const pattern of datePatterns) {
-    const match = title.match(pattern)
-    if (match && match[1]) {
-      return standardizeDate(match[1])
-    }
-  }
-  
-  return null
-}
-
-/**
- * Check if error indicates rate limiting
- */
-function isRateLimitError(error: any): boolean {
-  const message = error?.message?.toLowerCase() || ''
-  const status = error?.status || error?.response?.status
-  
-  return status === 429 || 
-         message.includes('rate limit') || 
-         message.includes('too many requests') ||
-         message.includes('quota exceeded')
-}
+// Utility functions are now imported from ./utils.js
 
 /**
  * Wrapper for Archive.org API calls with retry logic and rate limiting
@@ -355,6 +243,7 @@ async function makeArchiveApiCall<T>(apiCall: () => Promise<T>, context: string)
       const result = await apiCall()
       
       if (attempt > 1) {
+        console.log(`✅ ${context} succeeded on attempt ${attempt}`)
         console.log(`✅ ${context} succeeded on attempt ${attempt}`)
       }
       
@@ -408,18 +297,8 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
     
     console.log(`🔍 YouTube API search query: "${searchQuery}"`)
     
-    // Search YouTube API
-    const searchParams = new URLSearchParams({
-      part: 'snippet',
-      q: searchQuery,
-      channelId: channelId,
-      type: 'video',
-      maxResults: '20',
-      order: 'relevance',
-      key: apiKey
-    })
-    
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?${searchParams}`
+    // Build YouTube search URL using utility function
+    const searchUrl = buildYouTubeSearchUrl(apiKey, channelId, searchQuery)
     console.log(`🌐 YouTube API request: ${searchUrl}`)
     
     const response = await fetch(searchUrl)
@@ -427,8 +306,8 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
       const errorText = await response.text()
       console.error(`❌ YouTube API error ${response.status}:`, errorText)
       
-      // Check for quota exhaustion (403 status)
-      if (response.status === 403) {
+      // Check for quota exhaustion using utility function
+      if (isYouTubeQuotaError({ status: response.status })) {
         throw new Error(`QUOTA_EXHAUSTED: YouTube API quota exceeded`)
       }
       
@@ -474,12 +353,12 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
         const targetDate = new Date(date)
         const daysDiff = Math.abs((videoDate.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24))
         
-        // Bonus for videos published within 30 days of recording
-        if (daysDiff <= 30) {
+        // Bonus for videos published close to recording date
+        if (daysDiff <= YOUTUBE_DATE_MATCH_CLOSE_DAYS) {
           score += 20
-        } else if (daysDiff <= 90) {
+        } else if (daysDiff <= YOUTUBE_DATE_MATCH_MEDIUM_DAYS) {
           score += 10
-        } else if (daysDiff <= 365) {
+        } else if (daysDiff <= YOUTUBE_DATE_MATCH_FAR_DAYS) {
           score += 5
         }
       }
@@ -487,7 +366,7 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
       return {
         ...video,
         score,
-        url: `https://youtu.be/${video.id.videoId}`,
+        url: createYouTubeUrl(video.id.videoId),
         matchReason: `Score: ${score} (title similarity + date proximity)`
       }
     })
@@ -519,7 +398,7 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
       extractedVenue,
       extractedDate,
       allMatches: scoredResults.slice(0, 5).map((result: ScoredVideo) => ({
-        url: `https://youtu.be/${result.id.videoId}`,
+        url: createYouTubeUrl(result.id.videoId),
         title: result.snippet.title,
         score: result.score,
         publishedAt: result.snippet.publishedAt
@@ -530,7 +409,7 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
     console.error('YouTube search error:', error)
     
     // Re-throw quota exhaustion errors so they can be handled by the calling endpoint
-    if (error instanceof Error && error.message.includes('QUOTA_EXHAUSTED')) {
+    if (isYouTubeQuotaError(error)) {
       throw error
     }
     
@@ -541,10 +420,28 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
 
 
 
-// API ENDPOINT: GET /search
-// This endpoint searches within the authenticated user's uploaded items only
-// Example: GET /search?q=radiohead will search for "radiohead" in YOUR items on Archive.org
-app.get('/search', async (req, res) => {
+/**
+ * API ENDPOINT: GET /api/search
+ * This endpoint searches within the authenticated user's uploaded items only
+ * 
+ * Request example:
+ * GET /api/search?q=radiohead
+ * 
+ * Response example:
+ * {
+ *   "items": [
+ *     {
+ *       "identifier": "09.19.15_TestBand",
+ *       "title": "Test Concert Recording",
+ *       "date": "2015-09-19",
+ *       "creator": "test@example.com"
+ *     }
+ *   ],
+ *   "total": 1,
+ *   "returned": 1
+ * }
+ */
+app.get('/api/search', async (req, res) => {
   try {
     // Validate that the request has a proper 'q' (query) parameter
     const { q } = searchQuerySchema.parse(req.query)  // Zod validates the format
@@ -558,18 +455,13 @@ app.get('/search', async (req, res) => {
     
     console.log(`Searching user items with query: "${combinedQuery}"`)
     
-    // Build parameters for Archive.org's search API with authentication
-    const searchParams = new URLSearchParams({
-      q: combinedQuery,                                                               // Combined query (user search + uploader filter)
-      fl: 'identifier,title,creator,description,date,mediatype,collection,subject,uploader',  // Include uploader field
-      rows: '1000',                                                                   // Return up to 1000 results to handle large collections
-      output: 'json',                                                                 // Return results as JSON
-      sort: 'addeddate desc'                                                          // Sort by upload date (newest first) to ensure consistent results
-    })
+    // Build search URL using utility function
+    const fields = ['identifier', 'title', 'creator', 'description', 'date', 'mediatype', 'collection', 'subject', 'uploader']
+    const searchUrl = buildArchiveSearchUrl(combinedQuery, fields, MAX_SEARCH_RESULTS)
     
     // Use authenticated request to access uploader field
     const auth = btoa(`${accessKey}:${secretKey}`)
-    const response = await fetch(`${ARCHIVE_LEGACY_SEARCH_API}?${searchParams}`, {
+    const response = await fetch(searchUrl, {
       headers: {
         'Authorization': `Basic ${auth}`
       }
@@ -602,25 +494,20 @@ app.get('/search', async (req, res) => {
 // API ENDPOINT: GET /user-items  
 // This endpoint fetches all items uploaded by the authenticated user
 // Example: GET /user-items
-app.get('/user-items', async (_req, res) => {
+app.get('/api/user-items', async (_req, res) => {
   try {
     // Get user's Archive.org credentials to authenticate the request
     const { email, accessKey, secretKey } = getArchiveCredentials()
     
     console.log(`🔍 Fetching fresh user items for ${email} from Archive.org API`)
     
-    // Build search parameters to find all items uploaded by this user
-    const searchParams = new URLSearchParams({
-      q: `uploader:${email}`,                                             // Search only items uploaded by this user
-      fl: 'identifier,title,creator,description,date,mediatype,collection,subject,uploader,youtube',  // Fields to return
-      rows: '10000',                                                      // High limit to get all user items
-      output: 'json',                                                     // Return as JSON
-      sort: 'addeddate desc'                                              // Sort by upload date (newest first)
-    })
+    // Build search URL using utility function
+    const fields = ['identifier', 'title', 'creator', 'description', 'date', 'mediatype', 'collection', 'subject', 'uploader', 'youtube']
+    const searchUrl = buildArchiveSearchUrl(`uploader:${email}`, fields, MAX_USER_ITEMS)
     
     // Make authenticated request to Archive.org
     const auth = btoa(`${accessKey}:${secretKey}`)
-    const response = await fetch(`${ARCHIVE_LEGACY_SEARCH_API}?${searchParams}`, {
+    const response = await fetch(searchUrl, {
       headers: {
         'Authorization': `Basic ${auth}`
       }
@@ -651,27 +538,146 @@ app.get('/user-items', async (_req, res) => {
 })
 
 // API ENDPOINT: POST /update-metadata-stream
-// This endpoint handles batch metadata updates using Server-Sent Events for real-time progress
-// Example: POST /update-metadata-stream with JSON body containing array of items to update
-app.post('/update-metadata-stream', async (req, res) => {
+// 
+// ===== SERVER-SENT EVENTS (SSE) EXPLANATION =====
+// 
+// This endpoint uses Server-Sent Events (SSE) to provide real-time progress updates to the browser.
+// 
+// WHAT IS SSE?
+// Server-Sent Events is a web standard that allows a server to push real-time data to a web page
+// without the page needing to constantly refresh or make repeated requests.
+//
+// HOW SSE WORKS:
+// 1. Browser makes one request to this endpoint
+// 2. Server keeps the HTTP connection open (doesn't close it immediately)
+// 3. As the server processes each item, it sends progress updates in this format:
+//    data: {"type":"progress","current":1,"total":100,"identifier":"item1","status":"updating"}
+//    data: {"type":"progress","current":1,"total":100,"identifier":"item1","status":"completed"}
+// 4. Browser receives each update instantly and can show live progress to the user
+// 5. When all items are processed, server sends final summary and closes the connection
+//
+// WHY WE USE SSE HERE:
+// - Batch metadata updates can take several minutes for 100+ items
+// - Without SSE: User sees loading spinner for minutes with no feedback
+// - With SSE: User sees "Processing item 5 of 100... ✅ Item 5 complete..." in real-time
+//
+// SSE VS OTHER APPROACHES:
+// - WebSockets: Two-way communication (we only need server → browser)
+// - Polling: Browser repeatedly asks "are you done yet?" (inefficient)
+// - SSE: Server pushes updates as they happen (perfect for progress updates)
+//
+// REAL-WORLD EXAMPLE:
+// User selects 100 Archive.org items to update with YouTube links.
+// 
+// WITHOUT SSE (traditional approach):
+// - User clicks "Update" button
+// - Page shows loading spinner
+// - User waits 5+ minutes with no feedback
+// - Page finally shows "Done!" or "Error" (no details about which items failed)
+//
+// WITH SSE (our approach):
+// - User clicks "Update" button  
+// - User immediately sees: "Starting update for 100 items..."
+// - User sees live updates: "Processing item 1/100... ✅ Item 1 complete"
+// - User sees live updates: "Processing item 2/100... ✅ Item 2 complete" 
+// - If item 50 fails: "❌ Item 50 failed: YouTube link not found"
+// - User sees final summary: "🎉 Complete! 98/100 successful, 2 failed"
+//
+// BENEFITS:
+// - User knows the system is working (not frozen)
+// - User can see progress and estimate completion time
+// - User gets immediate feedback on failures (can cancel if needed)
+// - Much better user experience for long-running operations
+//
+/**
+ * API ENDPOINT: POST /api/update-metadata-stream
+ * Updates metadata for multiple Archive.org items using Server-Sent Events for progress tracking
+ * 
+ * Request example:
+ * POST /api/update-metadata-stream
+ * Content-Type: application/json
+ * {
+ *   "items": ["09.19.15_TestBand"],
+ *   "updates": [
+ *     {
+ *       "field": "title",
+ *       "value": "Updated Title"
+ *     },
+ *     {
+ *       "field": "date", 
+ *       "value": "2015-09-19"
+ *     }
+ *   ]
+ * }
+ * 
+ * Response example (Server-Sent Events):
+ * Content-Type: text/event-stream
+ * 
+ * data: {"type":"start","total":1}
+ * 
+ * data: {"type":"progress","identifier":"09.19.15_TestBand","current":1,"total":1,"status":"processing"}
+ * 
+ * data: {"type":"progress","identifier":"09.19.15_TestBand","current":1,"total":1,"status":"success"}
+ * 
+ * data: {"type":"complete","total":1,"successful":1,"failed":0}
+ */
+app.post('/api/update-metadata-stream', async (req, res) => {
   try {
-    // Validate the request body contains properly formatted items
-    const { items } = metadataUpdateStreamSchema.parse(req.body)
+    // Validate the request body contains properly formatted UpdateRequest
+    const { items: identifiers, updates } = updateRequestSchema.parse(req.body)
+    
+    // Handle empty updates array gracefully
+    if (updates.length === 0) {
+      // Set up SSE headers for consistent response format
+      res.setHeader('Content-Type', 'text/event-stream')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('Connection', 'keep-alive')
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      
+      // Send start and complete events immediately
+      res.write(`data: ${JSON.stringify({ type: 'start', total: identifiers.length })}\n\n`)
+      res.write(`data: ${JSON.stringify({ type: 'complete', total: identifiers.length, successful: identifiers.length, failed: 0 })}\n\n`)
+      res.end()
+      return
+    }
+    
+    // Transform UpdateRequest format to the format expected by processing logic
+    const items = identifiers.map(identifier => {
+      // Convert updates array to metadata object
+      const metadata: Record<string, any> = {}
+      updates.forEach(update => {
+        metadata[update.field] = update.value
+      })
+      
+      return {
+        identifier,
+        metadata,
+        target: 'metadata' as const
+      }
+    })
     
     // Get user's Archive.org credentials for authentication
     const { accessKey, secretKey } = getArchiveCredentials()
     
     console.log(`🔄 Starting batch metadata update for ${items.length} items`)
     
-    // Set up Server-Sent Events for real-time progress updates
-    res.setHeader('Content-Type', 'text/event-stream')
-    res.setHeader('Cache-Control', 'no-cache') 
-    res.setHeader('Connection', 'keep-alive')
-    res.setHeader('Access-Control-Allow-Origin', '*')
+    // ===== SET UP SERVER-SENT EVENTS (SSE) =====
+    //
+    // These HTTP headers tell the browser this is a streaming response (SSE format):
+    res.setHeader('Content-Type', 'text/event-stream')  // Browser knows to expect SSE format
+    res.setHeader('Cache-Control', 'no-cache')          // Don't cache the streaming response  
+    res.setHeader('Connection', 'keep-alive')           // Keep the HTTP connection open
+    res.setHeader('Access-Control-Allow-Origin', '*')   // Allow requests from any domain
     
-    // Helper function to send progress updates to the client
+    // ===== SSE DATA FORMAT =====
+    //
+    // Helper function to send progress updates to the client in SSE format.
+    // SSE format requires each message to be: "data: {JSON}\n\n"
+    // The browser's EventSource API automatically parses this format.
     const sendProgress = (data: ProgressData) => {
+      // Write data in SSE format: "data: " + JSON + two newlines
       res.write(`data: ${JSON.stringify(data)}\n\n`)
+      // Browser immediately receives this update and can display progress to user
     }
     
     sendProgress({ type: 'start', total: items.length })
@@ -694,33 +700,88 @@ app.post('/update-metadata-stream', async (req, res) => {
         
         console.log(`📝 Updating metadata for ${identifier} (${i + 1}/${items.length})`)
         
-        // Make API call to update Archive.org metadata
+        // Make API call to update Archive.org metadata using JSON Patch format
+        // Use add-first-then-replace pattern to handle both new and existing fields
         const result = await makeArchiveApiCall(async () => {
-          const formData = new URLSearchParams()
-          formData.append('-target', target)
+          const metadataUrl = buildArchiveMetadataUrl(identifier)
           
-          // Add each metadata field to the form data
-          Object.entries(metadata).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-              formData.append(key, String(value))
+          // Helper function to try a patch operation
+          const tryPatchOperation = async (operation: 'add' | 'replace') => {
+            const formData = new URLSearchParams()
+            formData.append('-target', target)
+            
+            // Create JSON Patch operations for metadata updates
+            const patches: JsonPatchOperation[] = []
+            Object.entries(metadata).forEach(([key, value]) => {
+              if (value !== undefined && value !== null) {
+                // Standardize special fields
+                let processedValue = String(value)
+                if (key === 'date') {
+                  processedValue = standardizeDate(processedValue)
+                } else if (key === 'youtube') {
+                  processedValue = standardizeYouTubeUrl(processedValue)
+                }
+                
+                // Use the specified operation from the update request if available, otherwise use the operation parameter
+                const update = updates.find(u => u.field === key)
+                const op = update?.operation || operation
+                
+                patches.push({
+                  op,
+                  path: `/${key}`,
+                  value: processedValue
+                })
+              }
+            })
+            
+            // Add the JSON patch to form data
+            formData.append('-patch', JSON.stringify(patches))
+            
+            const response = await fetch(metadataUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `LOW ${accessKey}:${secretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: formData
+            })
+            
+            const result = await response.json()
+            
+            if (!response.ok) {
+              // Return error with parsed result for better error handling
+              const error: ApiError = new Error(`Archive.org API error: ${response.status} ${response.statusText}`)
+              error.response = { status: response.status, result }
+              throw error
             }
-          })
-          
-          const response = await fetch(`${ARCHIVE_METADATA_API}/${identifier}`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: formData
-          })
-          
-          if (!response.ok) {
-            const errorText = await response.text()
-            throw new Error(`Archive.org API error: ${response.status} ${response.statusText} - ${errorText}`)
+            
+            return result
           }
           
-          return await response.json()
+          // Check if all operations are explicitly specified
+          const allOperationsSpecified = Object.keys(metadata).every(key => 
+            updates.find(u => u.field === key)?.operation
+          )
+          
+          if (allOperationsSpecified) {
+            // Use the operations as specified in the request
+            return await tryPatchOperation('add') // Default doesn't matter since operations are specified
+          } else {
+            // Use add-first-then-replace pattern for general metadata updates
+            try {
+              return await tryPatchOperation('add')
+            } catch (error: any) {
+              // If "add" fails because field already exists, try "replace"
+              const errorMsg = error.response?.result?.error || error.message || ''
+              if (errorMsg.includes('already exists') || errorMsg.includes('exists')) {
+                console.log(`🔄 Field exists, retrying with replace operation for ${identifier}`)
+                return await tryPatchOperation('replace')
+              }
+              
+              // Re-throw other errors
+              throw error
+            }
+          }
         }, `Metadata update for ${identifier}`)
         
         console.log(`✅ Successfully updated ${identifier}`)
@@ -742,7 +803,7 @@ app.post('/update-metadata-stream', async (req, res) => {
         
         // Small delay to avoid overwhelming Archive.org
         if (i < items.length - 1) {
-          await delay(1000)
+          await delay(API_DELAY_MS)
         }
         
       } catch (error) {
@@ -800,7 +861,7 @@ app.post('/update-metadata-stream', async (req, res) => {
 // API ENDPOINT: POST /update-metadata
 // This endpoint handles single metadata updates (simpler than the batch version)
 // Example: POST /update-metadata with JSON body containing identifier and metadata
-app.post('/update-metadata', async (req, res) => {
+app.post('/api/update-metadata', async (req, res) => {
   try {
     // Validate the request body
     const { identifier, metadata, target = 'metadata' } = metadataUpdateSchema.parse(req.body)
@@ -815,14 +876,17 @@ app.post('/update-metadata', async (req, res) => {
       const formData = new URLSearchParams()
       formData.append('-target', target)
       
-      // Add each metadata field to the form data
+      // Add each metadata field to the form data (standardize dates)
       Object.entries(metadata).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          formData.append(key, String(value))
+          // Standardize date fields
+          const processedValue = key === 'date' ? standardizeDate(String(value)) : String(value)
+          formData.append(key, processedValue)
         }
       })
       
-      const response = await fetch(`${ARCHIVE_METADATA_API}/${identifier}`, {
+      const metadataUrl = buildArchiveMetadataUrl(identifier)
+      const response = await fetch(metadataUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
@@ -861,10 +925,54 @@ app.post('/update-metadata', async (req, res) => {
   }
 })
 
-// API ENDPOINT: POST /youtube-suggest  
-// This endpoint finds YouTube matches for Archive.org items
-// Example: POST /youtube-suggest with JSON body containing array of items
-app.post('/youtube-suggest', async (req, res) => {
+/**
+ * API ENDPOINT: POST /api/youtube-suggest
+ * Finds YouTube matches for Archive.org items using intelligent matching
+ * 
+ * Request example:
+ * POST /api/youtube-suggest
+ * Content-Type: application/json
+ * {
+ *   "items": [
+ *     {
+ *       "identifier": "gd1977-05-08.sbd.miller",
+ *       "title": "Grateful Dead - Fire on the Mountain Live at Cornell 1977-05-08",
+ *       "date": "1977-05-08"
+ *     }
+ *   ]
+ * }
+ * 
+ * Response example:
+ * {
+ *   "results": [
+ *     {
+ *       "identifier": "gd1977-05-08.sbd.miller",
+ *       "success": true,
+ *       "match": {
+ *         "videoId": "dQw4w9WgXcQ",
+ *         "title": "Grateful Dead - Fire on the Mountain (Cornell 1977)",
+ *         "url": "https://youtu.be/dQw4w9WgXcQ",
+ *         "publishedAt": "2019-05-08T00:00:00Z",
+ *         "extractedBand": "Grateful Dead",
+ *         "extractedVenue": "Cornell",
+ *         "extractedDate": "1977-05-08"
+ *       },
+ *       "suggestions": {
+ *         "youtube": "https://youtu.be/dQw4w9WgXcQ",
+ *         "band": "Grateful Dead",
+ *         "venue": "Cornell University",
+ *         "date": "1977-05-08"
+ *       }
+ *     }
+ *   ],
+ *   "summary": {
+ *     "total": 1,
+ *     "successful": 1,
+ *     "failed": 0
+ *   }
+ * }
+ */
+app.post('/api/youtube-suggest', async (req, res) => {
   try {
     // Handle both old format (single item) and new format (items array)
     let items
@@ -901,6 +1009,7 @@ app.post('/youtube-suggest', async (req, res) => {
         
         if (youtubeMatch) {
           console.log(`✅ Found YouTube match: ${youtubeMatch.title}`)
+          console.log(`🔗 YouTube URL: ${youtubeMatch.url}`)
           results.push({
             identifier: item.identifier,
             title: item.title,
@@ -919,20 +1028,14 @@ app.post('/youtube-suggest', async (req, res) => {
         }
         
         // Rate limiting: small delay between requests
-        await delay(500)
+        await delay(SEARCH_DELAY_MS)
         
       } catch (error) {
         console.error(`❌ Error processing ${item.identifier}:`, error)
         
         // Check if this is a quota exhaustion error
-        const isQuotaError = error instanceof Error && 
-          (error.message.includes('QUOTA_EXHAUSTED') || 
-           error.message.includes('403') ||
-           error.message.includes('quotaExceeded') ||
-           error.message.includes('quota'))
+        const isQuotaError = isYouTubeQuotaError(error)
         
-        console.log(`🔍 DEBUG: Error message: "${error instanceof Error ? error.message : 'Unknown error'}"`)
-        console.log(`🔍 DEBUG: Is quota error: ${isQuotaError}`)
         
         results.push({
           identifier: item.identifier,
@@ -960,6 +1063,15 @@ app.post('/youtube-suggest', async (req, res) => {
     const successful = results.filter(r => r.success).length
     console.log(`🏁 YouTube suggestions complete: ${successful}/${items.length} matches found`)
     
+    // Log detailed summary of all found URLs
+    const successfulResults = results.filter(r => r.success)
+    if (successfulResults.length > 0) {
+      console.log(`📋 Summary of found YouTube URLs:`)
+      successfulResults.forEach((result, index) => {
+        console.log(`   ${index + 1}. ${result.identifier} -> ${result.youtubeMatch?.url}`)
+      })
+    }
+    
     res.json({
       results,
       summary: {
@@ -977,7 +1089,7 @@ app.post('/youtube-suggest', async (req, res) => {
     }
     
     // Check if this is a quota exhaustion error and return 403
-    if (error instanceof Error && error.message.includes('QUOTA_EXHAUSTED')) {
+    if (isYouTubeQuotaError(error)) {
       return res.status(403).json({ 
         error: 'YouTube API quota exceeded',
         quotaExhausted: true 
@@ -988,14 +1100,48 @@ app.post('/youtube-suggest', async (req, res) => {
   }
 })
 
-// API ENDPOINT: POST /batch-upload-image-stream
-// This endpoint handles batch image uploads using Server-Sent Events for real-time progress
-app.post('/batch-upload-image-stream', (req, res, _next) => {
+/**
+ * API ENDPOINT: POST /api/batch-upload-image-stream
+ * Handles batch image uploads using Server-Sent Events for real-time progress
+ * 
+ * Request example:
+ * POST /api/batch-upload-image-stream
+ * Content-Type: multipart/form-data
+ * 
+ * Form data:
+ * - files: [File] (image files to upload)
+ * - itemsMetadata: JSON string containing:
+ *   [
+ *     {
+ *       "identifier": "09.19.15_TestBand",
+ *       "metadata": {
+ *         "title": "Test Concert",
+ *         "date": "2015-09-19",
+ *         "band": "Test Band",
+ *         "venue": "Test Venue"
+ *       }
+ *     }
+ *   ]
+ * 
+ * Response example (Server-Sent Events):
+ * Content-Type: text/event-stream
+ * 
+ * data: {"type":"start","total":1}
+ * 
+ * data: {"type":"progress","identifier":"09.19.15_TestBand","current":1,"total":1,"status":"processing"}
+ * 
+ * data: {"type":"progress","identifier":"09.19.15_TestBand","current":1,"total":1,"status":"success"}
+ * 
+ * data: {"type":"complete","total":1,"successful":1,"failed":0}
+ */
+app.post('/api/batch-upload-image-stream', (req, res, _next) => {
+  
   upload.array('files')(req, res, async (err) => {
     if (err) {
       console.error('File upload error:', err)
       return res.status(400).json({ error: 'File upload failed' })
     }
+
 
     try {
       // Get user's Archive.org credentials
@@ -1006,16 +1152,19 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
       const files = req.files as Express.Multer.File[]
       
       if (!files || files.length === 0) {
-        return res.status(400).json({ error: 'No files uploaded' })
+        return res.status(400).json({ error: 'No image file uploaded' })
       }
       
-      if (files.length !== itemsMetadata.length) {
-        return res.status(400).json({ 
-          error: `File count (${files.length}) doesn't match metadata count (${itemsMetadata.length})` 
-        })
+      if (files.length !== 1) {
+        return res.status(400).json({ error: 'Expected exactly one image file' })
       }
       
-      console.log(`🔄 Starting batch image upload for ${files.length} items`)
+      if (!itemsMetadata || itemsMetadata.length === 0) {
+        return res.status(400).json({ error: 'No items specified for upload' })
+      }
+      
+      
+      console.log(`🔄 Starting batch image upload: uploading "${files[0].originalname}" to ${itemsMetadata.length} items`)
       
       // Set up Server-Sent Events
       res.setHeader('Content-Type', 'text/event-stream')
@@ -1027,32 +1176,40 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
         res.write(`data: ${JSON.stringify(data)}\n\n`)
       }
       
-      sendProgress({ type: 'start', total: files.length })
+      sendProgress({ type: 'start', total: itemsMetadata.length })
       
       const results = []
       
-      // Process each file sequentially
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+      // Process each item (uploading the same image file to each item)
+      for (let i = 0; i < itemsMetadata.length; i++) {
+        const file = files[0] // Always use the single uploaded file
         const metadata = itemsMetadata[i]
         
         try {
           sendProgress({ 
             type: 'progress', 
             current: i + 1, 
-            total: files.length, 
+            total: itemsMetadata.length, 
             identifier: metadata.identifier,
             status: 'uploading'
           })
           
-          console.log(`📤 Uploading ${metadata.identifier} (${i + 1}/${files.length})`)
+          console.log(`📤 Uploading ${metadata.identifier} (${i + 1}/${itemsMetadata.length})`)
+          
+          // Generate standardized flyer filename
+          const standardizedFilename = generateFlyerFilename(
+            metadata.identifier,
+            metadata.metadata.title || metadata.identifier,
+            metadata.metadata.date,
+            file.originalname
+          )
           
           // Prepare form data for Archive.org upload
           const formData = new FormData()
           
-          // Add the file
+          // Add the file with standardized name
           const blob = new Blob([new Uint8Array(file.buffer)], { type: file.mimetype })
-          formData.append('file', blob, file.originalname)
+          formData.append('file', blob, standardizedFilename)
           
           // Add metadata fields
           Object.entries(metadata.metadata).forEach(([key, value]) => {
@@ -1061,13 +1218,12 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
             }
           })
           
-          // Upload to Archive.org
-          const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${file.originalname}`, {
+          // Upload to Archive.org with standardized filename
+          const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${standardizedFilename}`, {
             method: 'PUT',
             headers: {
-              'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
-              'x-archive-auto-make-bucket': '1',
-              'x-archive-meta-mediatype': 'image',
+              'authorization': `LOW ${accessKey}:${secretKey}`,
+              'x-amz-auto-make-bucket': '1',
               ...Object.fromEntries(
                 Object.entries(metadata.metadata).map(([key, value]) => [
                   `x-archive-meta-${key}`, String(value)
@@ -1078,7 +1234,41 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
           })
           
           if (!uploadResponse.ok) {
-            throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`)
+            // Get detailed error information from Archive.org
+            let errorDetails = `${uploadResponse.status} ${uploadResponse.statusText}`
+            try {
+              const responseText = await uploadResponse.text()
+              if (responseText) {
+                console.error(`❌ Archive.org response body for ${metadata.identifier}:`, responseText)
+                errorDetails += ` - ${responseText}`
+              }
+            } catch (textError) {
+              console.error(`❌ Could not read response body for ${metadata.identifier}:`, textError)
+            }
+            
+            console.error(`❌ Archive.org upload failed for ${metadata.identifier}:`)
+            console.error(`   URL: https://s3.us.archive.org/${metadata.identifier}/${standardizedFilename}`)
+            console.error(`   Status: ${uploadResponse.status}`)
+            console.error(`   Headers:`, Object.fromEntries(uploadResponse.headers.entries()))
+            
+            throw new Error(`Upload failed: ${errorDetails}`)
+          }
+          
+          // Also upload the _rules.conf file with derivation rules
+          const rulesContent = 'CAT.ALL'
+          const rulesResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/_rules.conf`, {
+            method: 'PUT',
+            headers: {
+              'authorization': `LOW ${accessKey}:${secretKey}`,
+              'x-archive-meta-format': 'Derivation Rules'
+            },
+            body: rulesContent
+          })
+          
+          if (!rulesResponse.ok) {
+            console.warn(`⚠️  Failed to upload _rules.conf to ${metadata.identifier}: ${rulesResponse.status} ${rulesResponse.statusText}`)
+          } else {
+            console.log(`📋 Uploaded _rules.conf to ${metadata.identifier}`)
           }
           
           console.log(`✅ Successfully uploaded ${metadata.identifier}`)
@@ -1093,14 +1283,14 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
           sendProgress({ 
             type: 'progress', 
             current: i + 1, 
-            total: files.length, 
+            total: itemsMetadata.length, 
             identifier: metadata.identifier,
             status: 'completed'
           })
           
           // Small delay between uploads
-          if (i < files.length - 1) {
-            await delay(1000)
+          if (i < itemsMetadata.length - 1) {
+            await delay(API_DELAY_MS)
           }
           
         } catch (error) {
@@ -1117,7 +1307,7 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
           sendProgress({ 
             type: 'progress', 
             current: i + 1, 
-            total: files.length, 
+            total: itemsMetadata.length, 
             identifier: metadata.identifier,
             status: 'error',
             error: errorMessage
@@ -1131,7 +1321,7 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
       
       sendProgress({ 
         type: 'complete', 
-        total: files.length,
+        total: itemsMetadata.length,
         successful,
         failed,
         results 
@@ -1157,7 +1347,7 @@ app.post('/batch-upload-image-stream', (req, res, _next) => {
 
 // API ENDPOINT: POST /batch-upload-image
 // This endpoint handles batch image uploads (non-streaming version)
-app.post('/batch-upload-image', (req, res, _next) => {
+app.post('/api/batch-upload-image', (req, res, _next) => {
   upload.array('files')(req, res, async (err) => {
     if (err) {
       console.error('File upload error:', err)
@@ -1171,33 +1361,43 @@ app.post('/batch-upload-image', (req, res, _next) => {
       const files = req.files as Express.Multer.File[]
       
       if (!files || files.length === 0) {
-        return res.status(400).json({ error: 'No files uploaded' })
+        return res.status(400).json({ error: 'No image file uploaded' })
       }
       
-      if (files.length !== itemsMetadata.length) {
-        return res.status(400).json({ 
-          error: `File count (${files.length}) doesn't match metadata count (${itemsMetadata.length})` 
-        })
+      if (files.length !== 1) {
+        return res.status(400).json({ error: 'Expected exactly one image file' })
       }
       
-      console.log(`🔄 Processing ${files.length} image uploads`)
+      if (!itemsMetadata || itemsMetadata.length === 0) {
+        return res.status(400).json({ error: 'No items specified for upload' })
+      }
+      
+      console.log(`🔄 Processing batch upload: uploading "${files[0].originalname}" to ${itemsMetadata.length} items`)
       
       const results = []
       
-      // Process all uploads
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+      // Process all items (uploading the same image file to each item)
+      for (let i = 0; i < itemsMetadata.length; i++) {
+        const file = files[0] // Always use the single uploaded file
         const metadata = itemsMetadata[i]
+        
+        // Generate standardized flyer filename (outside try block so it's available for error handling)
+        const standardizedFilename = generateFlyerFilename(
+          metadata.identifier,
+          metadata.metadata.title || metadata.identifier,
+          metadata.metadata.date,
+          file.originalname
+        )
         
         try {
           console.log(`📤 Uploading ${metadata.identifier}`)
           
-          const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${file.originalname}`, {
+          
+          const uploadResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/${standardizedFilename}`, {
             method: 'PUT',
             headers: {
-              'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
-              'x-archive-auto-make-bucket': '1',
-              'x-archive-meta-mediatype': 'image',
+              'authorization': `LOW ${accessKey}:${secretKey}`,
+              'x-amz-auto-make-bucket': '1',
               ...Object.fromEntries(
                 Object.entries(metadata.metadata).map(([key, value]) => [
                   `x-archive-meta-${key}`, String(value)
@@ -1211,20 +1411,39 @@ app.post('/batch-upload-image', (req, res, _next) => {
             throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`)
           }
           
+          // Also upload the _rules.conf file with derivation rules
+          const rulesContent = 'CAT.ALL'
+          const rulesResponse = await fetch(`https://s3.us.archive.org/${metadata.identifier}/_rules.conf`, {
+            method: 'PUT',
+            headers: {
+              'authorization': `LOW ${accessKey}:${secretKey}`,
+              'x-archive-meta-format': 'Derivation Rules'
+            },
+            body: rulesContent
+          })
+          
+          if (!rulesResponse.ok) {
+            console.warn(`⚠️  Failed to upload _rules.conf to ${metadata.identifier}: ${rulesResponse.status} ${rulesResponse.statusText}`)
+          } else {
+            console.log(`📋 Uploaded _rules.conf to ${metadata.identifier}`)
+          }
+          
           results.push({
             identifier: metadata.identifier,
-            filename: file.originalname,
+            filename: standardizedFilename,
+            originalFilename: file.originalname,
             success: true,
             message: 'File uploaded successfully'
           })
           
-          await delay(1000)
+          await delay(API_DELAY_MS)
           
         } catch (error) {
           console.error(`❌ Upload failed for ${metadata.identifier}:`, error)
           results.push({
             identifier: metadata.identifier,
-            filename: file.originalname,
+            filename: standardizedFilename,
+            originalFilename: file.originalname,
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error'
           })
@@ -1254,9 +1473,20 @@ app.post('/batch-upload-image', (req, res, _next) => {
   })
 })
 
-// API ENDPOINT: GET /health
-// Simple health check endpoint to verify the server is running
-app.get('/health', (_req, res) => {
+/**
+ * API ENDPOINT: GET /api/health
+ * Simple health check endpoint to verify the server is running
+ * 
+ * Request example:
+ * GET /api/health
+ * 
+ * Response example:
+ * {
+ *   "status": "ok",
+ *   "timestamp": "2023-12-25T10:30:00.000Z"
+ * }
+ */
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
@@ -1370,7 +1600,7 @@ app.get('/auth/youtube/status', (_req, res) => {
 
 // API ENDPOINT: POST /youtube/update-recording-dates-stream
 // This endpoint updates YouTube video recording dates using Server-Sent Events
-app.post('/youtube/update-recording-dates-stream', async (req, res) => {
+app.post('/api/youtube/update-recording-dates-stream', async (req, res) => {
   try {
     const { items } = youtubeUpdateRecordingDatesStreamSchema.parse(req.body)
     
@@ -1389,7 +1619,7 @@ app.post('/youtube/update-recording-dates-stream', async (req, res) => {
     sendProgress({ type: 'start', total: items.length })
     
     try {
-      const _youtube = await getAuthenticatedYouTubeClient()
+      await getAuthenticatedYouTubeClient()
       const results = []
       
       for (let i = 0; i < items.length; i++) {
@@ -1474,7 +1704,7 @@ app.post('/youtube/update-recording-dates-stream', async (req, res) => {
 
 // API ENDPOINT: POST /youtube/get-descriptions
 // This endpoint fetches YouTube video descriptions
-app.post('/youtube/get-descriptions', async (req, res) => {
+app.post('/api/youtube/get-descriptions', async (req, res) => {
   try {
     const { items } = youtubeGetDescriptionsSchema.parse(req.body)
     
@@ -1523,7 +1753,7 @@ app.post('/youtube/get-descriptions', async (req, res) => {
 
 // API ENDPOINT: POST /youtube/update-descriptions-stream
 // This endpoint updates YouTube video descriptions using Server-Sent Events
-app.post('/youtube/update-descriptions-stream', async (req, res) => {
+app.post('/api/youtube/update-descriptions-stream', async (req, res) => {
   try {
     const { items } = youtubeUpdateDescriptionsStreamSchema.parse(req.body)
     
@@ -1542,7 +1772,7 @@ app.post('/youtube/update-descriptions-stream', async (req, res) => {
     sendProgress({ type: 'start', total: items.length })
     
     try {
-      const _youtube = await getAuthenticatedYouTubeClient()
+      await getAuthenticatedYouTubeClient()
       const results = []
       
       for (let i = 0; i < items.length; i++) {
@@ -1626,7 +1856,7 @@ app.post('/youtube/update-descriptions-stream', async (req, res) => {
 
 // API ENDPOINT: GET /metadata/:identifier
 // This endpoint fetches metadata for a specific Archive.org item
-app.get('/metadata/:identifier', async (req, res) => {
+app.get('/api/metadata/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params
     
@@ -1638,7 +1868,7 @@ app.get('/metadata/:identifier', async (req, res) => {
     
     // Make direct API call to Archive.org
     const response = await makeArchiveApiCall(async () => {
-      const url = `${ARCHIVE_METADATA_API}/${identifier}`
+      const url = buildArchiveMetadataUrl(identifier)
       const response = await fetch(url)
       
       if (!response.ok) {
@@ -1664,27 +1894,34 @@ app.get('/metadata/:identifier', async (req, res) => {
   }
 })
 
-// Start the server
-app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`)
-  
-  try {
-    getArchiveCredentials()
-    console.log('Archive.org credentials loaded successfully')
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.warn('Warning:', errorMessage)
-    console.warn('Please configure your Archive.org credentials in the .env file')
-  }
-  
-  // Check YouTube credentials
-  const youtubeConfig = getYouTubeCredentials()
-  if (youtubeConfig) {
-    console.log('YouTube integration enabled')
-    console.log(`YouTube Channel ID: ${youtubeConfig.channelId}`)
-  } else {
-    console.log('YouTube integration not configured (optional)')
-  }
-  
-  console.log('🚀 Server ready - all cache functionality removed, direct API calls enabled')
-})
+
+// Export the app for testing
+export default app
+
+// Start the server only if this file is run directly (not imported)  
+// Only start server when not in test environment and running directly
+if (process.env.NODE_ENV !== 'test' && process.argv[1]?.includes('server/index.ts')) {
+  app.listen(PORT, async () => {
+    console.log(`Server running on port ${PORT}`)
+    
+    try {
+      getArchiveCredentials()
+      console.log('Archive.org credentials loaded successfully')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.warn('Warning:', errorMessage)
+      console.warn('Please configure your Archive.org credentials in the .env file')
+    }
+    
+    // Check YouTube credentials
+    const youtubeConfig = getYouTubeCredentials()
+    if (youtubeConfig) {
+      console.log('YouTube integration enabled')
+      console.log(`YouTube Channel ID: ${youtubeConfig.channelId}`)
+    } else {
+      console.log('YouTube integration not configured (optional)')
+    }
+    
+    console.log('🚀 Server ready - all cache functionality removed, direct API calls enabled')
+  })
+}

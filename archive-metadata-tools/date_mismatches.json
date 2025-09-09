@@ -1,0 +1,30 @@
+[
+  {
+    "identifier": "01.20.12_Thou",
+    "title": "Thou @ The Che Cafe on 01.12.12",
+    "identifier_date": "2012-01-20",
+    "title_date": "2012-01-12",
+    "current_archive_date": "2012-01-20"
+  },
+  {
+    "identifier": "2023-06-05-division-of-mind",
+    "title": "Division Of Mind @ Mohawk Austin on 2023-08-05",
+    "identifier_date": "2023-06-05",
+    "title_date": "2023-08-05",
+    "current_archive_date": "2023-08-05"
+  },
+  {
+    "identifier": "04.05.14_Tolar",
+    "title": "Tolar @ Red Blood Club (Blood Fest 2014) on 04.05.15",
+    "identifier_date": "2014-04-05",
+    "title_date": "2015-04-05",
+    "current_archive_date": "2015-04-05"
+  },
+  {
+    "identifier": "5.28.06_FifthHourHero",
+    "title": "Fifth Hour Hero @ The Che Cafe on 05.28.2006",
+    "identifier_date": "2006-05-28",
+    "title_date": "2020-05-28",
+    "current_archive_date": "2020-05-28"
+  }
+]

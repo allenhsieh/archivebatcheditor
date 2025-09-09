@@ -1,0 +1,8400 @@
+[
+  {
+    "identifier": "01.05.12_TheFinches",
+    "title": "The Finches @ The Che Cafe on 01.05.12",
+    "current": {
+      "band": "The Finches",
+      "venue": "The Che Cafe",
+      "date": "2012-01-05T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2012-01-05"
+    }
+  },
+  {
+    "identifier": "01.07.07_Ceremony",
+    "title": "Ceremony @ The Che Cafe on 2007-01-07",
+    "current": {
+      "band": "Ceremony",
+      "venue": "The Che Cafe",
+      "date": "2007-01-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2007-01-07"
+    }
+  },
+  {
+    "identifier": "01.07.12_Devfits",
+    "title": "Devfits (Rob Crow of Pinback) @ The Che Cafe on 01.07.12 for \u201cI Promise\u201d Fest (Day 2)",
+    "current": {
+      "band": "Devfits (Rob Crow)",
+      "venue": "The Che Cafe",
+      "date": "2012-01-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2012-01-07"
+    }
+  },
+  {
+    "identifier": "01.07.12_NoAge",
+    "title": "No Age @ The Che Cafe on 01.07.12 for \"I Promise\" Fest (Day 2)",
+    "current": {
+      "band": "No Age",
+      "venue": "The Che Cafe",
+      "date": "2012-01-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2012-01-07"
+    }
+  },
+  {
+    "identifier": "01.07.12_Weatherbox",
+    "title": "Weatherbox @ The Che Cafe on 01.07.12 for \u201cI Promise\u201d Fest (Day 2)",
+    "current": {
+      "band": "Weatherbox",
+      "venue": "The Che Cafe",
+      "date": "2012-01-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2012-01-07"
+    }
+  },
+  {
+    "identifier": "01.08.12_Innerds",
+    "title": "Innerds @ The Che Cafe on 01.08.12 for \u201cI Promise\u201d Fest (Day 3)",
+    "current": {
+      "band": "Innerds",
+      "venue": "The Che Cafe",
+      "date": "2012-01-08T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2012-01-08"
+    }
+  },
+  {
+    "identifier": "01.08.12_xbxrx",
+    "title": "xbxrx @ The Che Cafe on 01.08.12 for \u201cI Promise\u201d Fest (Day 3)",
+    "current": {
+      "band": "xbxrx",
+      "venue": "The Che Cafe",
+      "date": "2012-01-08T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2012-01-08"
+    }
+  },
+  {
+    "identifier": "01.10.04_BusinessLady",
+    "title": "Business Lady @ The Che Cafe on 2004-01-10",
+    "current": {
+      "band": "Business Lady",
+      "venue": "The Che Cafe",
+      "date": "2004-01-10T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2004-01-10"
+    }
+  },
+  {
+    "identifier": "01.12.17_BurningHammer",
+    "title": "Burning Hammer @ The Che Cafe on 01.12.17",
+    "current": {
+      "band": "Burning Hammer",
+      "venue": "The Che Cafe",
+      "date": "2017-01-12T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2017-01-12"
+    }
+  },
+  {
+    "identifier": "01.12.17_HEAT",
+    "title": "HEAT @ The Che Cafe on 01.12.17",
+    "current": {
+      "band": "HEAT",
+      "venue": "The Che Cafe",
+      "date": "2017-01-12T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2017-01-12"
+    }
+  },
+  {
+    "identifier": "01.12.17_MethBreath",
+    "title": "Meth Breath @ The Che Cafe on 01.12.17",
+    "current": {
+      "band": "Meth Breath",
+      "venue": "The Che Cafe",
+      "date": "2017-01-12T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2017-01-12"
+    }
+  },
+  {
+    "identifier": "01.20.12_Thou",
+    "title": "Thou @ The Che Cafe on 01.12.12",
+    "current": {
+      "band": "Thou",
+      "venue": "The Che Cafe",
+      "date": "2012-01-20T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2012-01-12"
+    }
+  },
+  {
+    "identifier": "01.22.17_HEAT",
+    "title": "HEAT @ Mods Bar (Tijuana, MX) on 01.22.17",
+    "current": {
+      "band": "HEAT",
+      "venue": "Mods Bar",
+      "date": "2017-01-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2017-01-22"
+    }
+  },
+  {
+    "identifier": "01.24.03_TenGrand",
+    "title": "Ten Grand @ The Che Cafe on 01.24.03 (Remastered)",
+    "current": {
+      "band": "(Remaster) Ten Grand",
+      "venue": "The Che Cafe",
+      "date": "2003-01-24T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2003-01-24"
+    }
+  },
+  {
+    "identifier": "01.24.04_AlphaMales",
+    "title": "Alpha Males @ The Che Cafe on 01.24.04",
+    "current": {
+      "band": "Alpha Males",
+      "venue": "The Che Cafe",
+      "date": "2004-01-24T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2004-01-24"
+    }
+  },
+  {
+    "identifier": "01.27.12_WolvesintheThroneRoom",
+    "title": "Wolves in the Throne Room @ The Che Cafe on 01.27.12",
+    "current": {
+      "band": "Wolves in the Throne Room",
+      "venue": "The Che Cafe",
+      "date": "2012-01-27T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2012-01-27"
+    }
+  },
+  {
+    "identifier": "02.01.14_Landfill",
+    "title": "Landfill @ Mango's (Houston, Texas) on 2014-02-01",
+    "current": {
+      "band": "Landfill",
+      "venue": "Mango's Cafe",
+      "date": "2014-02-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-02-01"
+    }
+  },
+  {
+    "identifier": "02.15.14_Phobia",
+    "title": "Phobia @ Walters Downtown (Houston, Texas) on 02.15.14",
+    "current": {
+      "band": "Phobia",
+      "venue": "Walters Downtown",
+      "date": "2014-02-15T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-02-15"
+    }
+  },
+  {
+    "identifier": "02.16.14_Repulsion",
+    "title": "Repulsion",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-02-27T08:21:13Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-02-27"
+    }
+  },
+  {
+    "identifier": "02.22.13_ScatteredPurgatory",
+    "title": "Scattered Purgatory (\u7834\u5730\u7344) @ Revolver (Taipei, Taiwan) on 02.22.13",
+    "current": {
+      "band": "Scattered Purgatory (\u7834\u5730\u7344)",
+      "venue": "Revolver",
+      "date": "2013-02-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2013-02-22"
+    }
+  },
+  {
+    "identifier": "04.06.18_Provoke",
+    "title": "Provoke @ The Dildo Factory on 04.06.18",
+    "current": {
+      "band": "Provoke",
+      "venue": "The Dildo Factory",
+      "date": "2018-04-06T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2018-04-06"
+    }
+  },
+  {
+    "identifier": "04.22.23_Diztort",
+    "title": "Diztort @ The Compound (The End) on 2023-04-22",
+    "current": {
+      "band": "Diztort",
+      "venue": "The Compound (The End)",
+      "date": "2023-04-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-04-22"
+    }
+  },
+  {
+    "identifier": "04.22.23_FutureShock",
+    "title": "Future Shock @ The Compound (The End) on 2023-04-22",
+    "current": {
+      "band": "Future Shock",
+      "venue": "The Compound (The End)",
+      "date": "2023-04-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-04-22"
+    }
+  },
+  {
+    "identifier": "04.22.23_Skourge",
+    "title": "Skourge @ The Compound (The End) on 2023-04-22",
+    "current": {
+      "band": "Skourge",
+      "venue": "The Compound (The End)",
+      "date": "2023-04-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-04-22"
+    }
+  },
+  {
+    "identifier": "04.24.14_BacktoBack",
+    "title": "Back to Back @ Walters Downtown (Houston, TX) on 2014-04-24",
+    "current": {
+      "band": "Back To Back",
+      "venue": "Walter's Downtown",
+      "date": "2014-04-24T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-04-24"
+    }
+  },
+  {
+    "identifier": "04.24.14_CommonIgnorance",
+    "title": "Common Ignorance @ Walters Downtown (Houston, TX) on 2014-04-24",
+    "current": {
+      "band": "Common Ignorance",
+      "venue": "Walter's Downtown",
+      "date": "2014-04-24T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-04-24"
+    }
+  },
+  {
+    "identifier": "04.24.14_ViolentReaction",
+    "title": "Violent Reaction @ Walters Downtown (Houston, TX) on 2014-04-24",
+    "current": {
+      "band": "Violent Reaction",
+      "venue": "Walter's Downtown",
+      "date": "2014-04-24T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-04-24"
+    }
+  },
+  {
+    "identifier": "05.09.14_Breakout",
+    "title": "Breakout @ Mango's Cafe (Houston, TX) on 2014-05-09",
+    "current": {
+      "band": "Breakout",
+      "venue": "Mango's Cafe",
+      "date": "2014-05-09T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-05-09"
+    }
+  },
+  {
+    "identifier": "05.09.14_Institute",
+    "title": "Institute @ Mango's Cafe (Houston, TX) on 2014-05-09",
+    "current": {
+      "band": "Institute",
+      "venue": "Mango's Cafe",
+      "date": "2014-05-09T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-05-09"
+    }
+  },
+  {
+    "identifier": "05.09.14_MysticInane",
+    "title": "Mystic Inane @ Mango's Cafe (Houston, TX) on 2014-05-09",
+    "current": {
+      "band": "Mystic Inane",
+      "venue": "Mango's Cafe",
+      "date": "2014-05-09T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-05-09"
+    }
+  },
+  {
+    "identifier": "05.28.06_NoneMoreBlack",
+    "title": "None More Black @ The Che Cafe on 05.28.06",
+    "current": {
+      "band": "None More Black",
+      "venue": "The Che Cafe",
+      "date": "2006-05-28T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2006-05-28"
+    }
+  },
+  {
+    "identifier": "05.31.08_Blowback",
+    "title": "Blowback @ The Che Cafe on 05.31.08",
+    "current": {
+      "band": "Blowback",
+      "venue": "The Che Cafe",
+      "date": "2008-05-31T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2008-05-31"
+    }
+  },
+  {
+    "identifier": "06.08.23_GoodGuys",
+    "title": "Good Guys @ 1810 Ojeman on 2023-06-08",
+    "current": {
+      "band": "Good Guys",
+      "venue": "1810 Ojeman",
+      "date": "2023-06-08T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-06-08"
+    }
+  },
+  {
+    "identifier": "06.08.23_LaughingMatter",
+    "title": "Laughing Matter @ 1810 Ojeman on 2023-06-08",
+    "current": {
+      "band": "Laughing Matter",
+      "venue": "1810 Ojeman",
+      "date": "2023-06-08T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-06-08"
+    }
+  },
+  {
+    "identifier": "06.08.23_PrisonAffair",
+    "title": "Prison Affair @ 1810 Ojeman on 2023-06-08",
+    "current": {
+      "band": "Prison Affair",
+      "venue": "1810 Ojeman",
+      "date": "2023-06-08T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-06-08"
+    }
+  },
+  {
+    "identifier": "06.11.14_Give",
+    "title": "Give @ Walters Downtown (Houston, TX) on 06.11.14",
+    "current": {
+      "band": "Give",
+      "venue": "Walter's Downtown",
+      "date": "2014-06-11T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-06-11"
+    }
+  },
+  {
+    "identifier": "06.14.14_DressCode",
+    "title": "Dress Code @ Mango's Cafe (Houston, TX) on 06.14.14",
+    "current": {
+      "band": "Dress Code",
+      "venue": "Mango's Cafe",
+      "date": "2014-07-18T14:29:38Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-06-14"
+    }
+  },
+  {
+    "identifier": "06.14.14_DrugDogs",
+    "title": "Drug Dogs @ Mango's Cafe (Houston, TX) on 06.14.14",
+    "current": {
+      "band": "Drug Dogs",
+      "venue": "Mango's Cafe",
+      "date": "2014-06-14T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-06-14"
+    }
+  },
+  {
+    "identifier": "06.18.18_Initiate",
+    "title": "Initiate @ Humanist Hall on 2018-06-18",
+    "current": {
+      "band": "Initiate",
+      "venue": "Humanist Hall",
+      "date": "2018-06-18T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2018-06-18"
+    }
+  },
+  {
+    "identifier": "06.18.18_Krimewatch",
+    "title": "Krimewatch @ Humanist Hall on 2018-06-18",
+    "current": {
+      "band": "Krimewatch",
+      "venue": "Humanist Hall",
+      "date": "2018-06-18T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2018-06-18"
+    }
+  },
+  {
+    "identifier": "06.20.12_ScatteredPurgatory",
+    "title": "Scattered Purgatory (\u7834\u5730\u7344) @ Revolver (Taipei, Taiwan) on 06.20.12",
+    "current": {
+      "band": "Scattered Purgatory (\u7834\u5730\u7344)",
+      "venue": "Revolver",
+      "date": "2012-06-20T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2012-06-20"
+    }
+  },
+  {
+    "identifier": "06.23.23_AntiTrust",
+    "title": "Anti Trust @ The End on 2023-06-23",
+    "current": {
+      "band": "Anti Trust",
+      "venue": "The End",
+      "date": "2023-06-23T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-06-23"
+    }
+  },
+  {
+    "identifier": "06.23.23_NRA",
+    "title": "NRA @ The End on 2023-06-23",
+    "current": {
+      "band": "NRA",
+      "venue": "The End",
+      "date": "2023-06-23T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-06-23"
+    }
+  },
+  {
+    "identifier": "06.23.23_SelfSabotage",
+    "title": "Self Sabotage @ The End on 2023-06-23",
+    "current": {
+      "band": "Self Sabotage",
+      "venue": "The End",
+      "date": "2023-06-23T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-06-23"
+    }
+  },
+  {
+    "identifier": "06.23.23_TrashMagz",
+    "title": "Trash Magz @ The End on 2023-06-23",
+    "current": {
+      "band": "Trash Magz",
+      "venue": "The End",
+      "date": "2023-06-23T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-06-23"
+    }
+  },
+  {
+    "identifier": "07.08.23_HatredSurge",
+    "title": "Hatred Surge (Final Show) @ Mohawk Austin on 2023-07-08",
+    "current": {
+      "band": "Hatred Surge",
+      "venue": "Mohawk Austin",
+      "date": "2023-07-08T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-07-08"
+    }
+  },
+  {
+    "identifier": "07.08.23_PeaceDecay",
+    "title": "Peace Decay @ Mohawk Austin on 2023-07-08",
+    "current": {
+      "band": "Peace Decay",
+      "venue": "Mohawk Austin",
+      "date": "2023-07-08T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-07-08"
+    }
+  },
+  {
+    "identifier": "07.09.23_DeadHeat",
+    "title": "Dead Heat @ Mohawk Austin on 2023-07-09",
+    "current": {
+      "band": "Dead Heat",
+      "venue": "Mohawk Austin",
+      "date": "2023-07-09T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-07-09"
+    }
+  },
+  {
+    "identifier": "07.09.23_Mindforce",
+    "title": "Mindforce @ Mohawk Austin on 2023-07-09",
+    "current": {
+      "band": "Mindforce",
+      "venue": "Mohawk Austin",
+      "date": "2023-07-09T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-07-09"
+    }
+  },
+  {
+    "identifier": "07.11.05_Towers",
+    "title": "Towers @ The Che Cafe on 07.11.05",
+    "current": {
+      "band": "Towers",
+      "venue": "The Che Cafe",
+      "date": "2005-07-11T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2005-07-11"
+    }
+  },
+  {
+    "identifier": "08.04.14_UnitedRaces",
+    "title": "United Races @ Mango's Cafe (Houston, TX) on 08.04.14",
+    "current": {
+      "band": "United Races",
+      "venue": "Mango's Cafe",
+      "date": "2014-08-04T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-08-04"
+    }
+  },
+  {
+    "identifier": "09.04.15_Lunglust",
+    "title": "Lunglust @ The Boiler Room on 09.04.15",
+    "current": {
+      "band": "Lunglust",
+      "venue": "The Boiler Room",
+      "date": "2015-09-04T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2015-09-04"
+    }
+  },
+  {
+    "identifier": "09.19.15_AmericanHate",
+    "title": "American Hate @ New Funky Jungle on 09.19.15",
+    "current": {
+      "band": "American Hate",
+      "venue": "New Funky Jungle",
+      "date": "2015-09-19T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2015-09-19"
+    }
+  },
+  {
+    "identifier": "09.19.15_Mauler",
+    "title": "Mauler @ New Funky Jungle on 09.19.15",
+    "current": {
+      "band": "Mauler",
+      "venue": "New Funky Jungle",
+      "date": "2015-09-19T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2015-09-19"
+    }
+  },
+  {
+    "identifier": "1.07.07_FinalFight",
+    "title": "Final Fight @ The Che Cafe on 2007-01-07",
+    "current": {
+      "band": "Final Fight",
+      "venue": "The Che Cafe",
+      "date": "2007-01-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2007-01-07"
+    }
+  },
+  {
+    "identifier": "1.07.07_HopeCon",
+    "title": "Hope Conspiracy @ The Che Cafe on 2007-01-07",
+    "current": {
+      "band": "Hope Conspiracy",
+      "venue": "The Che Cafe",
+      "date": "2007-01-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2007-01-07"
+    }
+  },
+  {
+    "identifier": "10.18.13_xUCMx",
+    "title": "xUna Cover Masx (xUna Ves Masx) on 10.18.13",
+    "current": {
+      "band": "xUna Vez Masx",
+      "venue": null,
+      "date": "2013-12-10T00:05:03Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2013-10-18"
+    }
+  },
+  {
+    "identifier": "10.20.11_Griever",
+    "title": "Griever @ The Che Cafe on 10.20.11",
+    "current": {
+      "band": "Griever",
+      "venue": "The Che Cafe",
+      "date": "2011-10-20T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2011-10-20"
+    }
+  },
+  {
+    "identifier": "10.20.11_LewdActs",
+    "title": "Lewd Acts @ The Che Cafe on 10.20.11",
+    "current": {
+      "band": "Lewd Acts",
+      "venue": "The Che Cafe",
+      "date": "2011-10-20T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2011-10-20"
+    }
+  },
+  {
+    "identifier": "10.25.14_UnaVezMas",
+    "title": "xUna Vez Masx @ Lancho's [Edgeday 2014] on 10.25.14",
+    "current": {
+      "band": "xUna Vez Masx",
+      "venue": "Lancho's",
+      "date": "2014-10-25T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-10-25"
+    }
+  },
+  {
+    "identifier": "10.29.15_Gehenna",
+    "title": "Gehenna @ The Che Cafe on 10.29.15",
+    "current": {
+      "band": "Gehenna",
+      "venue": "The Che Cafe",
+      "date": "2015-10-29T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2015-10-29"
+    }
+  },
+  {
+    "identifier": "10.30.15_AgeOfCollapse",
+    "title": "Age of Collapse @ Market St. on 10.30.15",
+    "current": {
+      "band": "Age Of Collapse",
+      "venue": "Market St",
+      "date": "2015-10-30T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2015-10-30"
+    }
+  },
+  {
+    "identifier": "10.30.15_Catharsis",
+    "title": "Catharsis @ Market St. on 10.30.15",
+    "current": {
+      "band": "Catharsis",
+      "venue": "Market St",
+      "date": "2015-10-30T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2015-10-30"
+    }
+  },
+  {
+    "identifier": "11.12.11_TrappedUnderIce",
+    "title": "Trapped Under Ice @ The Che Cafe on 11.12.11",
+    "current": {
+      "band": "Trapped Under Ice",
+      "venue": "The Che Cafe",
+      "date": "2011-11-12T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2011-11-12"
+    }
+  },
+  {
+    "identifier": "11.13.17_HEAT",
+    "title": "HEAT @ SPACE on 11.13.17",
+    "current": {
+      "band": "HEAT",
+      "venue": "SPACE Bar",
+      "date": "2017-11-13T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2017-11-13"
+    }
+  },
+  {
+    "identifier": "12.06.16_BurningHammer",
+    "title": "Burning Hammer @ The Che Cafe on 12.06.16",
+    "current": {
+      "band": "Burning Hammer",
+      "venue": "The Che Cafe",
+      "date": "2016-12-06T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2016-12-06"
+    }
+  },
+  {
+    "identifier": "12.06.16_CrimeDesire",
+    "title": "Crime Desire @ The Che Cafe on 12.06.16",
+    "current": {
+      "band": "Crime Desire",
+      "venue": "The Che Cafe",
+      "date": "2016-12-06T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2016-12-06"
+    }
+  },
+  {
+    "identifier": "12.06.16_HEAT",
+    "title": "HEAT @ The Che Cafe on 12.06.16",
+    "current": {
+      "band": "HEAT",
+      "venue": "The Che Cafe",
+      "date": "2016-12-06T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2016-12-06"
+    }
+  },
+  {
+    "identifier": "12.06.16_Lysol",
+    "title": "Lysol @ The Che Cafe on 12.06.16",
+    "current": {
+      "band": "Lysol",
+      "venue": "The Che Cafe",
+      "date": "2016-12-06T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2016-12-06"
+    }
+  },
+  {
+    "identifier": "12.14.14_UnitedRaces",
+    "title": "United Races @ Mango's on 12.14.14",
+    "current": {
+      "band": "United Races",
+      "venue": "Mango's Cafe",
+      "date": "2014-12-20T15:09:08Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2014-12-14"
+    }
+  },
+  {
+    "identifier": "12.17.11_GrafOrlock",
+    "title": "Graf Orlock @ The Che Cafe on 12.17.11",
+    "current": {
+      "band": "Graf Orlock",
+      "venue": "The Che Cafe",
+      "date": "2011-12-17T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2011-12-17"
+    }
+  },
+  {
+    "identifier": "2023-08-12-anxious-arms",
+    "title": "Anxious Arms @ Equal Parts Brewing on 2023-08-12",
+    "current": {
+      "band": "Anxious Arms",
+      "venue": "Equal Parts Brewing",
+      "date": "2023-08-12T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-08-12"
+    }
+  },
+  {
+    "identifier": "2023-09-14-nra",
+    "title": "NRA @ White Swan Live on 2023-09-14",
+    "current": {
+      "band": "NRA",
+      "venue": "White Swan Live",
+      "date": "2023-09-14T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-09-14"
+    }
+  },
+  {
+    "identifier": "2023-09-14-scathe",
+    "title": "Scathe @ White Swan Live on 2023-09-14",
+    "current": {
+      "band": "Scathe",
+      "venue": "White Swan Live",
+      "date": "2023-09-14T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-09-14"
+    }
+  },
+  {
+    "identifier": "2023-11-02-eteraz",
+    "title": "Eteraz @ The End on 2023-11-02",
+    "current": {
+      "band": "Eteraz",
+      "venue": "The End",
+      "date": "2023-11-02T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-11-02"
+    }
+  },
+  {
+    "identifier": "2023-11-02-nra",
+    "title": "NRA @ The End on 2023-11-02",
+    "current": {
+      "band": "NRA",
+      "venue": "The End",
+      "date": "2023-11-02T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-11-02"
+    }
+  },
+  {
+    "identifier": "2023-11-03-sex-pill",
+    "title": "2023 11 03 Sex Pill",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-01-09T18:32:48Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-01-09"
+    }
+  },
+  {
+    "identifier": "2023-11-03-trash-magz",
+    "title": "2023 11 03 Trash Magz",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-01-13T19:13:07Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-01-13"
+    }
+  },
+  {
+    "identifier": "2023-12-01-dress-code",
+    "title": "Dress Code @ Mohawk Austin on 2023-12-01",
+    "current": {
+      "band": "Dress Code",
+      "venue": "Mohawk Austin",
+      "date": "2023-12-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-12-01"
+    }
+  },
+  {
+    "identifier": "2023-12-01-fugitive",
+    "title": "Fugitive @ Mohawk Austin on 2023-12-01",
+    "current": {
+      "band": "Fugitive",
+      "venue": "Mohawk Austin",
+      "date": "2023-12-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-12-01"
+    }
+  },
+  {
+    "identifier": "2023-12-01-power-trip",
+    "title": "Power Trip @ Mohawk Austin on 2023-12-01",
+    "current": {
+      "band": "Power Trip",
+      "venue": "Mohawk Austin",
+      "date": "2023-12-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-12-01"
+    }
+  },
+  {
+    "identifier": "2023-12-16-unit",
+    "title": "U.N.I.T. @ East End Barber on 2023-12-16",
+    "current": {
+      "band": "U.N.I.T.",
+      "venue": "East End Barber",
+      "date": "2023-12-16T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-12-16"
+    }
+  },
+  {
+    "identifier": "2023-12-22-sex-pill",
+    "title": "2023 12 22 Sex Pill",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-02-21T03:57:27Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-21"
+    }
+  },
+  {
+    "identifier": "2023-12-30-dress-code",
+    "title": "Dress Code @ The End (The Compound) on 2023-12-30",
+    "current": {
+      "band": "Dress Code",
+      "venue": "The End",
+      "date": "2023-12-30T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-12-30"
+    }
+  },
+  {
+    "identifier": "2023-12-30-narrow-head",
+    "title": "Narrow Head @ The End (The Compound) on 2023-12-30",
+    "current": {
+      "band": "Narrow Head",
+      "venue": "The End",
+      "date": "2023-12-30T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-12-30"
+    }
+  },
+  {
+    "identifier": "2023-12-30-substance",
+    "title": "Substance @ The End (The Compound) on 2023-12-30",
+    "current": {
+      "band": "Substance",
+      "venue": "The End",
+      "date": "2023-12-30T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2023-12-30"
+    }
+  },
+  {
+    "identifier": "2024-01-04-maldosa",
+    "title": "2024 01 04 Maldosa",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-01-04T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-01-04"
+    }
+  },
+  {
+    "identifier": "2024-01-04-mujeres-podridas",
+    "title": "2024 01 04 Mujeres Podridas",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-01-04T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-01-04"
+    }
+  },
+  {
+    "identifier": "2024-01-04-skourge",
+    "title": "2024 01 04 Skourge",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-01-04T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-01-04"
+    }
+  },
+  {
+    "identifier": "2024-01-22-kruelty",
+    "title": "2024 01 22 Kruelty",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-02-17T10:43:27Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-17"
+    }
+  },
+  {
+    "identifier": "2024-02-03-shock-treatment",
+    "title": "Shock Treatment @ Equal Parts Brewing on 2024-02-03",
+    "current": {
+      "band": "Shock Treatment",
+      "venue": "Equal Parts Brewing",
+      "date": "2024-02-03T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-03"
+    }
+  },
+  {
+    "identifier": "2024-02-03-towerlord",
+    "title": "Towerlord @ Equal Parts Brewing on 2024-02-03",
+    "current": {
+      "band": "Towerlord",
+      "venue": "Equal Parts Brewing",
+      "date": "2024-02-03T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-03"
+    }
+  },
+  {
+    "identifier": "2024-02-03-x-ancient-onesx",
+    "title": "Ancient X Ones @ Equal Parts Brewing on 2024-02-03",
+    "current": {
+      "band": "Ancient X Ones",
+      "venue": "Equal Parts Brewing",
+      "date": "2024-02-03T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-03"
+    }
+  },
+  {
+    "identifier": "2024-02-03-x-ctrlx",
+    "title": "xCTRLx @ Equal Parts Brewing on 2024-02-03",
+    "current": {
+      "band": [
+        "xCTRLx",
+        "[CTRL]"
+      ],
+      "venue": "Equal Parts Brewing",
+      "date": "2024-02-03T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-03"
+    }
+  },
+  {
+    "identifier": "2024-02-12-physique",
+    "title": "2024 02 12 Physique",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-02-17T10:24:57Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-17"
+    }
+  },
+  {
+    "identifier": "2024-02-12-private-eye",
+    "title": "2024 02 12 Private Eye",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-02-17T10:52:49Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-17"
+    }
+  },
+  {
+    "identifier": "2024-02-23-maldosa",
+    "title": "Maldosa @ The End on 2024-02-23",
+    "current": {
+      "band": "Maldosa",
+      "venue": "The End",
+      "date": "2024-02-23T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-23"
+    }
+  },
+  {
+    "identifier": "2024-02-23-mujeres-podridas",
+    "title": "Mujeres Podridas @ The End on 2024-02-23",
+    "current": {
+      "band": "Mujeres Podridas",
+      "venue": "The End",
+      "date": "2024-02-23T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-23"
+    }
+  },
+  {
+    "identifier": "2024-02-23-warden",
+    "title": "Warden @ The End on 2024-02-23",
+    "current": {
+      "band": "Warden",
+      "venue": "The End",
+      "date": "2024-02-23T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-02-23"
+    }
+  },
+  {
+    "identifier": "2024-03-07-jumprope",
+    "title": "Jumprope @ 1810 Ojeman on 2024-03-07",
+    "current": {
+      "band": "Jumprope",
+      "venue": "1810 Ojeman",
+      "date": "2024-03-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-03-07"
+    }
+  },
+  {
+    "identifier": "2024-04-06-scorched-earth",
+    "title": "Scorched Earth (final show) @ The Parlor on 2024-04-06",
+    "current": {
+      "band": "Scorched Earth",
+      "venue": "The Parlor",
+      "date": "2024-04-06T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-04-06"
+    }
+  },
+  {
+    "identifier": "2024-04-19-jesus-piece",
+    "title": "Jesus Piece @ The End (Parking Lot) on 2024-04-19",
+    "current": {
+      "band": "Jesus Piece",
+      "venue": "The End",
+      "date": "2024-04-19T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-04-19"
+    }
+  },
+  {
+    "identifier": "2024-05-17-hkfy",
+    "title": "Hong Kong Fuck You (HKFY) @ 1810 Ojeman on 2024-05-17",
+    "current": {
+      "band": "Hong Kong Fuck You",
+      "venue": "1810 Ojeman",
+      "date": "2024-05-17T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-05-17"
+    }
+  },
+  {
+    "identifier": "2024-05-24-liberty-and-justice",
+    "title": "Liberty And Justice @ Equal Parts Brewing on 2024-05-24",
+    "current": {
+      "band": "Liberty and Justice",
+      "venue": "Equal Parts Brewing",
+      "date": "2024-05-24T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-05-24"
+    }
+  },
+  {
+    "identifier": "2024-05-24-slugger",
+    "title": "Slugger @ Equal Parts Brewing on 2024-05-24",
+    "current": {
+      "band": "Slugger",
+      "venue": "Equal Parts Brewing",
+      "date": "2024-05-24T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-05-24"
+    }
+  },
+  {
+    "identifier": "2024-06-01-anti-trust",
+    "title": "Anti-Trust @ The End (Ground Control) on 2024-06-01",
+    "current": {
+      "band": "Anti Trust",
+      "venue": "The End",
+      "date": "2024-06-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-06-01"
+    }
+  },
+  {
+    "identifier": "2024-06-01-nra",
+    "title": "NRA @ The End (Ground Control) on 2024-06-01",
+    "current": {
+      "band": "NRA",
+      "venue": "The End",
+      "date": "2024-06-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-06-01"
+    }
+  },
+  {
+    "identifier": "2024-06-01-sex-pill",
+    "title": "Sex Pill @ The End (Ground Control) on 2024-06-01",
+    "current": {
+      "band": "Sex Pill",
+      "venue": "The End",
+      "date": "2024-06-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-06-01"
+    }
+  },
+  {
+    "identifier": "2024-06-01-warden",
+    "title": "Warden @ The End (Ground Control) on 2024-06-01",
+    "current": {
+      "band": "Warden",
+      "venue": "The End",
+      "date": "2024-06-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-06-01"
+    }
+  },
+  {
+    "identifier": "2024-09-16-nra",
+    "title": "NRA @ The End (Ground Control) on 2024-09-16",
+    "current": {
+      "band": "NRA",
+      "venue": "The End",
+      "date": "2024-09-16T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-09-16"
+    }
+  },
+  {
+    "identifier": "2024-09-16-rixe",
+    "title": "Rixe @ The End (Ground Control) on 2024-09-16",
+    "current": {
+      "band": "Rixe",
+      "venue": "The End",
+      "date": "2024-09-16T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-09-16"
+    }
+  },
+  {
+    "identifier": "2024-09-16-sex-pill",
+    "title": "Sex Pill @ The End (Ground Control) on 2024-09-16",
+    "current": {
+      "band": "Sex Pill",
+      "venue": "The End",
+      "date": "2024-09-16T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-09-16"
+    }
+  },
+  {
+    "identifier": "2024-09-16-warden",
+    "title": "Warden @ The End (Ground Control) on 2024-09-16",
+    "current": {
+      "band": "Warden",
+      "venue": "The End",
+      "date": "2024-09-16T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-09-16"
+    }
+  },
+  {
+    "identifier": "2024-11-11-private-eye",
+    "title": "Private Eye @ The End (Ground Control) on 2024-11-11",
+    "current": {
+      "band": "Private Eye",
+      "venue": "The End",
+      "date": "2025-08-12T15:36:16Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-11-11"
+    }
+  },
+  {
+    "identifier": "2024-11-17-allergic",
+    "title": "Allergic @ 529 EAV on 2024-11-17",
+    "current": {
+      "band": "Allergic",
+      "venue": "529 EAV",
+      "date": "2024-11-17T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-11-17"
+    }
+  },
+  {
+    "identifier": "2024-11-17-sikm",
+    "title": "SIKM @ 529 EAV on 2024-11-17",
+    "current": {
+      "band": "Sikm",
+      "venue": "529 EAV",
+      "date": "2024-11-17T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-11-17"
+    }
+  },
+  {
+    "identifier": "2024-11-17-slant",
+    "title": "Slant @ 529 EAV on 2024-11-17",
+    "current": {
+      "band": "Slant",
+      "venue": "529 EAV",
+      "date": "2024-11-17T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-11-17"
+    }
+  },
+  {
+    "identifier": "2024-12-07-skeleton",
+    "title": "Skeleton @ Black Magic Social Club on 2024-12-07",
+    "current": {
+      "band": "Skeleton",
+      "venue": "Black Magic Social Club",
+      "date": "2025-08-14T15:17:40Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-12-07"
+    }
+  },
+  {
+    "identifier": "2024-12-13-juicebox",
+    "title": "Juicebox @ Cry Later Tattoo on 2024-12-13",
+    "current": {
+      "band": "Juicebox",
+      "venue": "Cry Later Tattoo",
+      "date": "2024-12-13T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-12-13"
+    }
+  },
+  {
+    "identifier": "2024-12-28-arsenik",
+    "title": "Arsenik @ The End (Ground Control) on 2024-12-28",
+    "current": {
+      "band": "Arsenik",
+      "venue": "The End",
+      "date": "2024-12-28T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-12-28"
+    }
+  },
+  {
+    "identifier": "2024-12-28-dress-code",
+    "title": "Dress Code @ The End (Ground Control) on 2024-12-28",
+    "current": {
+      "band": "Dress Code",
+      "venue": "The End",
+      "date": "2025-08-17T13:28:44Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-12-28"
+    }
+  },
+  {
+    "identifier": "2024-12-28-freeze-out",
+    "title": "Freeze Out @ The End (Ground Control) on 2024-12-28",
+    "current": {
+      "band": "Freeze Out",
+      "venue": "The End",
+      "date": "2024-12-28T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-12-28"
+    }
+  },
+  {
+    "identifier": "2024-12-28-the-pose",
+    "title": "The Pose @ The End (Ground Control) on 2024-12-28",
+    "current": {
+      "band": "The Pose",
+      "venue": "The End",
+      "date": "2024-12-28T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-12-28"
+    }
+  },
+  {
+    "identifier": "2024-12-28-warden",
+    "title": "Warden @ The End (Ground Control) on 2024-12-28",
+    "current": {
+      "band": "Warden",
+      "venue": "The End",
+      "date": "2024-12-18T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2024-12-28"
+    }
+  },
+  {
+    "identifier": "2025-02-22-freeze-out",
+    "title": "Freeze Out @ O\u2019Death Cafe on 2025-02-22",
+    "current": {
+      "band": "Freeze Out",
+      "venue": "O\u2019Death Cafe",
+      "date": "2025-02-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-02-22"
+    }
+  },
+  {
+    "identifier": "2025-02-22-gang-busters",
+    "title": "Gang Busters @ O'Death Cafe on 2025-02-22",
+    "current": {
+      "band": "Gang Busters",
+      "venue": "O'Death Cafe",
+      "date": "2025-02-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-02-22"
+    }
+  },
+  {
+    "identifier": "2025-02-22-nemesis",
+    "title": "Nemesis @ O'Death Cafe on 2025-02-22",
+    "current": {
+      "band": "Nemesis",
+      "venue": "O'Death Cafe",
+      "date": "2025-02-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-02-22"
+    }
+  },
+  {
+    "identifier": "2025-02-22-unit",
+    "title": "U.N.I.T. @ O\u2019Death Cafe on 2025-02-22",
+    "current": {
+      "band": "U.N.I.T.",
+      "venue": "O'Death Cafe",
+      "date": "2025-02-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-02-22"
+    }
+  },
+  {
+    "identifier": "2025-02-22-warden",
+    "title": "Warden @ O\u2019Death Cafe on 2025-02-22",
+    "current": {
+      "band": "Warden",
+      "venue": "O\u2019Death Cafe",
+      "date": "2025-02-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-02-22"
+    }
+  },
+  {
+    "identifier": "2025-03-01-arsenik",
+    "title": "Arsenik @ The Kickback Bar on 2025-03-01",
+    "current": {
+      "band": "Arsenik",
+      "venue": "The Kickback Bar",
+      "date": "2025-03-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-03-01"
+    }
+  },
+  {
+    "identifier": "2025-03-01-seudo-youth",
+    "title": "Seudo Youth @ The Kickback Bar on 2025-03-01",
+    "current": {
+      "band": "Seudo Youth",
+      "venue": "The Kickback Bar",
+      "date": "2025-03-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-03-01"
+    }
+  },
+  {
+    "identifier": "2025-03-01-urin",
+    "title": "URIN @ The Kickback Bar on 2025-03-01",
+    "current": {
+      "band": "URIN",
+      "venue": "The Kickback Bar",
+      "date": "2025-03-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-03-01"
+    }
+  },
+  {
+    "identifier": "2025-03-01-warden",
+    "title": "Warden @ The Kickback Bar on 2025-03-01",
+    "current": {
+      "band": "Warden",
+      "venue": "The Kickback Bar",
+      "date": "2025-03-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-03-01"
+    }
+  },
+  {
+    "identifier": "2025-03-31-anti-trust",
+    "title": "Anti Trust @ The End on 2025-03-31",
+    "current": {
+      "band": "Anti Trust",
+      "venue": "The End",
+      "date": "2025-03-31T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-03-31"
+    }
+  },
+  {
+    "identifier": "2025-03-31-arsenik",
+    "title": "Arsenik @ The End on 2025-03-31",
+    "current": {
+      "band": "Arsenik",
+      "venue": "The End",
+      "date": "2025-03-31T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-03-31"
+    }
+  },
+  {
+    "identifier": "2025-03-31-gripe",
+    "title": "Gripe @ The End on 2025-03-31",
+    "current": {
+      "band": "Gripe",
+      "venue": "The End",
+      "date": "2025-03-31T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-03-31"
+    }
+  },
+  {
+    "identifier": "2025-03-31-necron-9",
+    "title": "Necron 9 @ The End on 2025-03-31",
+    "current": {
+      "band": "Necron 9",
+      "venue": "The End",
+      "date": "2025-03-31T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-03-31"
+    }
+  },
+  {
+    "identifier": "2025-04-04-guerra-fria",
+    "title": "Guerra Fr\u00eda @ Parque Intercultural de Quetzaltenango on 2025-04-04",
+    "current": {
+      "band": "Guerra Fr\u00eda",
+      "venue": "Parque Intercultural de Quetzaltenango",
+      "date": "2025-04-04T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-04-04"
+    }
+  },
+  {
+    "identifier": "2025-05-10-llvvia",
+    "title": "LLVVIA @ Kasa Kapikua (Guatemala City, Guatemala) on 2025-05-10",
+    "current": {
+      "band": "LLVVIA",
+      "venue": "Kasa Kapikua",
+      "date": "2025-05-10T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-05-10"
+    }
+  },
+  {
+    "identifier": "2025-05-10-ofelia",
+    "title": "Ofelia @ Kasa Kapikua (Guatemala City, Guatemala) on 2025-05-10",
+    "current": {
+      "band": "Ofelia",
+      "venue": "Kasa Kapikua",
+      "date": "2025-05-10T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-05-10"
+    }
+  },
+  {
+    "identifier": "2025-06-07-freeze-out",
+    "title": "Freeze Out @ Houston Premier Arena on 2025-06-07 for East End Barber's 10th Anniversary",
+    "current": {
+      "band": "Freeze Out",
+      "venue": "Houston Premier Arena",
+      "date": "2025-06-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-06-07"
+    }
+  },
+  {
+    "identifier": "2025-06-07-juicebox",
+    "title": "Juicebox @ Houston Premier Arena on 2025-06-07 for East End Barber's 10th Anniversary",
+    "current": {
+      "band": "Juicebox",
+      "venue": "Houston Premier Arena",
+      "date": "2025-06-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-06-07"
+    }
+  },
+  {
+    "identifier": "2025-06-07-libertyand-justice",
+    "title": "Liberty and Justice @ Houston Premier Arena on 2025-06-07 for East End Barber's 10th Anniversary",
+    "current": {
+      "band": "Liberty and Justice",
+      "venue": "Houston Premier Arena",
+      "date": "2025-06-07T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-06-07"
+    }
+  },
+  {
+    "identifier": "2025-06-15-amex",
+    "title": "Amex @ Starseed Hostel on 2025-06-15",
+    "current": {
+      "band": "Amex",
+      "venue": "Starseed Hostel",
+      "date": "2025-06-15T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-06-15"
+    }
+  },
+  {
+    "identifier": "2025-06-15-gripe",
+    "title": "Gripe @ Starseed Hostel on 2025-06-15",
+    "current": {
+      "band": "Gripe",
+      "venue": "Starseed Hostel",
+      "date": "2025-06-15T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-06-15"
+    }
+  },
+  {
+    "identifier": "2025-06-15-lamictal",
+    "title": "Lamictal @ Starseed Hostel on 2025-06-15",
+    "current": {
+      "band": "Lamictal",
+      "venue": "Starseed Hostel",
+      "date": "2025-06-15T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-06-15"
+    }
+  },
+  {
+    "identifier": "2025-06-18-CelRay",
+    "title": "Cel Ray @ The End on 2025-06-18",
+    "current": {
+      "band": "Cel Ray",
+      "venue": "The End",
+      "date": "2025-08-09T12:53:54Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-06-18"
+    }
+  },
+  {
+    "identifier": "2025-06-22-juicebox",
+    "title": "Juicebox @ Black Magic Social Club on 2025-06-22",
+    "current": {
+      "band": "Juicebox",
+      "venue": "black magic social club",
+      "date": "2025-06-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-06-22"
+    }
+  },
+  {
+    "identifier": "2025-06-22-watts",
+    "title": "Watts @ Black Magic Social Club on 2025-06-22",
+    "current": {
+      "band": "Watts",
+      "venue": "Black Magic Social Club",
+      "date": "2025-06-22T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-06-22"
+    }
+  },
+  {
+    "identifier": "2025-07-06-back-to-back",
+    "title": "Back to Back @ White Swan Live on 2025-07-06",
+    "current": {
+      "band": "Back to Back",
+      "venue": "White Swan Live",
+      "date": "2025-07-06T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-07-06"
+    }
+  },
+  {
+    "identifier": "2025-07-06-dress-code",
+    "title": "Dress Code @ White Swan Live on 2025-07-06",
+    "current": {
+      "band": "Dress Code",
+      "venue": "White Swan Live",
+      "date": "2025-07-06T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-07-06"
+    }
+  },
+  {
+    "identifier": "2025-07-06-freeze-out",
+    "title": "Freeze Out @ White Swan Live on 2025-07-06",
+    "current": {
+      "band": "Freeze Out",
+      "venue": "White Swan Live",
+      "date": "2025-07-06T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-07-06"
+    }
+  },
+  {
+    "identifier": "2025-07-16-combust",
+    "title": "Combust @ The Che Cafe on 2025-07-16",
+    "current": {
+      "band": "Combust",
+      "venue": "The Che Cafe",
+      "date": "2025-07-16T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-07-16"
+    }
+  },
+  {
+    "identifier": "2025-08-19-abi-ooze",
+    "title": "Abi Ooze @ Turn! Turn! Turn! on 2025-08-19",
+    "current": {
+      "band": "Abi Ooze",
+      "venue": "Turn! Turn! Turn!",
+      "date": "2025-08-19T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-08-19"
+    }
+  },
+  {
+    "identifier": "2025-08-19-collate",
+    "title": "Collate @ Turn! Turn! Turn! on 2025-08-19",
+    "current": {
+      "band": "Collate",
+      "venue": "Turn! Turn! Turn!",
+      "date": "2025-08-19T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-08-19"
+    }
+  },
+  {
+    "identifier": "2025-08-21-bad-image",
+    "title": "Bad Image @ Black Water Bar on 2025-08-21",
+    "current": {
+      "band": "Bad Image",
+      "venue": "Black Water Bar",
+      "date": "2025-08-21T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-08-21"
+    }
+  },
+  {
+    "identifier": "2025-08-21-pig-city",
+    "title": "Pig City @ Black Water Bar on 2025-08-21",
+    "current": {
+      "band": "Pig City",
+      "venue": "Black Water Bar",
+      "date": "2025-08-21T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2025-08-21"
+    }
+  },
+  {
+    "identifier": "8.19.07_GrafOrlock",
+    "title": "Graf Orlock @ The Che Cafe on 2007-08-19",
+    "current": {
+      "band": "Graf Orlock",
+      "venue": "The Che Cafe",
+      "date": "2007-08-19T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2007-08-19"
+    }
+  },
+  {
+    "identifier": "8.19.07_Trainwreck",
+    "title": "Trainwreck @ The Che Cafe on 2007-08-19",
+    "current": {
+      "band": "Trainwreck",
+      "venue": "The Che Cafe",
+      "date": "2007-08-19T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2007-08-19"
+    }
+  },
+  {
+    "identifier": "BravoCheCafeJune9",
+    "title": "Bravo Fucking Bravo @ The Che Cafe on 2006-06-09",
+    "current": {
+      "band": "Bravo Fucking Bravo",
+      "venue": "The Che Cafe",
+      "date": "2006-06-09T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2006-06-09"
+    }
+  },
+  {
+    "identifier": "ComadreCheJune9",
+    "title": "Comadre @ The Che Cafe on 2006-06-09",
+    "current": {
+      "band": "Comadre",
+      "venue": "The Che Cafe",
+      "date": "2006-06-09T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2006-06-09"
+    }
+  },
+  {
+    "identifier": "EdGeinCheCafeJune9",
+    "title": "Ed Gein @ The Che Cafe on 2006-06-09",
+    "current": {
+      "band": "Ed Gein",
+      "venue": "The Che Cafe",
+      "date": "2006-06-09T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2006-06-09"
+    }
+  },
+  {
+    "identifier": "ExplosionsInTheSkyKoosCafe",
+    "title": "Explosions In The Sky @ The Koos Cafe on 12.05.03",
+    "current": {
+      "band": "Explosions In The Sky",
+      "venue": "Koo's Cafe",
+      "date": "2003-01-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2003-12-05"
+    }
+  },
+  {
+    "identifier": "ExplosionsInTheSkyKoosDropIn",
+    "title": "Explosions In The Sky @ The Temp Koos/The Drop-In Center on 06.07.03",
+    "current": {
+      "band": "Explosions In The Sky",
+      "venue": "Koo's Cafe (The Drop-In Center)",
+      "date": "2003-01-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2003-06-07"
+    }
+  },
+  {
+    "identifier": "GrafOrlockCheCafe",
+    "title": "Graf Orlock @ The Che Cafe on 2006-01-01",
+    "current": {
+      "band": "Graf Orlock",
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2006-01-01"
+    }
+  },
+  {
+    "identifier": "GrafOrlockCheCafeJune9",
+    "title": "Graf Orlock @ The Che Cafe on 2006-06-09",
+    "current": {
+      "band": "Graf Orlock",
+      "venue": "The Che Cafe",
+      "date": "2006-06-09T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2006-06-09"
+    }
+  },
+  {
+    "identifier": "YouTakaruTheCheCafe_2",
+    "title": "Takaru @ The Che Cafe on 2003-10-04",
+    "current": {
+      "band": "Takaru",
+      "venue": "The Che Cafe",
+      "date": "2003-10-04T00:00:00Z"
+    },
+    "issues": [
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "date": "2003-10-04"
+    }
+  },
+  {
+    "identifier": "01.07.14_AcidFast",
+    "title": "Acid Fast @ The Butter Dungeon (Berkeley, CA) on 01.07.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-01-07T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Acid Fast",
+      "venue": "The Butter Dungeon",
+      "date": "2014-01-07"
+    }
+  },
+  {
+    "identifier": "01.07.14_Darto",
+    "title": "Darto @ The Butter Dungeon (Berkeley, CA) on 01.07.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-01-07T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Darto",
+      "venue": "The Butter Dungeon",
+      "date": "2014-01-07"
+    }
+  },
+  {
+    "identifier": "01.07.14_GlowGod",
+    "title": "Glow God @ The Butter Dungeon (Berkeley, CA) on 01.07.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-01-07T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Glow God",
+      "venue": "The Butter Dungeon",
+      "date": "2014-01-07"
+    }
+  },
+  {
+    "identifier": "02.09.14_TheSecretProstitutes",
+    "title": "The Secret Prostitutes @ Red 7 (Austin, Texas) on 02.09.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-02-12T21:54:38Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Secret Prostitutes",
+      "venue": "Red 7",
+      "date": "2014-02-09"
+    }
+  },
+  {
+    "identifier": "02.09.14_TheSpits",
+    "title": "The Spits @ Red 7 (Austin, Texas) on 02.09.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-02-09T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Spits",
+      "venue": "Red 7",
+      "date": "2014-02-09"
+    }
+  },
+  {
+    "identifier": "02.15.14_BornWrong",
+    "title": "Born Wrong (Ontario, Canada Hardcore Band) @ Eastdown Warehouse (Houston, Texas) on 2014-02-15",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-02-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Born Wrong (Ontario, Canada Hardcore Band)",
+      "venue": "Eastdown Warehouse",
+      "date": "2014-02-15"
+    }
+  },
+  {
+    "identifier": "02.15.14_Glue",
+    "title": "Glue @ Eastdown Warehouse (Houston, Texas) on 02.15.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-02-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Glue",
+      "venue": "Eastdown Warehouse",
+      "date": "2014-02-15"
+    }
+  },
+  {
+    "identifier": "02.15.14_Landfill",
+    "title": "Landfill @ The Doctor's Office for Badass Weekend 2014 on 02.15.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-02-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Landfill",
+      "venue": "The Doctor's Office for Badass Weekend",
+      "date": "2014-02-15"
+    }
+  },
+  {
+    "identifier": "02.15.14_TalkSickBrats",
+    "title": "Talk Sick Brats @ The Ponderosa (Houston, Texas) on 02.15.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-02-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Talk Sick Brats",
+      "venue": "The Ponderosa",
+      "date": "2014-02-15"
+    }
+  },
+  {
+    "identifier": "02.16.14_CapitalistCasualties",
+    "title": "Capitalist Casualties @ The Doctors Office (Houston, Texas) on 02.16.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-02-16T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Capitalist Casualties",
+      "venue": "The Doctors Office",
+      "date": "2014-02-16"
+    }
+  },
+  {
+    "identifier": "02.26.16_ExitDust",
+    "title": "Exit Dust @ The House of Creeps on 02.26.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-26T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Exit Dust",
+      "venue": "The House of Creeps",
+      "date": "2016-02-26"
+    }
+  },
+  {
+    "identifier": "02.27.16_ANNEX",
+    "title": "ANNEX @ Eastdown Warehouse on 02.27.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-27T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "ANNEX",
+      "venue": "Eastdown Warehouse",
+      "date": "2016-02-27"
+    }
+  },
+  {
+    "identifier": "02.27.16_AssholeParade",
+    "title": "Asshole Parade @ Donkey's Paw on 02.27.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-27T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Asshole Parade",
+      "venue": "Donkey's Paw",
+      "date": "2016-02-27"
+    }
+  },
+  {
+    "identifier": "02.27.16_AtaqueDeRabia",
+    "title": "Ataque de Rabia @ Eastdown Warehouse on 02.27.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-27T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ataque de Rabia",
+      "venue": "Eastdown Warehouse",
+      "date": "2016-02-27"
+    }
+  },
+  {
+    "identifier": "02.27.16_Coaccion",
+    "title": "Coaccion @ Eastdown Warehouse on 02.27.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-27T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Coaccion",
+      "venue": "Eastdown Warehouse",
+      "date": "2016-02-27"
+    }
+  },
+  {
+    "identifier": "02.27.16_GeneracionSuicida",
+    "title": "Generacion Suicida @ Eastdown Warehouse on 02.27.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-27T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Generacion Suicida",
+      "venue": "Eastdown Warehouse",
+      "date": "2016-02-27"
+    }
+  },
+  {
+    "identifier": "02.27.16_HolyMoney",
+    "title": "Holy Money @ Donkey's Paw on 02.27.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-08-03T14:50:34Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Holy Money",
+      "venue": "Donkey's Paw",
+      "date": "2016-02-27"
+    }
+  },
+  {
+    "identifier": "02.28.16_ACRYLICS",
+    "title": "Acrylics @ The Satellite Bar on 02.28.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Acrylics",
+      "venue": "The Satellite Bar",
+      "date": "2016-02-28"
+    }
+  },
+  {
+    "identifier": "02.28.16_BetaBoys",
+    "title": "Beta Boys @ The Satellite Bar on 02.28.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Beta Boys",
+      "venue": "The Satellite Bar",
+      "date": "2016-02-28"
+    }
+  },
+  {
+    "identifier": "02.28.16_CommonIgnorance",
+    "title": "Common Ignorance @ The Satellite Bar on 02.28.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Common Ignorance",
+      "venue": "The Satellite Bar",
+      "date": "2016-02-28"
+    }
+  },
+  {
+    "identifier": "02.28.16_GAG",
+    "title": "GAG @ The Satellite Bar on 02.28.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-02-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "GAG",
+      "venue": "The Satellite Bar",
+      "date": "2016-02-28"
+    }
+  },
+  {
+    "identifier": "03.22.13_OfficeVoids",
+    "title": "Office Voids @ \u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education on 03.22.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-03-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Office Voids",
+      "venue": "\u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education",
+      "date": "2013-03-22"
+    }
+  },
+  {
+    "identifier": "03.22.13_Vacation",
+    "title": "V/acation (Tokyo, Japan) at \u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education on 03.22.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-03-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "V/acation (Tokyo, Japan) at \u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education",
+      "venue": "\u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education",
+      "date": "2013-03-22"
+    }
+  },
+  {
+    "identifier": "03.22.13_WSS",
+    "title": "Wayne's So Sad (\u50b7\u5fc3\u6b32\u7d55) @ \u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education on 03.22.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-03-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Wayne's So Sad (\u50b7\u5fc3\u6b32\u7d55)",
+      "venue": "\u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education",
+      "date": "2013-03-22"
+    }
+  },
+  {
+    "identifier": "03.22.14_SubsonicVoices",
+    "title": "Subsonic Voices @ Vinal Edge (Houston, Texas) on 03.22.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-03-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Subsonic Voices",
+      "venue": "Vinal Edge",
+      "date": "2014-03-22"
+    }
+  },
+  {
+    "identifier": "03.23.12_Sleaze",
+    "title": "Sleaze \u6e6f\u6e6f\u6c34\u6c34 @ The Wall (Taipei, Taiwan) on 03.23.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-03-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sleaze \u6e6f\u6e6f\u6c34\u6c34",
+      "venue": "The Wall",
+      "date": "2012-03-23"
+    }
+  },
+  {
+    "identifier": "04.04.12_FujiRockyu",
+    "title": "Fuji RockYu @ \u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education on 04.04.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-04-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Fuji RockYu",
+      "venue": "\u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education",
+      "date": "2012-04-04"
+    }
+  },
+  {
+    "identifier": "04.04.12_NoOrder",
+    "title": "No Order (\u7121\u79e9\u5e8f) @ \u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education on 04.04.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-04-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "No Order (\u7121\u79e9\u5e8f)",
+      "venue": "\u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education",
+      "date": "2012-04-04"
+    }
+  },
+  {
+    "identifier": "04.04.12_Sleaze",
+    "title": "Sleaze \u6e6f\u6e6f\u6c34\u6c34 @ \u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education on 04.04.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-04-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sleaze \u6e6f\u6e6f\u6c34\u6c34",
+      "venue": "\u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education",
+      "date": "2012-04-04"
+    }
+  },
+  {
+    "identifier": "04.04.12_WayneSoSad",
+    "title": "Wayne So Sad @ \u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education on 04.04.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-04-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Wayne So Sad",
+      "venue": "\u81e5\u9f8d\u4e8c\u4e5d National Taipei University of Education",
+      "date": "2012-04-04"
+    }
+  },
+  {
+    "identifier": "04.06.18_Therapy",
+    "title": "Therapy @ The Dildo Factory on 04.06.18",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2018-04-06T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Therapy",
+      "venue": "The Dildo Factory",
+      "date": "2018-04-06"
+    }
+  },
+  {
+    "identifier": "05.28.13_BlackPus",
+    "title": "Black Pus @ Mudlark Theatre (New Orleans, LA) on 05.28.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-05-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Black Pus",
+      "venue": "Mudlark Theatre",
+      "date": "2013-05-28"
+    }
+  },
+  {
+    "identifier": "06.04.13_ScreamingFemales",
+    "title": "Screaming Females @ Triple Six Klubhaus (New Orleans, LA) on 06.04.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-06-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Screaming Females",
+      "venue": "Triple Six Klubhaus",
+      "date": "2013-06-04"
+    }
+  },
+  {
+    "identifier": "06.04.13_TheGhostwood",
+    "title": "The Ghostwood @ Triple Six Klubhaus (New Orleans, LA) on 06.04.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-06-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Ghostwood",
+      "venue": "Triple Six Klubhaus",
+      "date": "2013-06-04"
+    }
+  },
+  {
+    "identifier": "06.07.14_TURBOKRIEG",
+    "title": "TURBOKRIEG @ Fitzgerald's (Houston, TX) on 06.07.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-06-07T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "TURBOKRIEG",
+      "venue": "Fitzgerald's",
+      "date": "2014-06-07"
+    }
+  },
+  {
+    "identifier": "06.07.14_TheEnergy",
+    "title": "The Energy @ Fitzgerald's (Houston, TX) on 06.07.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-06-07T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Energy",
+      "venue": "Fitzgerald's",
+      "date": "2014-06-07"
+    }
+  },
+  {
+    "identifier": "06.07.14_TheSecretProstitutes",
+    "title": "The Secret Prostitutes @ Fitzgerald's (Houston, TX) on 06.07.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-06-07T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Secret Prostitutes",
+      "venue": "Fitzgerald's",
+      "date": "2014-06-07"
+    }
+  },
+  {
+    "identifier": "06.29.13_LON",
+    "title": "La Oveja Negra @ Casa De Victor (Guatemala) on 06.29.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-06-29T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "La Oveja Negra",
+      "venue": "Casa De Victor",
+      "date": "2013-06-29"
+    }
+  },
+  {
+    "identifier": "06.30.23_Liberty_and_Justice",
+    "title": "Liberty & Justice @ Trip Six HTX on 06.30.23",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2023-07-02T02:07:10Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Liberty & Justice",
+      "venue": "Trip Six HTX",
+      "date": "2023-06-30"
+    }
+  },
+  {
+    "identifier": "07.03.23_SEXPILL",
+    "title": "SEXPILL @ The End on 07.03.23",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2023-07-03T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "SEXPILL",
+      "venue": "The End",
+      "date": "2023-07-03"
+    }
+  },
+  {
+    "identifier": "07.15.23-lagrimas",
+    "title": "Lagrimas (HTX) @ Bohemeo's (Black & Brown Fest HTX 2023) on 07.15.23",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2023-07-18T06:35:54Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Lagrimas (HTX)",
+      "venue": "Bohemeo's",
+      "date": "2023-07-15"
+    }
+  },
+  {
+    "identifier": "07.15.23-pulsatile-tinnitus",
+    "title": "Pulsatile Tinnitus (Kayla of Bleed The Pigs) @ Bohemeo's (Black & Brown Fest HTX 2023) on 07.15.23",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2023-07-18T06:16:37Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Pulsatile Tinnitus (Kayla of Bleed The Pigs)",
+      "venue": "Bohemeo's",
+      "date": "2023-07-15"
+    }
+  },
+  {
+    "identifier": "07.15.23-shiiva",
+    "title": "Shiiva @ Bohemeo's (Black & Brown Fest HTX 2023) on 07.15.23",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2023-07-23T11:55:57Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Shiiva",
+      "venue": "Bohemeo's",
+      "date": "2023-07-15"
+    }
+  },
+  {
+    "identifier": "07.19.14_Infest",
+    "title": "Infest @ Vice Palace (Dallas, TX) on 07.19.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-07-24T01:56:39Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Infest",
+      "venue": "Vice Palace",
+      "date": "2014-07-19"
+    }
+  },
+  {
+    "identifier": "07.19.14_Mindless",
+    "title": "Mindless @ Vice Palace (Dallas, TX) on 07.19.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-07-23T21:05:41Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Mindless",
+      "venue": "Vice Palace",
+      "date": "2014-07-19"
+    }
+  },
+  {
+    "identifier": "07.21.12_ToumingMagazine",
+    "title": "Touming Magazine (\u900f\u660e\u96dc\u8a8c) @ Legacy (Taipei, Taiwan) on 07.21.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-07-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Touming Magazine (\u900f\u660e\u96dc\u8a8c)",
+      "venue": "Legacy",
+      "date": "2012-07-21"
+    }
+  },
+  {
+    "identifier": "08.04.14_Blotter",
+    "title": "Blotter (Last Show) @ Hotel Vegas (Austin, TX) on 08.04.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-08-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Blotter (Last Show)",
+      "venue": "Hotel Vegas",
+      "date": "2014-08-04"
+    }
+  },
+  {
+    "identifier": "08.05.14_Intent",
+    "title": "Intent @ Hotel Vegas (Austin, TX) on 08.05.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-08-05T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Intent",
+      "venue": "Hotel Vegas",
+      "date": "2014-08-05"
+    }
+  },
+  {
+    "identifier": "08.26.17_Infest",
+    "title": "INFEST @ You Revolution (Tijuana, MX) on 08.26.17",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2017-08-26T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "INFEST",
+      "venue": "You Revolution",
+      "date": "2017-08-26"
+    }
+  },
+  {
+    "identifier": "09.01.13_LON",
+    "title": "La Oveja Negra @ Rock'Ol Vuh on 09.01.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-09-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "La Oveja Negra",
+      "venue": "Rock'Ol Vuh",
+      "date": "2013-09-01"
+    }
+  },
+  {
+    "identifier": "09.19.15_Cochina",
+    "title": "Cochina @ New Funky Jungle on 09.19.15",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2015-09-19T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Cochina",
+      "venue": "New Funky Jungle",
+      "date": "2015-09-19"
+    }
+  },
+  {
+    "identifier": "09.19.15_SavageBlindGod",
+    "title": "Savage Blind God @ New Funky Jungle on 09.19.15",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2015-09-19T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Savage Blind God",
+      "venue": "New Funky Jungle",
+      "date": "2015-09-19"
+    }
+  },
+  {
+    "identifier": "1.17.09_Extortion",
+    "title": "Extortion @ Pokez on 1.17.09",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2009-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Extortion",
+      "venue": "Pokez",
+      "date": "2009-01-17"
+    }
+  },
+  {
+    "identifier": "1.17.09_IronLung",
+    "title": "Iron Lung @ Pokez on 1.17.09",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2009-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Iron Lung",
+      "venue": "Pokez",
+      "date": "2009-01-17"
+    }
+  },
+  {
+    "identifier": "10.11.07_DefianceOhio",
+    "title": "Defiance Ohio @ The People's Center on 10.11.07",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2007-10-11T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Defiance Ohio",
+      "venue": "The People's Center",
+      "date": "2007-10-11"
+    }
+  },
+  {
+    "identifier": "10.18.13_Neurotoxico",
+    "title": "Neurotoxico @ Q'Chilero (Guatemala City, Guatemala) on 10.18.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-10-18T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Neurotoxico",
+      "venue": "Q'Chilero",
+      "date": "2013-10-18"
+    }
+  },
+  {
+    "identifier": "10.18.13_TestofTime",
+    "title": "Test of Time @ Q'Chilero (Guatemala City, Guatemala) on 10.18.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-10-18T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Test of Time",
+      "venue": "Q'Chilero",
+      "date": "2013-10-18"
+    }
+  },
+  {
+    "identifier": "10.19.13_KillsandThrills",
+    "title": "Kills and Thrills @ Municipal Museum Tecle\u00f1o [Mute] (Santa Tecla, El Salvador) on 10.19.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-12-09T21:26:54Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Kills and Thrills",
+      "venue": "Municipal Museum Tecle\u00f1o [Mute]",
+      "date": "2013-10-19"
+    }
+  },
+  {
+    "identifier": "10.19.13_TestofTime",
+    "title": "Test of Time @ Museo Municipal Tecle\u00f1o [MUTE] (Santa Tecla, El Salvador) on 10.19.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-10-19T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Test of Time",
+      "venue": "Museo Municipal Tecle\u00f1o [MUTE]",
+      "date": "2013-10-19"
+    }
+  },
+  {
+    "identifier": "10.20.13_KillsandThrills",
+    "title": "Kills & Thrills @ Salon Manuel Colom Argueta (Guatemala City, Guatemala) on 10.20.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-10-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Kills & Thrills",
+      "venue": "Salon Manuel Colom Argueta",
+      "date": "2013-10-20"
+    }
+  },
+  {
+    "identifier": "10.20.13_LaOvejaNegra",
+    "title": "La Oveja Negra @ Salon Manuel Colom Argueta (Guatemala City, Guatemala) on 10.20.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-12-05T04:07:30Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "La Oveja Negra",
+      "venue": "Salon Manuel Colom Argueta",
+      "date": "2013-10-20"
+    }
+  },
+  {
+    "identifier": "10.20.13_NuncaEsTarde",
+    "title": "Nunca es Tarde @ Salon Manuel Colom Argueta (Guatemala City, Guatemala) on 10.20.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-10-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Nunca es Tarde",
+      "venue": "Salon Manuel Colom Argueta",
+      "date": "2013-10-20"
+    }
+  },
+  {
+    "identifier": "10.20.13_SeVosMismo",
+    "title": "Se Vos Mismo @ Salon Manuel Colom Argueta (Guatemala City, Guatemala) on 10.20.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-10-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Se Vos Mismo",
+      "venue": "Salon Manuel Colom Argueta",
+      "date": "2013-10-20"
+    }
+  },
+  {
+    "identifier": "10.20.13_TestofTime",
+    "title": "Test of Time @ Salon Manuel Colom Argueta (Guatemala City, Guatemala) on 10.20.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-10-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Test of Time",
+      "venue": "Salon Manuel Colom Argueta",
+      "date": "2013-10-20"
+    }
+  },
+  {
+    "identifier": "10.25.14_MinorityOfOne",
+    "title": "Minority of One (Spain) @ Lancho's [Edgeday 2014] on 10.25.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-10-25T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Minority of One (Spain)",
+      "venue": "Lancho's",
+      "date": "2014-10-25"
+    }
+  },
+  {
+    "identifier": "10.25.14_Revancha",
+    "title": "Revancha @ Lancho's [Edgeday 2014] on 10.25.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-10-25T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Revancha",
+      "venue": "Lancho's",
+      "date": "2014-10-25"
+    }
+  },
+  {
+    "identifier": "10.25.14_TomaElRiesgo",
+    "title": "Toma el Riesgo (El Salvador) @ Lancho's [Edgeday 2014] on 10.25.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-10-25T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Toma el Riesgo (El Salvador)",
+      "venue": "Lancho's",
+      "date": "2014-10-25"
+    }
+  },
+  {
+    "identifier": "10.26.07_Engineer",
+    "title": "Engineer @ The Metropolis in Torrington, CT on 10.26.07",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2007-10-26T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Engineer",
+      "venue": "The Metropolis in Torrington, CT",
+      "date": "2007-10-26"
+    }
+  },
+  {
+    "identifier": "10.28.06_Furnace",
+    "title": "Furnace on 10.28.06 in Basement @ Manchester, NH",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-10-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Furnace on 10.28.06 in Basement",
+      "venue": "Manchester, NH",
+      "date": "2006-10-28"
+    }
+  },
+  {
+    "identifier": "10.28.06_LAntietam",
+    "title": "L'antietam (Timmy's Last Show!) on 10.28.06 in Basement @ Manchester, NH",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-10-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "L'antietam (Timmy's Last Show!) on 10.28.06 in Basement",
+      "venue": "Manchester, NH",
+      "date": "2006-10-28"
+    }
+  },
+  {
+    "identifier": "10.30.15_HeatDust",
+    "title": "Heat Dust @ Market St. on 2015-10-30",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2015-10-30T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Heat Dust",
+      "venue": "Market St.",
+      "date": "2015-10-30"
+    }
+  },
+  {
+    "identifier": "11.10.16_AngelDust",
+    "title": "Angel Du$t @ The Industry on 11.10.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-11-10T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Angel Du$t",
+      "venue": "The Industry",
+      "date": "2016-11-10"
+    }
+  },
+  {
+    "identifier": "11.10.16_Lock",
+    "title": "Lock @ The Industry on 11.10.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-11-15T08:05:55Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Lock",
+      "venue": "The Industry",
+      "date": "2016-11-10"
+    }
+  },
+  {
+    "identifier": "11.10.16_Turnstile",
+    "title": "Turnstile @ The Industry on 11.10.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-11-15T18:55:47Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Turnstile",
+      "venue": "The Industry",
+      "date": "2016-11-10"
+    }
+  },
+  {
+    "identifier": "11.12.16_DFMK",
+    "title": "DFMK @ La Caja (Tijuana, MX) on 11.12.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-11-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "DFMK",
+      "venue": "La Caja",
+      "date": "2016-11-12"
+    }
+  },
+  {
+    "identifier": "11.12.16_LosCrudos",
+    "title": "Los Crudos @ Beach Club Safari (Tijuana, MX) on 11.12.16",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2016-11-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Los Crudos",
+      "venue": "Beach Club Safari",
+      "date": "2016-11-12"
+    }
+  },
+  {
+    "identifier": "11.16.15_UraniumClub",
+    "title": "The Minneapolis Uranium Club @ Psychic Readings (PVD) on 11.16.15",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2015-11-16T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Minneapolis Uranium Club",
+      "venue": "Psychic Readings",
+      "date": "2015-11-16"
+    }
+  },
+  {
+    "identifier": "12.01.17_Therapy",
+    "title": "Therapy @ Teros Gallery on 12.01.17",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2017-12-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Therapy",
+      "venue": "Teros Gallery",
+      "date": "2017-12-01"
+    }
+  },
+  {
+    "identifier": "12.12.08_Aerosols",
+    "title": "Aerosols @ the UMass Campus Center Reading Room on 12.12.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-12-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Aerosols",
+      "venue": "the UMass Campus Center Reading Room",
+      "date": "2008-12-12"
+    }
+  },
+  {
+    "identifier": "12.12.08_Ampere",
+    "title": "Ampere @ UMass Campus Center",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-12-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ampere",
+      "venue": "UMass Campus Center",
+      "date": "2008-12-12"
+    }
+  },
+  {
+    "identifier": "12.14.13_Nervous",
+    "title": "Nervous @ RCA/Hot Mess Compound (Oakland, CA) on 12.14.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-12-14T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Nervous",
+      "venue": "RCA/Hot Mess Compound",
+      "date": "2013-12-14"
+    }
+  },
+  {
+    "identifier": "12.17.13_NaomiPunk",
+    "title": "Naomi Punk @ LoBot Gallery (West Oakland, CA) on 12.17.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-12-17T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Naomi Punk",
+      "venue": "LoBot Gallery",
+      "date": "2013-12-17"
+    }
+  },
+  {
+    "identifier": "12.17.13_WildMoth",
+    "title": "Wild Moth @ LoBot Gallery (West Oakland, CA) on 12.17.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-12-17T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Wild Moth",
+      "venue": "LoBot Gallery",
+      "date": "2013-12-17"
+    }
+  },
+  {
+    "identifier": "12.22.13_NoBabies",
+    "title": "No Babies @ The Hive (Oakland, CA) on 12.22.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-12-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "No Babies",
+      "venue": "The Hive",
+      "date": "2013-12-22"
+    }
+  },
+  {
+    "identifier": "12.22.13_PerfectPussy",
+    "title": "Perfect Pussy @ The Hive (Oakland, CA) on 12.22.13",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-12-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Perfect Pussy",
+      "venue": "The Hive",
+      "date": "2013-12-22"
+    }
+  },
+  {
+    "identifier": "12.23.12_Forests",
+    "title": "Forests (\u68ee\u6797) @ Soochow University (\u6771\u5433\u5927\u5b78) for \u300cYou&Me\u300d on 12.23.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-12-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Forests (\u68ee\u6797)",
+      "venue": "Soochow University",
+      "date": "2012-12-23"
+    }
+  },
+  {
+    "identifier": "12.23.12_ManicSheep",
+    "title": "Manic Sheep @ Soochow University (\u6771\u5433\u5927\u5b78) for \u300cYou&Me\u300d on 12.23.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-12-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Manic Sheep",
+      "venue": "Soochow University",
+      "date": "2012-12-23"
+    }
+  },
+  {
+    "identifier": "12.23.12_Sleaze",
+    "title": "Sleaze \u6e6f\u6e6f\u6c34\u6c34 @ Soochow University (\u6771\u5433\u5927\u5b78) for \u300cYou&Me\u300d on 12.23.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-12-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sleaze \u6e6f\u6e6f\u6c34\u6c34",
+      "venue": "Soochow University",
+      "date": "2012-12-23"
+    }
+  },
+  {
+    "identifier": "12.23.12_ToumingMagazine",
+    "title": "Touming Magazine (\u900f\u660e\u96dc\u8a8c) @ Soochow University (\u6771\u5433\u5927\u5b78) for \u300cYou&Me\u300d on 12.23.12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2012-12-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Touming Magazine (\u900f\u660e\u96dc\u8a8c)",
+      "venue": "Soochow University",
+      "date": "2012-12-23"
+    }
+  },
+  {
+    "identifier": "12.30.06_Comadre",
+    "title": "Comadre @ Casa De La 9 on 12.30.06",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-12-30T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Comadre",
+      "venue": "Casa De La 9",
+      "date": "2006-12-30"
+    }
+  },
+  {
+    "identifier": "12.30.06_ThisFlood",
+    "title": "This Flood Covers The Earth @ Casa De La 9 on 12.30.06",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-12-30T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "This Flood Covers The Earth",
+      "venue": "Casa De La 9",
+      "date": "2006-12-30"
+    }
+  },
+  {
+    "identifier": "12.30.08_LewdActs",
+    "title": "Lewd Acts @ Pacific Beach Music Trader on 12.30.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-12-30T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Lewd Acts",
+      "venue": "Pacific Beach Music Trader",
+      "date": "2008-12-30"
+    }
+  },
+  {
+    "identifier": "2.14.08_Relics",
+    "title": "Relics @ UNH on 2.14.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Relics",
+      "venue": "UNH",
+      "date": "2008-02-14"
+    }
+  },
+  {
+    "identifier": "2.16.08_AcidReflux",
+    "title": "Acid Reflux @ The Ratscellar on 2.16.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Acid Reflux",
+      "venue": "The Ratscellar",
+      "date": "2008-02-16"
+    }
+  },
+  {
+    "identifier": "2.16.08_DirectControl",
+    "title": "Direct Control @ The Ratscellar on 2.16.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Direct Control",
+      "venue": "The Ratscellar",
+      "date": "2008-02-16"
+    }
+  },
+  {
+    "identifier": "2.16.08_SocialCirckle",
+    "title": "Social Circkle @ The Ratscellar on 2.16.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Social Circkle",
+      "venue": "The Ratscellar",
+      "date": "2008-02-16"
+    }
+  },
+  {
+    "identifier": "2.16.08_WastedTime",
+    "title": "Wasted Time @ The Ratscellar on 2.16.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Wasted Time",
+      "venue": "The Ratscellar",
+      "date": "2008-02-16"
+    }
+  },
+  {
+    "identifier": "2.24.08_Aerosols",
+    "title": "Aerosols @ The Red Barn (Hampshire) on 2.24.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Aerosols",
+      "venue": "The Red Barn",
+      "date": "2008-02-24"
+    }
+  },
+  {
+    "identifier": "2.24.08_Failures",
+    "title": "Failures @ The Red Barn (Hampshire College) on 2.24.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Failures",
+      "venue": "The Red Barn",
+      "date": "2008-02-24"
+    }
+  },
+  {
+    "identifier": "2.24.08_TheConversions",
+    "title": "The Conversions @ The Red Barn (Hampshire College) on 2.24.08",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Conversions",
+      "venue": "The Red Barn",
+      "date": "2008-02-24"
+    }
+  },
+  {
+    "identifier": "2023-06-05-division-of-mind",
+    "title": "Division Of Mind @ Mohawk Austin on 2023-08-05",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2023-08-11T02:04:13Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Division Of Mind",
+      "venue": "Mohawk Austin",
+      "date": "2023-08-05"
+    }
+  },
+  {
+    "identifier": "2023-08-05-skourge",
+    "title": "Skourge @ Mohawk Austin on 2023-08-05",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2023-08-08T00:08:54Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Skourge",
+      "venue": "Mohawk Austin",
+      "date": "2023-08-05"
+    }
+  },
+  {
+    "identifier": "2023-08-05-soul-search",
+    "title": "Soul Search @ Mohawk Austin on 2023-08-05",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2023-08-08T05:27:40Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Soul Search",
+      "venue": "Mohawk Austin",
+      "date": "2023-08-05"
+    }
+  },
+  {
+    "identifier": "2023-08-12-prim",
+    "title": "Prim @ Equal Parts Brewing on 2023-08-12",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2023-08-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Prim",
+      "venue": "Equal Parts Brewing",
+      "date": "2023-08-12"
+    }
+  },
+  {
+    "identifier": "2024-11-11-dsablu",
+    "title": "D.SABLU @ The End on 2024-11-11",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2024-11-24T09:36:54Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "D.SABLU",
+      "venue": "The End",
+      "date": "2024-11-11"
+    }
+  },
+  {
+    "identifier": "2025-05-25-clique",
+    "title": "Clique @ The Secret Group on 2025-05-25",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2025-05-25T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Clique",
+      "venue": "The Secret Group",
+      "date": "2025-05-25"
+    }
+  },
+  {
+    "identifier": "4.08.07_TheVicious",
+    "title": "The Vicious @ The Florence VFW Hall on 4.08.07",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Vicious",
+      "venue": "The Florence VFW Hall",
+      "date": "2007-04-08"
+    }
+  },
+  {
+    "identifier": "4.10.10_HighPlaces",
+    "title": "High Places @ Diamond Junction Bowling Lanes (The Old Store/The Shed) on 4.10.10",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2010-04-10T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "High Places",
+      "venue": "Diamond Junction Bowling Lanes",
+      "date": "2010-04-10"
+    }
+  },
+  {
+    "identifier": "4.13.07_MindEraser",
+    "title": "Mind Eraser @ The Florence VFW Hall on 4.13.07",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Mind Eraser",
+      "venue": "The Florence VFW Hall",
+      "date": "2007-04-13"
+    }
+  },
+  {
+    "identifier": "4.13.07_TheCancerKids",
+    "title": "The Cancer Kids @ The Florence VFW Hall on 4.13.07",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Cancer Kids",
+      "venue": "The Florence VFW Hall",
+      "date": "2007-04-13"
+    }
+  },
+  {
+    "identifier": "4.13.07_Wasteland",
+    "title": "Wasteland @ The Florence VFW Hall on 4.13.07",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Wasteland",
+      "venue": "The Florence VFW Hall",
+      "date": "2007-04-13"
+    }
+  },
+  {
+    "identifier": "5.23.10_KyklooppienSukupuutto",
+    "title": "Kyklooppien Sukupuutto @ The Rathole on 5.23.10",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2010-05-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Kyklooppien Sukupuutto",
+      "venue": "The Rathole",
+      "date": "2010-05-23"
+    }
+  },
+  {
+    "identifier": "5.30.10_GoodLuck",
+    "title": "Good Luck @ 924 Gilman on 05.30.10",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2010-05-30T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Good Luck",
+      "venue": "924 Gilman",
+      "date": "2010-05-30"
+    }
+  },
+  {
+    "identifier": "AmpereRH",
+    "title": "Ampere @ Record Hospital Fest Day 1 on 4.28.06",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ampere",
+      "venue": "Record Hospital Fest Day 1",
+      "date": "2006-04-28"
+    }
+  },
+  {
+    "identifier": "BravoFnBravoRH",
+    "title": "Bravo F'n Bravo @ Record Hospital Fest Day 1 on 4.28.06",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Bravo F'n Bravo",
+      "venue": "Record Hospital Fest Day 1",
+      "date": "2006-04-28"
+    }
+  },
+  {
+    "identifier": "BravoFnBravoVFWNH",
+    "title": "Bravo F'n Bravo @ Kingston, NH VFW Hall on 2.23.06",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Bravo F'n Bravo",
+      "venue": "Kingston, NH VFW Hall",
+      "date": "2006-02-23"
+    }
+  },
+  {
+    "identifier": "DSTRH",
+    "title": "Daniel Striped Tiger @ Record Hospital Fest Day 1 on 4.28.06",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Daniel Striped Tiger",
+      "venue": "Record Hospital Fest Day 1",
+      "date": "2006-04-28"
+    }
+  },
+  {
+    "identifier": "DTTRH",
+    "title": "Death To Tyrants @ Record Hospital Fest Day 1 on 4.28.06",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Death To Tyrants",
+      "venue": "Record Hospital Fest Day 1",
+      "date": "2006-04-28"
+    }
+  },
+  {
+    "identifier": "Question_5.23.10",
+    "title": "Question @ The Rathole on 5.23.10",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2010-05-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Question",
+      "venue": "The Rathole",
+      "date": "2010-05-23"
+    }
+  },
+  {
+    "identifier": "SinaloaRH",
+    "title": "Sinaloa @ Record Hospital Fest Day 1 on 4.28.06",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sinaloa",
+      "venue": "Record Hospital Fest Day 1",
+      "date": "2006-04-28"
+    }
+  },
+  {
+    "identifier": "SpringBreak",
+    "title": "Spring Break! (band) @ Garage in Vista on 2.24.05",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2005-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Spring Break! (band)",
+      "venue": "Garage in Vista",
+      "date": "2005-02-24"
+    }
+  },
+  {
+    "identifier": "SpringBreak2",
+    "title": "Spring Break! in 06.05.06 at the Static Lounge in San Diego",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Spring Break!",
+      "venue": "the Static Lounge in San Diego",
+      "date": "2006-06-05"
+    }
+  },
+  {
+    "identifier": "TinyHawksRH",
+    "title": "Tiny Hawks @ Record Hospital Fest Day 1 on 4.28.06",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Tiny Hawks",
+      "venue": "Record Hospital Fest Day 1",
+      "date": "2006-04-28"
+    }
+  },
+  {
+    "identifier": "01.05.12_KeyLosers",
+    "title": "Key Losers @ The Che Cafe on 01.05.12",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2012-01-05T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Key Losers",
+      "date": "2012-01-05"
+    }
+  },
+  {
+    "identifier": "01.07.11_NoAge",
+    "title": "No Age @ The Che Cafe on 01.07.11",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2011-01-07T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "No Age",
+      "date": "2011-01-07"
+    }
+  },
+  {
+    "identifier": "01.17.14_PEASANT",
+    "title": "PEASANT @ Mangos (Houston, TX) on 01.17.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-01-17T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "PEASANT",
+      "date": "2014-01-17"
+    }
+  },
+  {
+    "identifier": "01.20.11_DefianceOhio",
+    "title": "Defiance, Ohio @ The Che Cafe on 01.20.11",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2011-01-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Defiance, Ohio",
+      "date": "2011-01-20"
+    }
+  },
+  {
+    "identifier": "01.20.11_KimyaDawson",
+    "title": "Kimya Dawson @ The Che Cafe on 01.20.11",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2011-01-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Kimya Dawson",
+      "date": "2011-01-20"
+    }
+  },
+  {
+    "identifier": "01.21.17_DAME",
+    "title": "DAME @ The Mods Bar (Tijuana, MX) on 01.21.17",
+    "current": {
+      "band": null,
+      "venue": "Mods Bar",
+      "date": "2017-01-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "DAME",
+      "date": "2017-01-21"
+    }
+  },
+  {
+    "identifier": "01.21.17_TarPit",
+    "title": "Tar Pit @ The Mods Bar (Tijuana, MX) on 01.21.17",
+    "current": {
+      "band": null,
+      "venue": "Mods Bar",
+      "date": "2017-01-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Tar Pit",
+      "date": "2017-01-21"
+    }
+  },
+  {
+    "identifier": "01.22.17_ColdStare",
+    "title": "Cold Stare @ Mods Bar (Tijuana, MX) on 01.22.17",
+    "current": {
+      "band": null,
+      "venue": "Mods Bar",
+      "date": "2017-01-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Cold Stare",
+      "date": "2017-01-22"
+    }
+  },
+  {
+    "identifier": "01.22.17_DFMK",
+    "title": "DFMK @ Mods Bar (Tijuana, MX) on 01.22.17",
+    "current": {
+      "band": null,
+      "venue": "Mods Bar",
+      "date": "2017-01-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "DFMK",
+      "date": "2017-01-22"
+    }
+  },
+  {
+    "identifier": "02.07.14_NoTalk",
+    "title": "No Talk @ Walter's (Houston, Texas) on 02.07.14",
+    "current": {
+      "band": null,
+      "venue": "Walter's Downtown",
+      "date": "2014-02-10T16:22:09Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "No Talk",
+      "date": "2014-02-07"
+    }
+  },
+  {
+    "identifier": "02.07.14_TheSecretProstitutes",
+    "title": "The Secret Prostitutes @ Walters Downtown (Houston, Texas) on 02.07.14",
+    "current": {
+      "band": null,
+      "venue": "Walter's Downtown",
+      "date": "2014-02-10T16:08:21Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Secret Prostitutes",
+      "date": "2014-02-07"
+    }
+  },
+  {
+    "identifier": "02.07.14_TheSpits",
+    "title": "The Spits @ Walters Downtown (Houston, Texas) on 02.07.14",
+    "current": {
+      "band": null,
+      "venue": "Walter's Downtown",
+      "date": "2014-02-10T19:08:41Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Spits",
+      "date": "2014-02-07"
+    }
+  },
+  {
+    "identifier": "02.14.14_CapitalistCasualties",
+    "title": "Capitalist Casualties @ Walters Downtown on 2014-02-14",
+    "current": {
+      "band": null,
+      "venue": "Walter's Downtown",
+      "date": "2014-02-14T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Capitalist Casualties",
+      "date": "2014-02-14"
+    }
+  },
+  {
+    "identifier": "02.14.14_CokeBust",
+    "title": "Coke Bust @ Walters Downtown (Houston, Texas) on 02.14.14",
+    "current": {
+      "band": null,
+      "venue": "Walter's Downtown",
+      "date": "2014-02-14T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Coke Bust",
+      "date": "2014-02-14"
+    }
+  },
+  {
+    "identifier": "02.14.14_SinMotivo",
+    "title": "Sin Motivo @ Walters Downtown (Houston, Texas) on 02.14.14",
+    "current": {
+      "band": null,
+      "venue": "Walter's Downtown",
+      "date": "2014-02-19T09:29:18Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sin Motivo",
+      "date": "2014-02-14"
+    }
+  },
+  {
+    "identifier": "02.15.14_TheImpalers",
+    "title": "The Impalers @ Walters Downtown (Houston, Texas) on 02.15.14",
+    "current": {
+      "band": null,
+      "venue": "Walter's Downtown",
+      "date": "2014-02-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Impalers",
+      "date": "2014-02-15"
+    }
+  },
+  {
+    "identifier": "02.22.13_KarmaCollective",
+    "title": "Karma Collective @ Revolver (Taipei, Taiwan) on 02.22.13",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2013-02-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Karma Collective",
+      "date": "2013-02-22"
+    }
+  },
+  {
+    "identifier": "03.03.17_DFMK",
+    "title": "DFMK @ Mods Bar (Tijuana, MX) on 03.03.17",
+    "current": {
+      "band": null,
+      "venue": "Mods Bar",
+      "date": "2017-03-03T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "DFMK",
+      "date": "2017-03-03"
+    }
+  },
+  {
+    "identifier": "03.03.17_GeneracionSuicida",
+    "title": "Generacion Suicida @ Mods Bar (Tijuana, MX) on 03.03.17",
+    "current": {
+      "band": null,
+      "venue": "Mods Bar",
+      "date": "2017-03-03T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Generacion Suicida",
+      "date": "2017-03-03"
+    }
+  },
+  {
+    "identifier": "03.08.13_KarmaCollective",
+    "title": "Karma Collective @ Pipe Livehouse (Taipei, Taiwan) on 03.08.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-03-08T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Karma Collective",
+      "date": "2013-03-08"
+    }
+  },
+  {
+    "identifier": "03.08.13_Sleaze",
+    "title": "Sleaze \u6e6f\u6e6f\u6c34\u6c34 @ Pipe Livehouse (Taipei, Taiwan) on 03.08.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-03-08T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sleaze \u6e6f\u6e6f\u6c34\u6c34",
+      "date": "2013-03-08"
+    }
+  },
+  {
+    "identifier": "03.08.13_USWE",
+    "title": "Until Seeing Whale's Eyes (\u76f4\u5230\u770b\u898b\u9be8\u9b5a\u7684\u773c\u775b) @ Pipe Livehouse on 03.08.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-03-08T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Until Seeing Whale's Eyes (\u76f4\u5230\u770b\u898b\u9be8\u9b5a\u7684\u773c\u775b)",
+      "date": "2013-03-08"
+    }
+  },
+  {
+    "identifier": "03.12.14_Confused",
+    "title": "Confused @ Thirsty Monkey (McAllen, Texas) on 03.12.14",
+    "current": {
+      "band": null,
+      "venue": "Thirsty Monkey",
+      "date": "2014-03-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Confused",
+      "date": "2014-03-12"
+    }
+  },
+  {
+    "identifier": "03.12.14_LecherousGaze",
+    "title": "Lecherous Gaze @ Thirsty Monkey (McAllen, Texas) on 03.12.14",
+    "current": {
+      "band": null,
+      "venue": "Thirsty Monkey",
+      "date": "2014-03-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Lecherous Gaze",
+      "date": "2014-03-12"
+    }
+  },
+  {
+    "identifier": "03.12.14_TheSecretProstitutes",
+    "title": "The Secret Prostitutes @ Thirsty Monkey (McAllen, Texas) on 03.12.14",
+    "current": {
+      "band": null,
+      "venue": "Thirsty Monkey",
+      "date": "2014-03-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Secret Prostitutes",
+      "date": "2014-03-12"
+    }
+  },
+  {
+    "identifier": "03.12.14_Turbokrieg",
+    "title": "TURBOKRIEG @ Thirsty Monkey (McAllen, Texas) on 03.12.14",
+    "current": {
+      "band": null,
+      "venue": "Thirsty Monkey",
+      "date": "2014-03-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "TURBOKRIEG",
+      "date": "2014-03-12"
+    }
+  },
+  {
+    "identifier": "03.22.13_VideoGirl",
+    "title": "Video Girl @",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2013-03-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Video Girl",
+      "date": "2013-03-22"
+    }
+  },
+  {
+    "identifier": "03.22.14_OathofCruelty",
+    "title": "Oath of Cruelty @ Mango's Cafe (Houston, TX) on 03.22.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-03-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Oath of Cruelty",
+      "date": "2014-03-22"
+    }
+  },
+  {
+    "identifier": "03.22.14_PEASANT",
+    "title": "PEASANT @ Mango's Cafe (Houston, TX) on 03.22.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-03-22T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "PEASANT",
+      "date": "2014-03-22"
+    }
+  },
+  {
+    "identifier": "03.23.13_OfficeVoids",
+    "title": "Office Voids (Japan) @ Pipe Livehouse (Taipei, Taiwan) on 03.23.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-03-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Office Voids (Japan)",
+      "date": "2013-03-23"
+    }
+  },
+  {
+    "identifier": "03.23.13_Sleaze",
+    "title": "Sleaze \u6e6f\u6e6f\u6c34\u6c34 @ Pipe Livehouse (Taipei, Taiwan) on 03.23.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-03-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sleaze \u6e6f\u6e6f\u6c34\u6c34",
+      "date": "2013-03-23"
+    }
+  },
+  {
+    "identifier": "03.23.13_ToumingMagazine",
+    "title": "Touming Magazine (\u900f\u660e\u96dc\u8a8c) @ Pipe Livehouse (Taipei, Taiwan) on 03.23.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-03-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Touming Magazine (\u900f\u660e\u96dc\u8a8c)",
+      "date": "2013-03-23"
+    }
+  },
+  {
+    "identifier": "03.23.13_Vacation",
+    "title": "V/acation (Tokyo, Japan) @ Pipe Livehouse (Taipei, Taiwan) on 03.23.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-03-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "V/acation (Tokyo, Japan)",
+      "date": "2013-03-23"
+    }
+  },
+  {
+    "identifier": "03.23.13_WSS",
+    "title": "Wayne's So Sad (\u50b7\u5fc3\u6b32\u7d55) @ Pipe Livehouse on 03.23.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-03-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Wayne's So Sad (\u50b7\u5fc3\u6b32\u7d55)",
+      "date": "2013-03-23"
+    }
+  },
+  {
+    "identifier": "04.04.14_Breakout",
+    "title": "Breakout @ Red Blood Club (Dallas, TX) for Blood Fest 2014 on 04.04.14",
+    "current": {
+      "band": null,
+      "venue": "Red Blood Club",
+      "date": "2014-04-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Breakout",
+      "date": "2014-04-04"
+    }
+  },
+  {
+    "identifier": "04.04.14_SinMotivo",
+    "title": "Sin Motivo @ Red Blood Club (Dallas, TX) for Blood Fest 2014 on 04.04.14",
+    "current": {
+      "band": null,
+      "venue": "Red Blood Club",
+      "date": "2014-04-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sin Motivo",
+      "date": "2014-04-04"
+    }
+  },
+  {
+    "identifier": "04.05.14_PissedGrave",
+    "title": "Pissed Grave @ Red Blood Club (Dallas, TX) for Blood Fest 2014 on 04.05.14",
+    "current": {
+      "band": null,
+      "venue": "Red Blood Club",
+      "date": "2014-04-05T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Pissed Grave",
+      "date": "2014-04-05"
+    }
+  },
+  {
+    "identifier": "04.05.14_Tolar",
+    "title": "Tolar @ Red Blood Club (Blood Fest 2014) on 04.05.15",
+    "current": {
+      "band": null,
+      "venue": "Red Blood Club",
+      "date": "2014-04-05T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Tolar",
+      "date": "2015-04-05"
+    }
+  },
+  {
+    "identifier": "04.24.14_TheFlex",
+    "title": "The Flex @ Walters Downtown (Houston, TX) on 04.24.14",
+    "current": {
+      "band": null,
+      "venue": "Walter's Downtown",
+      "date": "2014-04-24T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Flex",
+      "date": "2014-04-24"
+    }
+  },
+  {
+    "identifier": "05.15.05_GreyDaturas",
+    "title": "Grey Daturas @ The Che Cafe on 05.15.05",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2005-05-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Grey Daturas",
+      "date": "2005-05-15"
+    }
+  },
+  {
+    "identifier": "05.15.14_BlackCoffee",
+    "title": "Black Coffee @ Mango's Cafe (Houston, TX) on 05.15.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-05-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Black Coffee",
+      "date": "2014-05-15"
+    }
+  },
+  {
+    "identifier": "05.15.14_Landfill",
+    "title": "Landfill @ Mango's Cafe (Houston, TX) on 05.15.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-05-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Landfill",
+      "date": "2014-05-15"
+    }
+  },
+  {
+    "identifier": "05.15.14_VICE",
+    "title": "VICE @ Mango's Cafe (Houston, TX) on 05.15.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-05-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "VICE",
+      "date": "2014-05-15"
+    }
+  },
+  {
+    "identifier": "05.18.13_Bazooka",
+    "title": "Baz\u00f6oka @ Pipe Livehouse (Taipei, Taiwan) on 05.18.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-05-18T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Baz\u00f6oka",
+      "date": "2013-05-18"
+    }
+  },
+  {
+    "identifier": "05.18.13_NoOrder",
+    "title": "No Order (\u7121\u79e9\u5e8f) @ Pipe Livehouse (Taipei, Taiwan) on 05.18.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-05-18T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "No Order (\u7121\u79e9\u5e8f)",
+      "date": "2013-05-18"
+    }
+  },
+  {
+    "identifier": "05.18.13_Revilement",
+    "title": "Revilement @ Pipe Livehouse (Taipei, Taiwan) on 05.18.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-05-18T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Revilement",
+      "date": "2013-05-18"
+    }
+  },
+  {
+    "identifier": "05.18.13_StenchOfLust",
+    "title": "Stench of Lust @ Pipe Livehouse (Taipei, Taiwan) on 05.18.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-05-18T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Stench of Lust",
+      "date": "2013-05-18"
+    }
+  },
+  {
+    "identifier": "05.18.13_TerrorSquad",
+    "title": "Terror Squad (Japan) @ Pipe Livehouse (Taipei, Taiwan) on 05.18.13",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2013-05-18T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Terror Squad (Japan)",
+      "date": "2013-05-18"
+    }
+  },
+  {
+    "identifier": "05.24.13_NoOrder",
+    "title": "No Order (\u7121\u79e9\u5e8f) @ Revolver (Taipei, Taiwan) on 05.24.13 (Sample)",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2013-05-24T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "No Order (\u7121\u79e9\u5e8f)",
+      "date": "2013-05-24"
+    }
+  },
+  {
+    "identifier": "05.24.13_Sleaze",
+    "title": "Sleaze \u6e6f\u6e6f\u6c34\u6c34 @ Revolver (Taipei, Taiwan) on 05.24.13",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2013-05-24T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sleaze \u6e6f\u6e6f\u6c34\u6c34",
+      "date": "2013-05-24"
+    }
+  },
+  {
+    "identifier": "05.27.06_Cursed",
+    "title": "Cursed @ The Che Cafe on 05.27.06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-05-27T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Cursed",
+      "date": "2006-05-27"
+    }
+  },
+  {
+    "identifier": "05.29.11_KeyLosers",
+    "title": "Key Losers @ The Che Cafe on 05.29.11",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2011-05-29T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Key Losers",
+      "date": "2011-05-29"
+    }
+  },
+  {
+    "identifier": "05.29.11_MountEerie",
+    "title": "Mount Eerie @ The Che Cafe on 05.29.11",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2011-05-29T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Mount Eerie",
+      "date": "2011-05-29"
+    }
+  },
+  {
+    "identifier": "05.29.11_NicholasKrgovich",
+    "title": "Nicholas Krgovich @ The Che Cafe on 05.29.11",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2011-05-29T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Nicholas Krgovich",
+      "date": "2011-05-29"
+    }
+  },
+  {
+    "identifier": "05.31.08_Tragedy",
+    "title": "Tragedy @ The Che Cafe on 05.31.08",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2008-05-31T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Tragedy",
+      "date": "2008-05-31"
+    }
+  },
+  {
+    "identifier": "06.02.10_GoodLuck",
+    "title": "Good Luck @ The Che Cafe on 06.02.10",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-06-02T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Good Luck",
+      "date": "2010-06-02"
+    }
+  },
+  {
+    "identifier": "06.04.10_RedPonyClock",
+    "title": "Red Pony Clock on 06.04.10",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2010-06-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Red Pony Clock",
+      "date": "2010-06-04"
+    }
+  },
+  {
+    "identifier": "06.07.10_JehovasFitness",
+    "title": "Jehovas Fitness @ The Che Cafe on 06.07.10",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-06-07T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Jehovas Fitness",
+      "date": "2010-06-07"
+    }
+  },
+  {
+    "identifier": "06.07.10_ScreamingFemales",
+    "title": "Screaming Females @ The Che Cafe on 06.07.10",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-06-07T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Screaming Females",
+      "date": "2010-06-07"
+    }
+  },
+  {
+    "identifier": "06.11.14_Bane",
+    "title": "Bane @ Walters Downtown (Houston, TX) on 06.11.14",
+    "current": {
+      "band": null,
+      "venue": "Walter's Downtown",
+      "date": "2014-06-11T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Bane",
+      "date": "2014-06-11"
+    }
+  },
+  {
+    "identifier": "06.12.10_Thou",
+    "title": "Thou @ The Che Cafe on 06.12.10",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-06-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Thou",
+      "date": "2010-06-12"
+    }
+  },
+  {
+    "identifier": "06.14.10_GirlBand",
+    "title": "Girl Band @ the Che Cafe on 2010-06-14",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-06-14T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Girl Band",
+      "date": "2010-06-14"
+    }
+  },
+  {
+    "identifier": "06.20.12_PhantasyofMirage",
+    "title": "Phantasy of Mirage (\u73fe\u8c61\u5e2b) @ Revolver (Taipei, Taiwan) on 06.20.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-06-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Phantasy of Mirage (\u73fe\u8c61\u5e2b)",
+      "date": "2012-06-20"
+    }
+  },
+  {
+    "identifier": "06.20.12_TheJUNK",
+    "title": "TheJUNK (\u5e06\u4eba) @ Revolver (Taipei, Taiwan) on 06.20.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-06-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "TheJUNK (\u5e06\u4eba)",
+      "date": "2012-06-20"
+    }
+  },
+  {
+    "identifier": "06.21.12_NoOrder",
+    "title": "No Order (\u7121\u79e9\u5e8f) @ Revolver (Taipei, Taiwan) on 06.21.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-06-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "No Order (\u7121\u79e9\u5e8f)",
+      "date": "2012-06-21"
+    }
+  },
+  {
+    "identifier": "06.21.12_PanzerWarfare",
+    "title": "Panzer Warfare @ Revolver (Taipei, Taiwan) on 06.21.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-06-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Panzer Warfare",
+      "date": "2012-06-21"
+    }
+  },
+  {
+    "identifier": "06.23.12_Bombori",
+    "title": "BOMBORI (Japan) @ Pipe Livehouse (Taipei, Taiwan) on 06.23.12",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2012-06-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "BOMBORI (Japan)",
+      "date": "2012-06-23"
+    }
+  },
+  {
+    "identifier": "06.23.12_Sleaze",
+    "title": "Sleaze \u6e6f\u6e6f\u6c34\u6c34 @ Pipe Livehouse (Taipei, Taiwan) on 06.23.12",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2012-06-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sleaze \u6e6f\u6e6f\u6c34\u6c34",
+      "date": "2012-06-23"
+    }
+  },
+  {
+    "identifier": "07.08.09_PaulBaribeau",
+    "title": "Paul Baribeau @ The Che Cafe on 07.08.09",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2009-07-08T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Paul Baribeau",
+      "date": "2009-07-08"
+    }
+  },
+  {
+    "identifier": "07.12.12_HumanBeings",
+    "title": "\u4eba HUMAN BEINGS @ Revolver (Taipei, Taiwan) on 07.12.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-07-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "\u4eba HUMAN BEINGS",
+      "date": "2012-07-12"
+    }
+  },
+  {
+    "identifier": "07.12.12_NoOrder",
+    "title": "No Order (\u7121\u79e9\u5e8f) @ Revolver (Taipei, Taiwan) on 07.12.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-07-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "No Order (\u7121\u79e9\u5e8f)",
+      "date": "2012-07-12"
+    }
+  },
+  {
+    "identifier": "08.04.14_Demolition",
+    "title": "Demolition @ Mango's Cafe (Houston, TX) on 08.04.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-08-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Demolition",
+      "date": "2014-08-04"
+    }
+  },
+  {
+    "identifier": "08.04.14_Intent",
+    "title": "Intent @ Mango's Cafe (Houston, TX) on 08.04.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-08-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Intent",
+      "date": "2014-08-04"
+    }
+  },
+  {
+    "identifier": "08.06.14_DressCode",
+    "title": "Dress Code @ Mango's Cafe (Houston, TX) on 08.06.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-08-06T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Dress Code",
+      "date": "2014-08-06"
+    }
+  },
+  {
+    "identifier": "08.06.14_SexPill",
+    "title": "Sex Pill @ Mango's Cafe (Houston, TX) on 08.06.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-08-06T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sex Pill",
+      "date": "2014-08-06"
+    }
+  },
+  {
+    "identifier": "08.09.12_Masquerader",
+    "title": "Masquerader @ Revolver (Taipei, Taiwan) on 08.09.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-08-09T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Masquerader",
+      "date": "2012-08-09"
+    }
+  },
+  {
+    "identifier": "08.09.12_NoOrder",
+    "title": "No Order (\u7121\u79e9\u5e8f) @ Revolver (Taipei, Taiwan) on 08.09.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-08-09T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "No Order (\u7121\u79e9\u5e8f)",
+      "date": "2012-08-09"
+    }
+  },
+  {
+    "identifier": "08.09.12_TheJUNK",
+    "title": "TheJUNK @ Revolver (Taipei, Taiwan) on 08.09.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-08-09T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "TheJUNK",
+      "date": "2012-08-09"
+    }
+  },
+  {
+    "identifier": "08.12.06_CrimeDesire",
+    "title": "Crime Desire @ The Che Cafe on 08.12.06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-08-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Crime Desire",
+      "date": "2006-08-12"
+    }
+  },
+  {
+    "identifier": "09.02.10_TedLeo",
+    "title": "Ted Leo @ The Che Cafe on 09.02.10",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-09-02T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ted Leo",
+      "date": "2010-09-02"
+    }
+  },
+  {
+    "identifier": "09.04.15_Necklacing",
+    "title": "Necklacing @ The Boiler Room on 09.04.15",
+    "current": {
+      "band": null,
+      "venue": "The Boiler Room",
+      "date": "2015-09-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Necklacing",
+      "date": "2015-09-04"
+    }
+  },
+  {
+    "identifier": "09.04.15_Torso",
+    "title": "Torso (T\u00f8rs\u00f6) @ The Boiler Room on 09.04.15",
+    "current": {
+      "band": null,
+      "venue": "The Boiler Room",
+      "date": "2015-09-06T18:48:17Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Torso (T\u00f8rs\u00f6)",
+      "date": "2015-09-04"
+    }
+  },
+  {
+    "identifier": "09.14.11_Bumbklaatt",
+    "title": "Bumbklaatt @ The Che Cafe on 09.14.11",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2011-09-14T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Bumbklaatt",
+      "date": "2011-09-14"
+    }
+  },
+  {
+    "identifier": "09.14.11_Rorschach",
+    "title": "Rorschach @ The Che Cafe on 09.14.11",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2011-09-14T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Rorschach",
+      "date": "2011-09-14"
+    }
+  },
+  {
+    "identifier": "09.21.15_DAME",
+    "title": "DAME on 09.21.15",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2015-09-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "DAME",
+      "date": "2015-09-21"
+    }
+  },
+  {
+    "identifier": "09.21.15_Firewalker",
+    "title": "Firewalker on 09.21.15",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2015-09-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Firewalker",
+      "date": "2015-09-21"
+    }
+  },
+  {
+    "identifier": "09.21.15_GLOSS",
+    "title": "G.L.O.S.S. on 09.21.15",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2015-09-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "G.L.O.S.S.",
+      "date": "2015-09-21"
+    }
+  },
+  {
+    "identifier": "09.21.15_GasStationGirls",
+    "title": "Gas Station Girls on 09.21.15",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2015-09-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Gas Station Girls",
+      "date": "2015-09-21"
+    }
+  },
+  {
+    "identifier": "09.21.15_LeatherDaddy",
+    "title": "Leather Daddy on 09.21.15",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2015-09-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Leather Daddy",
+      "date": "2015-09-21"
+    }
+  },
+  {
+    "identifier": "1.11.10_LymbycSystym",
+    "title": "Lymbyc Systym @ The Che Cafe on 1.11.10",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-01-11T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Lymbyc Systym",
+      "date": "2010-01-11"
+    }
+  },
+  {
+    "identifier": "1.19.08_Bane",
+    "title": "Bane @ The Che Cafe on 1.19.08",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Bane",
+      "date": "2008-01-19"
+    }
+  },
+  {
+    "identifier": "1.20.11_JehovasFitness",
+    "title": "Jehovas Fitness @ The Che Cafe on 01.20.11",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2011-01-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Jehovas Fitness",
+      "date": "2011-01-20"
+    }
+  },
+  {
+    "identifier": "1.3.10_CrimeDesire",
+    "title": "Crime Desire @ The Che Cafe on 1.3.10",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-01-03T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Crime Desire",
+      "date": "2010-01-03"
+    }
+  },
+  {
+    "identifier": "1.3.10_CrimeDesire_Redo",
+    "title": "Crime Desire @ The Che Cafe on 1.3.10",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-01-03T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Crime Desire",
+      "date": "2010-01-03"
+    }
+  },
+  {
+    "identifier": "1.3.10_Ok",
+    "title": "Ok @ The Che Cafe on 1.3.10",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2010-01-03T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ok @ The Che Cafe",
+      "date": "2010-01-03"
+    }
+  },
+  {
+    "identifier": "10.04.14_LaOvejaNegra",
+    "title": "La Oveja Negra on 10.04.14",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2014-10-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "La Oveja Negra",
+      "date": "2014-10-04"
+    }
+  },
+  {
+    "identifier": "10.06.12_Malegoat",
+    "title": "Malegoat (Japan) @ Pipe Livehouse (Taipei, Taiwan) on 10.06.12",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2012-10-06T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Malegoat (Japan)",
+      "date": "2012-10-06"
+    }
+  },
+  {
+    "identifier": "10.06.12_Sleaze",
+    "title": "Sleaze \u6e6f\u6e6f\u6c34\u6c34 @ Pipe Livehouse (Taipei, Taiwan) on 10.06.12",
+    "current": {
+      "band": null,
+      "venue": "Pipe Livehouse (\u6c34\u7ba1\u97f3\u6a02)",
+      "date": "2012-10-06T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sleaze \u6e6f\u6e6f\u6c34\u6c34",
+      "date": "2012-10-06"
+    }
+  },
+  {
+    "identifier": "10.08.04_JulieDoiron",
+    "title": "Julie Doiron @ The Che Cafe on 2004-10-08",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2004-10-08T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Julie Doiron",
+      "date": "2004-10-08"
+    }
+  },
+  {
+    "identifier": "10.20.06_McClane",
+    "title": "McClane @ Mercy House Church on 10.20.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-10-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "McClane",
+      "date": "2006-10-20"
+    }
+  },
+  {
+    "identifier": "10.20.06_NoneMoreBlack",
+    "title": "None More Black @ Mercy House Church on 10.20.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-10-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "None More Black",
+      "date": "2006-10-20"
+    }
+  },
+  {
+    "identifier": "10.23.06_Ampere",
+    "title": "Ampere @ Mercy House on 10.23.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-10-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ampere",
+      "date": "2006-10-23"
+    }
+  },
+  {
+    "identifier": "10.23.06_DasOath",
+    "title": "Das Oath @ Mercy House on 10.23.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-10-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Das Oath",
+      "date": "2006-10-23"
+    }
+  },
+  {
+    "identifier": "10.23.06_MindEraser",
+    "title": "Mind Eraser @ Mercy House on 10.23.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-10-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Mind Eraser",
+      "date": "2006-10-23"
+    }
+  },
+  {
+    "identifier": "11.13.17_Burnout",
+    "title": "Burnout @ SPACE on 11.13.17",
+    "current": {
+      "band": null,
+      "venue": "SPACE Bar",
+      "date": "2017-11-13T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Burnout",
+      "date": "2017-11-13"
+    }
+  },
+  {
+    "identifier": "11.13.17_Violencia",
+    "title": "Violencia @ SPACE on 11.13.17",
+    "current": {
+      "band": null,
+      "venue": "SPACE Bar",
+      "date": "2017-11-13T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Violencia",
+      "date": "2017-11-13"
+    }
+  },
+  {
+    "identifier": "12.01.06_Imprint",
+    "title": "Imprint @ Mercy House Church on 12.01.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-12-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Imprint",
+      "date": "2006-12-01"
+    }
+  },
+  {
+    "identifier": "12.01.06_Relics",
+    "title": "Relics @ Mercy House Church on 12.01.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-12-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Relics",
+      "date": "2006-12-01"
+    }
+  },
+  {
+    "identifier": "12.04.06_MLIW",
+    "title": "Modern Life Is War @ Mercy House Church on 12.04.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-12-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Modern Life Is War",
+      "date": "2006-12-04"
+    }
+  },
+  {
+    "identifier": "12.04.06_Relics",
+    "title": "Relics @ Mercy House Church on 12.04.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-12-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Relics",
+      "date": "2006-12-04"
+    }
+  },
+  {
+    "identifier": "12.04.06_Wasteland",
+    "title": "Wasteland @ Mercy House Church on 12.04.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-12-04T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Wasteland",
+      "date": "2006-12-04"
+    }
+  },
+  {
+    "identifier": "12.12.06_TheEvens",
+    "title": "The Evens on 12.12.06 @ The Mercy House Church on The Flywheel",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-12-12T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Evens on 12.12.06",
+      "date": "2006-12-12"
+    }
+  },
+  {
+    "identifier": "12.14.14_Fury",
+    "title": "Fury @ Mango's Cafe (Houston, TX) on 12.14.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-12-14T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Fury",
+      "date": "2014-12-14"
+    }
+  },
+  {
+    "identifier": "12.19.09_ColdWorld",
+    "title": "Cold World @ The Che Cafe on 12.19.09",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2009-12-19T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Cold World",
+      "date": "2009-12-19"
+    }
+  },
+  {
+    "identifier": "12.19.09_TitleFight_Redo",
+    "title": "Title Fight @ The Che Cafe on 12.19.09",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2009-12-19T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Title Fight",
+      "date": "2009-12-19"
+    }
+  },
+  {
+    "identifier": "12.19.14_LumpyandTheDumpers",
+    "title": "Lumpy and The Dumpers @ Mango's on 12.19.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-12-19T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Lumpy and The Dumpers",
+      "date": "2014-12-19"
+    }
+  },
+  {
+    "identifier": "12.19.14_MysticInane",
+    "title": "Mystic Inane @ Mangos on 12.19.14",
+    "current": {
+      "band": null,
+      "venue": "Mango's Cafe",
+      "date": "2014-12-19T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Mystic Inane",
+      "date": "2014-12-19"
+    }
+  },
+  {
+    "identifier": "12.21.12_HumanBeings",
+    "title": "\u4eba HUMAN BEINGS @ Revolver (Taipei, Taiwan) on 12.21.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-12-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "\u4eba HUMAN BEINGS",
+      "date": "2012-12-21"
+    }
+  },
+  {
+    "identifier": "12.21.12_SkipSkipBenBen",
+    "title": "Skip Skip Ben Ben @ Revolver (Taipei, Taiwan) on 12.21.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-12-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Skip Skip Ben Ben",
+      "date": "2012-12-21"
+    }
+  },
+  {
+    "identifier": "12.21.12_USWE",
+    "title": "Until Seeing Whale's Eyes (\u76f4\u5230\u770b\u898b\u9be8\u9b5a\u7684\u773c\u775b) @ Revolver (Taipei, Taiwan) on 12.21.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-12-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Until Seeing Whale's Eyes (\u76f4\u5230\u770b\u898b\u9be8\u9b5a\u7684\u773c\u775b)",
+      "date": "2012-12-21"
+    }
+  },
+  {
+    "identifier": "12.21.12_Unripe",
+    "title": "Unripe @ Revolver (Taipei, Taiwan) on 12.21.12",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2012-12-21T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Unripe",
+      "date": "2012-12-21"
+    }
+  },
+  {
+    "identifier": "12.28.08_CheapArt",
+    "title": "Cheap Art @ The Che Cafe on 12.28.08",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2008-12-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Cheap Art",
+      "date": "2008-12-28"
+    }
+  },
+  {
+    "identifier": "12.28.08_TotalFury",
+    "title": "Total Fury @ The Che Cafe on 12.28.08",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2008-12-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Total Fury",
+      "date": "2008-12-28"
+    }
+  },
+  {
+    "identifier": "12.29.06_Comadre",
+    "title": "Comadre @ The Che Cafe on 12.29.06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-12-29T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Comadre",
+      "date": "2006-12-29"
+    }
+  },
+  {
+    "identifier": "2.08.08_CruelHand",
+    "title": "Cruel Hand @ The Mercy House on 2.08.08",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Cruel Hand",
+      "date": "2008-02-08"
+    }
+  },
+  {
+    "identifier": "2.22.08_Blacklisted",
+    "title": "Blacklisted @ The Mercy House on 2.22.08",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Blacklisted",
+      "date": "2008-02-22"
+    }
+  },
+  {
+    "identifier": "2.22.08_Terror",
+    "title": "Terror @ The Mercy House on 2.22.08",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Terror",
+      "date": "2008-02-22"
+    }
+  },
+  {
+    "identifier": "2023-09-02-lotion",
+    "title": "L.O.T.I.O.N. @ White Swan Live on 2023-09-02",
+    "current": {
+      "band": null,
+      "venue": "White Swan Live",
+      "date": "2023-09-02T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "L.O.T.I.O.N.",
+      "date": "2023-09-02"
+    }
+  },
+  {
+    "identifier": "2023-09-02-sex-pill",
+    "title": "Sex Pill @ White Swan Live on 2023-09-02",
+    "current": {
+      "band": null,
+      "venue": "White Swan Live",
+      "date": "2023-09-02T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Sex Pill",
+      "date": "2023-09-02"
+    }
+  },
+  {
+    "identifier": "2023-09-14-gag",
+    "title": "GAG @ White Swan Live on 2023-09-14",
+    "current": {
+      "band": null,
+      "venue": "White Swan Live",
+      "date": "2023-09-14T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "GAG",
+      "date": "2023-09-14"
+    }
+  },
+  {
+    "identifier": "2023-12-01-criaturas",
+    "title": "Criaturas @ Mohawk Austin on 2023-12-01",
+    "current": {
+      "band": null,
+      "venue": "Mohawk Austin",
+      "date": "2023-12-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Criaturas",
+      "date": "2023-12-01"
+    }
+  },
+  {
+    "identifier": "2023-12-16-juicebox",
+    "title": "Juicebox @ East End Barber on 2023-12-16",
+    "current": {
+      "band": null,
+      "venue": "East End Barber",
+      "date": "2023-12-16T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Juicebox",
+      "date": "2023-12-16"
+    }
+  },
+  {
+    "identifier": "2023-12-16-strange-joy",
+    "title": "Strange Joy @ East End Barber on 2023-12-16",
+    "current": {
+      "band": null,
+      "venue": "East End Barber",
+      "date": "2023-12-16T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Strange Joy",
+      "date": "2023-12-16"
+    }
+  },
+  {
+    "identifier": "2024-03-29-apex-predator",
+    "title": "Apex Predator @ The White Swan Live on 2024-03-29",
+    "current": {
+      "band": null,
+      "venue": "White Swan Live",
+      "date": "2024-03-29T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Apex Predator",
+      "date": "2024-03-29"
+    }
+  },
+  {
+    "identifier": "2024-03-29-witness-chamber",
+    "title": "Witness Chamber @ The White Swan Live on 2024-03-29",
+    "current": {
+      "band": null,
+      "venue": "White Swan Live",
+      "date": "2024-03-29T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Witness Chamber",
+      "date": "2024-03-29"
+    }
+  },
+  {
+    "identifier": "2024-10-20-strange-joy",
+    "title": "Strange Joy @ The White Swan on 2024-10-20",
+    "current": {
+      "band": null,
+      "venue": "White Swan Live",
+      "date": "2024-10-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Strange Joy",
+      "date": "2024-10-20"
+    }
+  },
+  {
+    "identifier": "2025-007-13-psychic-pigs",
+    "title": "Psychic Pigs @ Whistle Stop Bar on 2025-07-13",
+    "current": {
+      "band": null,
+      "venue": "Whistle Stop Bar",
+      "date": "2025-07-13T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Psychic Pigs",
+      "date": "2025-07-13"
+    }
+  },
+  {
+    "identifier": "2025-03-23-anti-trust",
+    "title": "Anti Trust @ The White Swan on 2025-03-23",
+    "current": {
+      "band": null,
+      "venue": "White Swan Live",
+      "date": "2025-03-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Anti Trust",
+      "date": "2025-03-23"
+    }
+  },
+  {
+    "identifier": "2025-03-23-fugitive-bubble",
+    "title": "Fugitive Bubble @ White Swan Live on 2025-03-23",
+    "current": {
+      "band": null,
+      "venue": "White Swan Live",
+      "date": "2025-03-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Fugitive Bubble",
+      "date": "2025-03-23"
+    }
+  },
+  {
+    "identifier": "2025-03-23-remote-control",
+    "title": "Remote Control @ The End on 2025-03-23",
+    "current": {
+      "band": null,
+      "venue": "The End",
+      "date": "2025-08-07T22:43:03Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Remote Control",
+      "date": "2025-03-23"
+    }
+  },
+  {
+    "identifier": "2025-07-06-gang-busters",
+    "title": "Gang Busters @ White Swan Live on 2025-07-06",
+    "current": {
+      "band": null,
+      "venue": "White Swan Live",
+      "date": "2025-07-06T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Gang Busters",
+      "date": "2025-07-06"
+    }
+  },
+  {
+    "identifier": "2025-07-23-witness",
+    "title": "Witness @ Soda Bar on 2025-07-23",
+    "current": {
+      "band": null,
+      "venue": "Soda Bar",
+      "date": "2025-07-23T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Witness",
+      "date": "2025-07-23"
+    }
+  },
+  {
+    "identifier": "3.10.07_Ampere",
+    "title": "Ampere @ Mystery Train Records on 3.10.07",
+    "current": {
+      "band": null,
+      "venue": "Mystery Train Records",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ampere",
+      "date": "2007-03-10"
+    }
+  },
+  {
+    "identifier": "3.10.07_DesArk",
+    "title": "Des Ark @ Mystery Train Records on 3.10.07",
+    "current": {
+      "band": null,
+      "venue": "Mystery Train Records",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Des Ark",
+      "date": "2007-03-10"
+    }
+  },
+  {
+    "identifier": "4.10.10_RadicalDads",
+    "title": "Radical Dads Diamond Junction Bowling Lanes (The Old Store/The Shed) on 4.10.10",
+    "current": {
+      "band": null,
+      "venue": null,
+      "date": "2010-04-10T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Radical Dads Diamond Junction Bowling Lanes (The Old Store/The Shed)",
+      "date": "2010-04-10"
+    }
+  },
+  {
+    "identifier": "5.2.08_Bane",
+    "title": "Bane @ The Mercy House on 5.2.08",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2008-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Bane",
+      "date": "2008-05-02"
+    }
+  },
+  {
+    "identifier": "5.26.06_MikaMiko",
+    "title": "Mika Miko @ The Che Cafe on 5.26.06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Mika Miko",
+      "date": "2006-05-26"
+    }
+  },
+  {
+    "identifier": "5.28.06_FifthHourHero",
+    "title": "Fifth Hour Hero @ The Che Cafe on 05.28.2006",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Fifth Hour Hero",
+      "date": "2020-05-28"
+    }
+  },
+  {
+    "identifier": "5.29.07_MattandKim",
+    "title": "Matt and Kim @ The Che Cafe on 5.29.07",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Matt and Kim",
+      "date": "2007-05-29"
+    }
+  },
+  {
+    "identifier": "5.29.07_TheDiskettes",
+    "title": "The Diskettes @ The Che Cafe on 5.29.07",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Diskettes",
+      "date": "2007-05-29"
+    }
+  },
+  {
+    "identifier": "5.30.09_WarCry",
+    "title": "WarCry @ The Che Cafe on 5.30.09",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2009-05-30T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "WarCry",
+      "date": "2009-05-30"
+    }
+  },
+  {
+    "identifier": "6.1.07_TheDiskettes",
+    "title": "The Diskettes @ Cafe Revolver in Tijuana, Mexico on 6.1.07",
+    "current": {
+      "band": null,
+      "venue": "Revolver",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Diskettes",
+      "date": "2007-06-01"
+    }
+  },
+  {
+    "identifier": "6.13.07_JulieDoiron",
+    "title": "Julie Doiron @ The Che Cafe on 6.13.07",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Julie Doiron",
+      "date": "2007-06-13"
+    }
+  },
+  {
+    "identifier": "6.17.07_DanDeacon",
+    "title": "Dan Deacon @ The Che Cafe on 6.17.07",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Dan Deacon",
+      "date": "2007-06-17"
+    }
+  },
+  {
+    "identifier": "7.11.09_WolvesintheThroneRoom",
+    "title": "Wolves in the Throne Room @ The Che Cafe on 7.11.09",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2009-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Wolves in the Throne Room",
+      "date": "2009-07-11"
+    }
+  },
+  {
+    "identifier": "7YearRabbitCycleCheCafe082606",
+    "title": "7 Year Rabbit Cycle @ the Che Cafe on 8.26.06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "7 Year Rabbit Cycle",
+      "date": "2006-08-26"
+    }
+  },
+  {
+    "identifier": "8.12.07_Daedelus",
+    "title": "Daedelus @ The Che Cafe on 8.12.07",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Daedelus",
+      "date": "2007-08-12"
+    }
+  },
+  {
+    "identifier": "8.12.07_LymbycSystym",
+    "title": "Lymbyc Systym @ The Che Cafe on 8.12.07",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Lymbyc Systym",
+      "date": "2007-08-12"
+    }
+  },
+  {
+    "identifier": "8.12.07_TheOneAmRadio",
+    "title": "The One Am Radio @ The Che Cafe on 8.12.07",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The One Am Radio",
+      "date": "2007-08-12"
+    }
+  },
+  {
+    "identifier": "8.13.07_DanielStripedTiger",
+    "title": "Daniel Striped Tiger @ The Che Cafe on 8.13.07",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2007-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Daniel Striped Tiger",
+      "date": "2007-08-13"
+    }
+  },
+  {
+    "identifier": "9.04.09_Japanther",
+    "title": "Japanther @ The Che Cafe on 9.04.09",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2009-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Japanther",
+      "date": "2009-09-04"
+    }
+  },
+  {
+    "identifier": "AgainstMeCheCafe",
+    "title": "Against Me! @ The Che Cafe on 07.20.02",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2002-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Against Me!",
+      "date": "2002-07-20"
+    }
+  },
+  {
+    "identifier": "AmpereMT",
+    "title": "Ampere @ Mystery Train Records on 5.6.06",
+    "current": {
+      "band": null,
+      "venue": "Mystery Train Records",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ampere",
+      "date": "2006-05-06"
+    }
+  },
+  {
+    "identifier": "AnArrowInFlightCheCafe",
+    "title": "An Arrow In Flight @ The Che Cafe on 7.23.03",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2003-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "An Arrow In Flight",
+      "date": "2003-07-23"
+    }
+  },
+  {
+    "identifier": "BloodFest_Peasant",
+    "title": "Peasant @ Red Blood Club",
+    "current": {
+      "band": null,
+      "venue": "Red Blood Club",
+      "date": "2014-04-27T10:30:40Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Peasant",
+      "date": "2014-04-27"
+    }
+  },
+  {
+    "identifier": "BurialYearMH",
+    "title": "Burial Year @ Mercy House Church in Amherst on 5.1.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Burial Year",
+      "date": "2006-05-01"
+    }
+  },
+  {
+    "identifier": "CircleTakesTheSquareCheCafe",
+    "title": "Circle Takes The Square @ Che Cafe",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2003-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Circle Takes The Square",
+      "date": "2003-01-01"
+    }
+  },
+  {
+    "identifier": "CityOfCaterpillarCheCafe",
+    "title": "City Of Caterpillar @ The Che Cafe on 2002-06-28",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2002-06-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "City Of Caterpillar",
+      "date": "2002-06-28"
+    }
+  },
+  {
+    "identifier": "CursedCheCafe",
+    "title": "Cursed @ The Che Cafe on 3.20.04",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2004-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Cursed",
+      "date": "2004-03-20"
+    }
+  },
+  {
+    "identifier": "DTTMT",
+    "title": "Death To Tyrants @ Mystery Train Records on 5.6.06",
+    "current": {
+      "band": null,
+      "venue": "Mystery Train Records",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Death To Tyrants",
+      "date": "2006-05-06"
+    }
+  },
+  {
+    "identifier": "ErinTobeyFlywheel",
+    "title": "Erin Tobey @ The Flywheel on 4.14.06",
+    "current": {
+      "band": null,
+      "venue": "The Flywheel",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Erin Tobey",
+      "date": "2006-04-14"
+    }
+  },
+  {
+    "identifier": "FindHimandKillHimChe",
+    "title": "Find Him and Kill Him @ The Che Cafe",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2005-12-01T17:17:46Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Find Him and Kill Him",
+      "date": "2005-12-01"
+    }
+  },
+  {
+    "identifier": "FindHimandKillHimCheCafe2",
+    "title": "Find Him and Kill Him @ The Che Cafe 2 - '04",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2004-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Find Him and Kill Him",
+      "date": "2004-01-01"
+    }
+  },
+  {
+    "identifier": "FurnaceMH",
+    "title": "Furnace @ Mercy House Church on 5.12.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Furnace",
+      "date": "2006-05-12"
+    }
+  },
+  {
+    "identifier": "GospelCheCafe",
+    "title": "Gospel @ The Che Cafe on 05.15.05",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2005-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Gospel",
+      "date": "2005-05-15"
+    }
+  },
+  {
+    "identifier": "LattermenCheCafe",
+    "title": "Latterman @ The Che Cafe on 2005-11-28",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2005-11-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Latterman",
+      "date": "2005-11-28"
+    }
+  },
+  {
+    "identifier": "LattermentheCheCafe",
+    "title": "Lattermen @ the Che Cafe on 11.28.2005",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2005-12-16T16:22:54Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Lattermen",
+      "date": "2020-11-28"
+    }
+  },
+  {
+    "identifier": "LightTheFuseAndRunCheCafe",
+    "title": "Light The Fuse And Run @ The Che Cafe",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2005-12-03T13:21:52Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Light The Fuse And Run",
+      "date": "2005-12-03"
+    }
+  },
+  {
+    "identifier": "LoserLifeCheCafe812",
+    "title": "Loser Life @ The Che Cafe on 8/12/06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Loser Life",
+      "date": "2006-08-12"
+    }
+  },
+  {
+    "identifier": "MattandKimCheCafe082806",
+    "title": "Matt and Kim @ the Che Cafe on 8.26.06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Matt and Kim",
+      "date": "2006-08-26"
+    }
+  },
+  {
+    "identifier": "MeneguarCheCafe",
+    "title": "Meneguar @ The Che Cafe on 05.15.05",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2005-05-15T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Meneguar",
+      "date": "2005-05-15"
+    }
+  },
+  {
+    "identifier": "NorthLincolnCheCafe",
+    "title": "North Lincoln @ The Che Cafe on 2005-11-28",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2005-11-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "North Lincoln",
+      "date": "2005-11-28"
+    }
+  },
+  {
+    "identifier": "PlotToBlowUpCDCheCafe",
+    "title": "The Plot To Blow Up The Eiffel Tower @ The Che Cafe on 01.24.03",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2003-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Plot To Blow Up The Eiffel Tower",
+      "date": "2003-01-24"
+    }
+  },
+  {
+    "identifier": "PlotToBlowUpCheCafe",
+    "title": "The Plot To Blow Up The Eiffel Tower @ The Che Cafe on 7.23.03",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2003-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Plot To Blow Up The Eiffel Tower",
+      "date": "2003-07-23"
+    }
+  },
+  {
+    "identifier": "PlotToBlowUpCheCafe2",
+    "title": "Plot To Blow Up The Eiffel Tower @ The Che Cafe in '01",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2001-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Plot To Blow Up The Eiffel Tower",
+      "date": "2001-01-01"
+    }
+  },
+  {
+    "identifier": "RelicMH",
+    "title": "Relics @ Mercy House Church on 5.12.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Relics",
+      "date": "2006-05-12"
+    }
+  },
+  {
+    "identifier": "TATCMH",
+    "title": "They and the Children Relics @ Mercy House Church on 5.12.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "They and the Children Relics",
+      "date": "2006-05-12"
+    }
+  },
+  {
+    "identifier": "TBIAPBCheCafe082606",
+    "title": "This Bike Is A Pipe Bomb @ the Che Cafe on 08.26.06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "This Bike Is A Pipe Bomb",
+      "date": "2006-08-26"
+    }
+  },
+  {
+    "identifier": "TedLeoCheCafe",
+    "title": "Ted Leo @ The Che Cafe on 2003-10-03",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2003-10-03T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ted Leo",
+      "date": "2003-10-03"
+    }
+  },
+  {
+    "identifier": "TheAssistantCheCafe",
+    "title": "The Assistant @ The Che Cafe for Che Fest '02",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2002-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Assistant",
+      "date": "2002-01-01"
+    }
+  },
+  {
+    "identifier": "TheRedLightStingtheCheCafe",
+    "title": "The Red Light Sting @ the Che Cafe",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2005-12-01T21:26:51Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "The Red Light Sting",
+      "date": "2005-12-01"
+    }
+  },
+  {
+    "identifier": "TinyHawksCheCafe",
+    "title": "Tiny Hawks @ The Che Cafe on 5.31.06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Tiny Hawks",
+      "date": "2006-05-31"
+    }
+  },
+  {
+    "identifier": "UnderADyingSunCheCafe",
+    "title": "Under A Dying Sun @ The Che Cafe for Che Fest '02 on 07.19.02",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2002-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Under A Dying Sun",
+      "date": "2002-07-19"
+    }
+  },
+  {
+    "identifier": "UnrequitedMH",
+    "title": "Unrequited @ Mercy House Church on 5.12.06",
+    "current": {
+      "band": null,
+      "venue": "MERCYhouse",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Unrequited",
+      "date": "2006-05-12"
+    }
+  },
+  {
+    "identifier": "WastelandMT",
+    "title": "Wasteland @ Mystery Train Records on 5.6.06",
+    "current": {
+      "band": null,
+      "venue": "Mystery Train Records",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Wasteland",
+      "date": "2006-05-06"
+    }
+  },
+  {
+    "identifier": "YouTenGrandTheCheCafe_0",
+    "title": "Ten Grand @ The Che Cafe",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2003-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "Ten Grand",
+      "date": "2003-01-01"
+    }
+  },
+  {
+    "identifier": "xbxrxCheCafe082606",
+    "title": "xbxrx @ the Che Cafe on 08.26.06",
+    "current": {
+      "band": null,
+      "venue": "The Che Cafe",
+      "date": "2006-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_band",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "band": "xbxrx",
+      "date": "2006-08-26"
+    }
+  },
+  {
+    "identifier": "06.29.13_xuvmx",
+    "title": "xUna Vez Masx @ Casa De Victor (Guatemala) on 06.29.13",
+    "current": {
+      "band": "xUna Vez Masx",
+      "venue": null,
+      "date": "2013-06-29T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "Casa De Victor",
+      "date": "2013-06-29"
+    }
+  },
+  {
+    "identifier": "09.01.13_xuvmx",
+    "title": "xUna Vez Masx @ Rock'Ol Vuh on 09.01.13",
+    "current": {
+      "band": "xUna Vez Masx",
+      "venue": null,
+      "date": "2013-09-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "Rock'Ol Vuh",
+      "date": "2013-09-01"
+    }
+  },
+  {
+    "identifier": "10.20.13_xUVMx",
+    "title": "xUna Vez Masx @ Salon Manuel Colom Argueta (Guatemala City, Guatemala) on 10.20.13",
+    "current": {
+      "band": "xUna Vez Masx",
+      "venue": null,
+      "date": "2013-10-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "Salon Manuel Colom Argueta",
+      "date": "2013-10-20"
+    }
+  },
+  {
+    "identifier": "10.25.14_RevanchaReaxion",
+    "title": "Revancha & Reaxion @ La Luna [Edgeday 2014] on 10.25.14",
+    "current": {
+      "band": "xUna Vez Masx",
+      "venue": null,
+      "date": "2014-10-25T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "La Luna",
+      "date": "2014-10-25"
+    }
+  },
+  {
+    "identifier": "11.20.16_HEAT",
+    "title": "HEAT @ The Whistlestop Bar on 11.20.16",
+    "current": {
+      "band": "HEAT",
+      "venue": null,
+      "date": "2016-11-20T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "The Whistlestop Bar",
+      "date": "2016-11-20"
+    }
+  },
+  {
+    "identifier": "12.01.17_HEAT",
+    "title": "HEAT @ Teros Gallery on 12.01.17",
+    "current": {
+      "band": "HEAT",
+      "venue": null,
+      "date": "2017-12-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "Teros Gallery",
+      "date": "2017-12-01"
+    }
+  },
+  {
+    "identifier": "2023-11-06-powerplant",
+    "title": "Powerplant @ 1810 Ojeman on 2023-11-06",
+    "current": {
+      "band": "Powerplant",
+      "venue": null,
+      "date": "2023-11-06T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "1810 Ojeman",
+      "date": "2023-11-06"
+    }
+  },
+  {
+    "identifier": "2024-01-01-black-button",
+    "title": "Black Button @ The End on 2024-01-01",
+    "current": {
+      "band": "Black Button",
+      "venue": null,
+      "date": "2024-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "The End",
+      "date": "2024-01-01"
+    }
+  },
+  {
+    "identifier": "2024-01-01-cicada",
+    "title": "Cicada @ The End on 2024-01-01",
+    "current": {
+      "band": "Cicada",
+      "venue": null,
+      "date": "2024-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "The End",
+      "date": "2024-01-01"
+    }
+  },
+  {
+    "identifier": "2024-01-01-warden",
+    "title": "Warden @ The End on 2024-01-01",
+    "current": {
+      "band": "Warden",
+      "venue": null,
+      "date": "2024-01-01T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "The End",
+      "date": "2024-01-01"
+    }
+  },
+  {
+    "identifier": "2024-12-28-SexPill",
+    "title": "Sex Pill [10 Year Anniversary show] @ The End (Ground Control) on 2024-12-28",
+    "current": {
+      "band": "Sex Pill",
+      "venue": null,
+      "date": "2024-12-28T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "The End",
+      "date": "2024-12-28"
+    }
+  },
+  {
+    "identifier": "2025-07-06-sex-pill",
+    "title": "Sex Pill @ White Swan Live on 2025-07-06",
+    "current": {
+      "band": "Sex Pill",
+      "venue": null,
+      "date": "2025-07-06T00:00:00Z"
+    },
+    "issues": [
+      "missing_venue",
+      "bad_date_format"
+    ],
+    "suggestions": {
+      "venue": "White Swan Live",
+      "date": "2025-07-06"
+    }
+  }
+]
