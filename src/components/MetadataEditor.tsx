@@ -976,7 +976,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 }
                 
                 // Debug: Check what items look like
-                console.log('🔍 DEBUG: Sample items:', allItems.slice(0, 3).map(item => ({ 
+                console.log('🔍 DEBUG: Sample items:', allItems.slice(0, 3).map((item: ArchiveItem) => ({ 
                   identifier: item.identifier, 
                   title: item.title?.substring(0, 50), 
                   youtube: item.youtube,

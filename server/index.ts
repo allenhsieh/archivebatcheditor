@@ -20,6 +20,7 @@ import {
   standardizeYouTubeUrl,
   generateFlyerFilename
 } from './utils.js'
+import type { JsonPatchOperation, ApiError } from '../src/types.js'
 
 // Create our Express server app
 const app = express()
@@ -55,13 +56,6 @@ const metadataUpdateSchema = z.object({
   target: z.enum(['metadata', 'files']).optional().default('metadata')
 })
 
-const metadataUpdateStreamSchema = z.object({
-  items: z.array(z.object({
-    identifier: z.string().min(1).max(100),
-    metadata: z.record(z.any()),
-    target: z.enum(['metadata', 'files']).optional().default('metadata')
-  })).min(1).max(100)
-})
 
 // New schema matching the TypeScript UpdateRequest interface (items: string[], updates: MetadataUpdate[])
 const updateRequestSchema = z.object({
@@ -70,7 +64,7 @@ const updateRequestSchema = z.object({
     field: z.string().min(1).max(100),
     value: z.string().max(1000),
     operation: z.enum(['add', 'replace', 'remove']).optional()
-  })).min(1).max(100)
+  })).min(0).max(100) // Allow empty updates array for graceful handling
 })
 
 const youtubeSuggestSchema = z.object({
@@ -425,9 +419,27 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
 
 
 
-// API ENDPOINT: GET /search
-// This endpoint searches within the authenticated user's uploaded items only
-// Example: GET /search?q=radiohead will search for "radiohead" in YOUR items on Archive.org
+/**
+ * API ENDPOINT: GET /api/search
+ * This endpoint searches within the authenticated user's uploaded items only
+ * 
+ * Request example:
+ * GET /api/search?q=radiohead
+ * 
+ * Response example:
+ * {
+ *   "items": [
+ *     {
+ *       "identifier": "09.19.15_TestBand",
+ *       "title": "Test Concert Recording",
+ *       "date": "2015-09-19",
+ *       "creator": "test@example.com"
+ *     }
+ *   ],
+ *   "total": 1,
+ *   "returned": 1
+ * }
+ */
 app.get('/api/search', async (req, res) => {
   try {
     // Validate that the request has a proper 'q' (query) parameter
@@ -576,11 +588,57 @@ app.get('/api/user-items', async (_req, res) => {
 // - User gets immediate feedback on failures (can cancel if needed)
 // - Much better user experience for long-running operations
 //
-// Example: POST /update-metadata-stream with JSON body containing array of items to update
+/**
+ * API ENDPOINT: POST /api/update-metadata-stream
+ * Updates metadata for multiple Archive.org items using Server-Sent Events for progress tracking
+ * 
+ * Request example:
+ * POST /api/update-metadata-stream
+ * Content-Type: application/json
+ * {
+ *   "items": ["09.19.15_TestBand"],
+ *   "updates": [
+ *     {
+ *       "field": "title",
+ *       "value": "Updated Title"
+ *     },
+ *     {
+ *       "field": "date", 
+ *       "value": "2015-09-19"
+ *     }
+ *   ]
+ * }
+ * 
+ * Response example (Server-Sent Events):
+ * Content-Type: text/event-stream
+ * 
+ * data: {"type":"start","total":1}
+ * 
+ * data: {"type":"progress","identifier":"09.19.15_TestBand","current":1,"total":1,"status":"processing"}
+ * 
+ * data: {"type":"progress","identifier":"09.19.15_TestBand","current":1,"total":1,"status":"success"}
+ * 
+ * data: {"type":"complete","total":1,"successful":1,"failed":0}
+ */
 app.post('/api/update-metadata-stream', async (req, res) => {
   try {
     // Validate the request body contains properly formatted UpdateRequest
     const { items: identifiers, updates } = updateRequestSchema.parse(req.body)
+    
+    // Handle empty updates array gracefully
+    if (updates.length === 0) {
+      // Set up SSE headers for consistent response format
+      res.setHeader('Content-Type', 'text/event-stream')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('Connection', 'keep-alive')
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      
+      // Send start and complete events immediately
+      res.write(`data: ${JSON.stringify({ type: 'start', total: identifiers.length })}\n\n`)
+      res.write(`data: ${JSON.stringify({ type: 'complete', total: identifiers.length, successful: identifiers.length, failed: 0 })}\n\n`)
+      res.end()
+      return
+    }
     
     // Transform UpdateRequest format to the format expected by processing logic
     const items = identifiers.map(identifier => {
@@ -652,7 +710,7 @@ app.post('/api/update-metadata-stream', async (req, res) => {
             formData.append('-target', target)
             
             // Create JSON Patch operations for metadata updates
-            const patches = []
+            const patches: JsonPatchOperation[] = []
             Object.entries(metadata).forEach(([key, value]) => {
               if (value !== undefined && value !== null) {
                 // Standardize special fields
@@ -691,7 +749,7 @@ app.post('/api/update-metadata-stream', async (req, res) => {
             
             if (!response.ok) {
               // Return error with parsed result for better error handling
-              const error = new Error(`Archive.org API error: ${response.status} ${response.statusText}`)
+              const error: ApiError = new Error(`Archive.org API error: ${response.status} ${response.statusText}`)
               error.response = { status: response.status, result }
               throw error
             }
@@ -866,9 +924,53 @@ app.post('/api/update-metadata', async (req, res) => {
   }
 })
 
-// API ENDPOINT: POST /youtube-suggest  
-// This endpoint finds YouTube matches for Archive.org items
-// Example: POST /youtube-suggest with JSON body containing array of items
+/**
+ * API ENDPOINT: POST /api/youtube-suggest
+ * Finds YouTube matches for Archive.org items using intelligent matching
+ * 
+ * Request example:
+ * POST /api/youtube-suggest
+ * Content-Type: application/json
+ * {
+ *   "items": [
+ *     {
+ *       "identifier": "gd1977-05-08.sbd.miller",
+ *       "title": "Grateful Dead - Fire on the Mountain Live at Cornell 1977-05-08",
+ *       "date": "1977-05-08"
+ *     }
+ *   ]
+ * }
+ * 
+ * Response example:
+ * {
+ *   "results": [
+ *     {
+ *       "identifier": "gd1977-05-08.sbd.miller",
+ *       "success": true,
+ *       "match": {
+ *         "videoId": "dQw4w9WgXcQ",
+ *         "title": "Grateful Dead - Fire on the Mountain (Cornell 1977)",
+ *         "url": "https://youtu.be/dQw4w9WgXcQ",
+ *         "publishedAt": "2019-05-08T00:00:00Z",
+ *         "extractedBand": "Grateful Dead",
+ *         "extractedVenue": "Cornell",
+ *         "extractedDate": "1977-05-08"
+ *       },
+ *       "suggestions": {
+ *         "youtube": "https://youtu.be/dQw4w9WgXcQ",
+ *         "band": "Grateful Dead",
+ *         "venue": "Cornell University",
+ *         "date": "1977-05-08"
+ *       }
+ *     }
+ *   ],
+ *   "summary": {
+ *     "total": 1,
+ *     "successful": 1,
+ *     "failed": 0
+ *   }
+ * }
+ */
 app.post('/api/youtube-suggest', async (req, res) => {
   try {
     // Handle both old format (single item) and new format (items array)
@@ -997,8 +1099,40 @@ app.post('/api/youtube-suggest', async (req, res) => {
   }
 })
 
-// API ENDPOINT: POST /batch-upload-image-stream
-// This endpoint handles batch image uploads using Server-Sent Events for real-time progress
+/**
+ * API ENDPOINT: POST /api/batch-upload-image-stream
+ * Handles batch image uploads using Server-Sent Events for real-time progress
+ * 
+ * Request example:
+ * POST /api/batch-upload-image-stream
+ * Content-Type: multipart/form-data
+ * 
+ * Form data:
+ * - files: [File] (image files to upload)
+ * - itemsMetadata: JSON string containing:
+ *   [
+ *     {
+ *       "identifier": "09.19.15_TestBand",
+ *       "metadata": {
+ *         "title": "Test Concert",
+ *         "date": "2015-09-19",
+ *         "band": "Test Band",
+ *         "venue": "Test Venue"
+ *       }
+ *     }
+ *   ]
+ * 
+ * Response example (Server-Sent Events):
+ * Content-Type: text/event-stream
+ * 
+ * data: {"type":"start","total":1}
+ * 
+ * data: {"type":"progress","identifier":"09.19.15_TestBand","current":1,"total":1,"status":"processing"}
+ * 
+ * data: {"type":"progress","identifier":"09.19.15_TestBand","current":1,"total":1,"status":"success"}
+ * 
+ * data: {"type":"complete","total":1,"successful":1,"failed":0}
+ */
 app.post('/api/batch-upload-image-stream', (req, res, _next) => {
   
   upload.array('files')(req, res, async (err) => {
@@ -1338,8 +1472,19 @@ app.post('/api/batch-upload-image', (req, res, _next) => {
   })
 })
 
-// API ENDPOINT: GET /health
-// Simple health check endpoint to verify the server is running
+/**
+ * API ENDPOINT: GET /api/health
+ * Simple health check endpoint to verify the server is running
+ * 
+ * Request example:
+ * GET /api/health
+ * 
+ * Response example:
+ * {
+ *   "status": "ok",
+ *   "timestamp": "2023-12-25T10:30:00.000Z"
+ * }
+ */
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })

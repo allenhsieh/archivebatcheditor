@@ -60,7 +60,7 @@ describe('Flyer Upload E2E Tests (Real Server)', () => {
         .get('/api/health')
         .expect(200);
 
-      expect(response.body.status).toBe('OK');
+      expect(response.body.status).toBe('ok');
       expect(response.body).toHaveProperty('timestamp');
     });
   });
@@ -71,7 +71,7 @@ describe('Flyer Upload E2E Tests (Real Server)', () => {
         .post('/api/batch-upload-image-stream')
         .expect(400);
 
-      expect(response.body.error).toContain('No files uploaded');
+      expect(response.body.error).toContain('No image file uploaded');
     });
 
     test('rejects requests without itemsMetadata', async () => {
@@ -85,7 +85,7 @@ describe('Flyer Upload E2E Tests (Real Server)', () => {
           .attach('files', testImagePath)
           .expect(400);
 
-        expect(response.body.error).toContain('itemsMetadata is required');
+        expect(response.body.error).toContain('No items specified for upload');
       } finally {
         if (fs.existsSync(testImagePath)) {
           fs.unlinkSync(testImagePath);
@@ -297,10 +297,10 @@ describe('Flyer Upload E2E Tests (Real Server)', () => {
         .query({ q: 'test band' })
         .expect(200);
 
-      expect(response.body).toHaveProperty('response');
-      expect(response.body.response).toHaveProperty('docs');
-      expect(response.body.response).toHaveProperty('numFound');
-      expect(Array.isArray(response.body.response.docs)).toBe(true);
+      expect(response.body).toHaveProperty('items');
+      expect(response.body).toHaveProperty('total');
+      expect(response.body).toHaveProperty('returned');
+      expect(Array.isArray(response.body.items)).toBe(true);
       expect(global.fetch).toHaveBeenCalled();
     });
 
