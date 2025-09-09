@@ -244,6 +244,7 @@ async function makeArchiveApiCall<T>(apiCall: () => Promise<T>, context: string)
       
       if (attempt > 1) {
         console.log(`✅ ${context} succeeded on attempt ${attempt}`)
+        console.log(`✅ ${context} succeeded on attempt ${attempt}`)
       }
       
       return result
