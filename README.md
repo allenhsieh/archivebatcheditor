@@ -447,5 +447,4 @@ This tool can save you **hours** of manual work when managing large media collec
 
 ---
 
-*Last updated: September 2024*  
-*Built with ❤️ for the Archive.org community*
+*Last updated: September 2024* 
