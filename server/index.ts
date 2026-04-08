@@ -689,10 +689,10 @@ app.post('/api/update-metadata-stream', async (req, res) => {
       const { identifier, metadata, target = 'metadata' } = item
       
       try {
-        sendProgress({ 
-          type: 'progress', 
-          current: i + 1, 
-          total: items.length, 
+        sendProgress({
+          type: 'progress',
+          progress: i + 1,
+          total: items.length,
           identifier,
           status: 'updating'
         })
@@ -769,7 +769,7 @@ app.post('/api/update-metadata-stream', async (req, res) => {
             sendProgress({
               type: 'progress',
               identifier,
-              current: i + 1,
+              progress: i + 1,
               total: items.length,
               info: `🔄 Field not found, using add operation (${errorMsg})`
             })
@@ -787,12 +787,13 @@ app.post('/api/update-metadata-stream', async (req, res) => {
           archiveResponse: result
         })
         
-        sendProgress({ 
-          type: 'progress', 
-          current: i + 1, 
-          total: items.length, 
+        sendProgress({
+          type: 'progress',
+          progress: i + 1,
+          total: items.length,
           identifier,
-          status: 'completed'
+          status: 'completed',
+          message: 'Metadata updated successfully'
         })
         
         // Small delay to avoid overwhelming Archive.org
@@ -802,18 +803,21 @@ app.post('/api/update-metadata-stream', async (req, res) => {
         
       } catch (error) {
         console.error(`❌ Failed to update ${identifier}:`, error)
-        
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+        const archiveDetail = ((error as ApiError).response?.result as any)?.error
+        const errorMessage = archiveDetail
+          ? `${error instanceof Error ? error.message : 'Unknown error'}: ${archiveDetail}`
+          : error instanceof Error ? error.message : 'Unknown error'
         results.push({
           identifier,
           success: false,
           error: errorMessage
         })
         
-        sendProgress({ 
-          type: 'progress', 
-          current: i + 1, 
-          total: items.length, 
+        sendProgress({
+          type: 'progress',
+          progress: i + 1,
+          total: items.length,
           identifier,
           status: 'error',
           error: errorMessage

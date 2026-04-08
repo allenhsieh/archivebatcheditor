@@ -211,7 +211,7 @@ export const useArchive = () => {
                   // Informational message mid-processing (e.g. replace→add fallback)
                   addLog({
                     type: 'info',
-                    message: `[${data.current}/${data.total}] ${data.info}`,
+                    message: `[${data.progress}/${data.total}] ${data.info}`,
                     identifier: data.identifier
                   })
                 } else if (data.message) {
