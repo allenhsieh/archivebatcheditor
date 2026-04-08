@@ -247,7 +247,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       newUpdates.push({
         field: 'band',
         value: editableValues.band,
-        operation: 'replace'
+        operation: 'add'
       })
     }
     
@@ -256,7 +256,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       newUpdates.push({
         field: 'venue',
         value: editableValues.venue,
-        operation: 'replace'
+        operation: 'add'
       })
     }
     

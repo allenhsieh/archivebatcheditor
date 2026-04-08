@@ -207,6 +207,13 @@ export const useArchive = () => {
                 } else if (data.message?.includes('Processing')) {
                   // Item is being processed
                   setItemStatuses(prev => ({ ...prev, [data.identifier]: 'processing' }))
+                } else if (data.info) {
+                  // Informational message mid-processing (e.g. replace→add fallback)
+                  addLog({
+                    type: 'info',
+                    message: `[${data.current}/${data.total}] ${data.info}`,
+                    identifier: data.identifier
+                  })
                 } else if (data.message) {
                   // Success for this item
                   const status: ItemStatus = data.updated === 0 ? 'skipped' : 'success'

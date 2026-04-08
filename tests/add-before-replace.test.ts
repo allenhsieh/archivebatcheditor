@@ -1,502 +1,328 @@
 /**
- * Add-Before-Replace Metadata Operations Integration Tests
- * 
- * These tests verify the add-before-replace pattern that was learned during development:
- * - When updating metadata that already exists, Archive.org requires an "add" operation first
- * - Then perform a "replace" operation to update the value
- * - This prevents metadata conflicts and ensures consistent updates
+ * Replace-First Metadata Operations Integration Tests
+ *
+ * These tests verify the replace-first-then-add pattern:
+ * - Replace is attempted first to update existing fields without creating duplicates
+ *   (e.g. avoids a second "band" tag if one already exists)
+ * - If replace fails (field doesn't exist yet), add is used as a fallback
+ * - The add fallback is forced even when the update has an explicit 'replace' operation,
+ *   so the fallback actually works instead of silently retrying replace
  */
 
 import request from 'supertest';
-import https from 'node:https';
 import app from '../server/index.js';
 
-// Mock external API calls
-jest.mock('node:https', () => ({
-  request: jest.fn()
-}));
+// Parse the JSON Patch payload from a URL-encoded request body
+function parsePatch(body: string): { op: string; path: string; value: string }[] {
+  const params = new URLSearchParams(body)
+  const patch = params.get('-patch')
+  return patch ? JSON.parse(patch) : []
+}
 
-describe('Add-Before-Replace Metadata Operations E2E Tests', () => {
+describe('Replace-First-Then-Add Metadata Operations', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    
-    // Set up required environment variables for tests
-    process.env.ARCHIVE_EMAIL = 'test@example.com';
-    process.env.ARCHIVE_ACCESS_KEY = 'test-access-key';
-    process.env.ARCHIVE_SECRET_KEY = 'test-secret-key';
-    
-    // Mock global fetch for Archive.org API calls
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ success: true }),
-      text: () => Promise.resolve('{"success": true}')
-    });
-  });
+    jest.clearAllMocks()
+    process.env.ARCHIVE_ACCESS_KEY = 'test-access-key'
+    process.env.ARCHIVE_SECRET_KEY = 'test-secret-key'
+    process.env.ARCHIVE_EMAIL = 'test@example.com'
+  })
 
   afterEach(() => {
-    // Clean up environment variables
-    delete process.env.ARCHIVE_EMAIL;
-    delete process.env.ARCHIVE_ACCESS_KEY;
-    delete process.env.ARCHIVE_SECRET_KEY;
-  });
+    delete process.env.ARCHIVE_ACCESS_KEY
+    delete process.env.ARCHIVE_SECRET_KEY
+    delete process.env.ARCHIVE_EMAIL
+  })
 
-  describe('Metadata Update Pattern Verification', () => {
-    test('existing metadata fields use add-before-replace pattern', async () => {
-      let capturedRequests: any[] = [];
-      
-      // Mock fetch to capture requests and simulate add-before-replace behavior
+  describe('Operation Order', () => {
+    test('replace is sent in the first API call', async () => {
+      const metadataCalls: { patch: ReturnType<typeof parsePatch> }[] = []
+
       global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
-        capturedRequests.push({
-          url,
-          method: options.method,
-          body: options.body,
-          headers: options.headers
-        });
-        
-        // Check if this is an "add" operation (first attempt) and simulate "already exists" error
-        const bodyString = options.body.toString();
-        const isAddOperation = bodyString.includes('"op":"add"');
-        
-        if (isAddOperation) {
-          // Simulate "already exists" error to trigger replace operation
+        if (url.includes('/metadata/')) {
+          metadataCalls.push({ patch: parsePatch(options.body.toString()) })
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ success: true })
+        })
+      })
+
+      await request(app)
+        .post('/api/update-metadata-stream')
+        .send({ items: ['09.19.15_TestBand'], updates: [{ field: 'band', value: 'Test Band' }] })
+        .expect(200)
+
+      expect(metadataCalls.length).toBe(1) // Only one call when replace succeeds
+      expect(metadataCalls[0].patch[0].op).toBe('replace')
+    })
+
+    test('add is used as fallback when replace fails', async () => {
+      let metadataCallCount = 0
+      const metadataCalls: { patch: ReturnType<typeof parsePatch> }[] = []
+
+      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
+        if (!url.includes('/metadata/')) {
+          return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+        }
+
+        metadataCallCount++
+        metadataCalls.push({ patch: parsePatch(options.body.toString()) })
+
+        if (metadataCallCount === 1) {
+          // First call: replace fails because the field doesn't exist yet
           return Promise.resolve({
             ok: false,
             status: 400,
-            json: () => Promise.resolve({ 
-              success: false, 
-              error: 'field already exists' 
-            }),
-            text: () => Promise.resolve('{"success": false, "error": "field already exists"}')
-          });
-        } else {
-          // For replace operations (second attempt), return success
-          return Promise.resolve({
-            ok: true,
-            status: 200,
-            json: () => Promise.resolve({ success: true }),
-            text: () => Promise.resolve('{"success": true}')
-          });
+            json: () => Promise.resolve({ success: false, error: 'field not found' })
+          })
         }
-      });
 
-      const requestData = {
-        items: ['09.19.15_TestBand'],
-        updates: [
-          {
-            field: 'title',
-            value: 'Updated Concert Title'
-          },
-          {
-            field: 'date', 
-            value: '2015-09-19'
-          },
-          {
-            field: 'venue',
-            value: 'The Venue'
-          }
-        ]
-      };
+        // Second call: add succeeds
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+      })
 
       await request(app)
         .post('/api/update-metadata-stream')
-        .send(requestData)
-        .expect(200);
+        .send({ items: ['09.19.15_TestBand'], updates: [{ field: 'band', value: 'Test Band' }] })
+        .expect(200)
 
-      // Verify that fetch was called for API requests
-      expect(global.fetch as jest.Mock).toHaveBeenCalled();
+      // Expect two calls: replace (fails) then add (succeeds)
+      expect(metadataCalls.length).toBeGreaterThanOrEqual(2)
+      expect(metadataCalls[0].patch[0].op).toBe('replace')
+      const addCall = metadataCalls.find(c => c.patch[0].op === 'add')
+      expect(addCall).toBeDefined()
+    })
 
-      // Verify that at least one metadata API call was made
-      const metadataApiCalls = capturedRequests.filter(req => 
-        req.url && req.url.includes('/metadata/')
-      );
-      
-      expect(metadataApiCalls.length).toBeGreaterThan(0);
-    });
+    test('fallback add overrides explicit per-field replace operation', async () => {
+      let metadataCallCount = 0
+      const metadataCalls: { patch: ReturnType<typeof parsePatch> }[] = []
 
-    test('new metadata fields use simple add operation', async () => {
-      let capturedRequests: any[] = [];
-      
-      // Mock fetch to capture requests for new fields (always succeed with add)
       global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
-        capturedRequests.push({
-          url,
-          method: options.method,
-          body: options.body,
-          headers: options.headers
-        });
-        
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ success: true }),
-          text: () => Promise.resolve('{"success": true}')
-        });
-      });
+        if (!url.includes('/metadata/')) {
+          return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+        }
 
-      const requestData = {
-        items: ['06.14.14_NewField'],
-        updates: [
-          {
-            field: 'band',
-            value: 'The Test Band'
-          },
-          {
-            field: 'setlist',
-            value: 'Song 1, Song 2, Song 3'
-          }
-        ]
-      };
+        metadataCallCount++
+        metadataCalls.push({ patch: parsePatch(options.body.toString()) })
 
-      await request(app)
-        .post('/api/update-metadata-stream')
-        .send(requestData)
-        .expect(200);
-
-      // Verify that fetch was called for API requests
-      expect(global.fetch as jest.Mock).toHaveBeenCalled();
-
-      // Verify that at least one metadata API call was made
-      const metadataApiCalls = capturedRequests.filter(req => 
-        req.url && req.url.includes('/metadata/')
-      );
-
-      expect(metadataApiCalls.length).toBeGreaterThan(0);
-    });
-
-    test('date field standardization with add-before-replace', async () => {
-      let capturedRequests: any[] = [];
-      
-      // Mock fetch to capture requests
-      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
-        capturedRequests.push({
-          url,
-          method: options.method,
-          body: options.body,
-          headers: options.headers
-        });
-        
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ success: true }),
-          text: () => Promise.resolve('{"success": true}')
-        });
-      });
-
-      const requestData = {
-        items: ['01.05.12_DateTest'],
-        updates: [
-          {
-            field: 'date',
-            value: '2012-01-05'
-          }
-        ]
-      };
-
-      await request(app)
-        .post('/api/update-metadata-stream')
-        .send(requestData)
-        .expect(200);
-
-      expect(global.fetch as jest.Mock).toHaveBeenCalled();
-
-      const metadataApiCalls = capturedRequests.filter(req => 
-        req.url && req.url.includes('/metadata/')
-      );
-
-      expect(metadataApiCalls.length).toBeGreaterThan(0);
-
-      // Verify date is in correct format in the API calls
-      const dateCalls = metadataApiCalls.filter(call => 
-        call.body && call.body.toString().includes('2012-01-05')
-      );
-      
-      expect(dateCalls.length).toBeGreaterThan(0);
-    });
-
-    test('youtube field updates with URL standardization', async () => {
-      let capturedRequests: any[] = [];
-      
-      // Mock fetch to capture requests
-      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
-        capturedRequests.push({
-          url,
-          method: options.method,
-          body: options.body,
-          headers: options.headers
-        });
-        
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ success: true }),
-          text: () => Promise.resolve('{"success": true}')
-        });
-      });
-
-      const requestData = {
-        items: ['07.15.13_YouTubeTest'],
-        updates: [
-          {
-            field: 'youtube',
-            value: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-          }
-        ]
-      };
-
-      await request(app)
-        .post('/api/update-metadata-stream')
-        .send(requestData)
-        .expect(200);
-
-      expect(global.fetch as jest.Mock).toHaveBeenCalled();
-
-      const metadataApiCalls = capturedRequests.filter(req => 
-        req.url && req.url.includes('/metadata/')
-      );
-
-      // Verify API calls were made (YouTube URL standardization happens server-side)
-      expect(metadataApiCalls.length).toBeGreaterThan(0);
-    });
-
-    test('subject field uses add-before-replace for tag management', async () => {
-      let capturedRequests: any[] = [];
-      
-      // Mock fetch to capture requests
-      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
-        capturedRequests.push({
-          url,
-          method: options.method,
-          body: options.body,
-          headers: options.headers
-        });
-        
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ success: true }),
-          text: () => Promise.resolve('{"success": true}')
-        });
-      });
-
-      const requestData = {
-        items: ['03.22.14_SubjectTest'],
-        updates: [
-          {
-            field: 'subject',
-            value: 'Folk; Indie Rock; Live Recording; Concert'
-          }
-        ]
-      };
-
-      await request(app)
-        .post('/api/update-metadata-stream')
-        .send(requestData)
-        .expect(200);
-
-      expect(global.fetch as jest.Mock).toHaveBeenCalled();
-
-      const metadataApiCalls = capturedRequests.filter(req => 
-        req.url && req.url.includes('/metadata/')
-      );
-
-      // Verify API calls were made (subject formatting happens server-side)
-      expect(metadataApiCalls.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('Bulk Operation Patterns', () => {
-    test('bulk updates maintain add-before-replace consistency', async () => {
-      let capturedRequests: any[] = [];
-      
-      // Mock fetch to capture requests
-      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
-        capturedRequests.push({
-          url,
-          method: options.method,
-          body: options.body,
-          headers: options.headers
-        });
-        
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ success: true }),
-          text: () => Promise.resolve('{"success": true}')
-        });
-      });
-
-      const requestData = {
-        items: ['09.19.15_Item1', '06.14.14_Item2', '01.05.12_Item3'],
-        updates: [
-          {
-            field: 'venue',
-            value: 'Updated Venue Name'
-          },
-          {
-            field: 'band',
-            value: 'The Updated Band'
-          }
-        ]
-      };
-
-      await request(app)
-        .post('/api/update-metadata-stream')
-        .send(requestData)
-        .expect(200);
-
-      expect(global.fetch as jest.Mock).toHaveBeenCalled();
-
-      // Should make API calls for all items
-      const metadataApiCalls = capturedRequests.filter(req => 
-        req.url && req.url.includes('/metadata/')
-      );
-
-      // Should have calls for each item
-      expect(metadataApiCalls.length).toBeGreaterThan(0);
-
-      // Verify identifiers appear in API calls
-      const itemIdentifiers = ['09.19.15_Item1', '06.14.14_Item2', '01.05.12_Item3'];
-      itemIdentifiers.forEach(identifier => {
-        const itemCalls = metadataApiCalls.filter(call => 
-          call.url && call.url.includes(identifier)
-        );
-        expect(itemCalls.length).toBeGreaterThan(0);
-      });
-    });
-
-    test('mixed operations (add and replace) work correctly', async () => {
-      let capturedRequests: any[] = [];
-      
-      // Mock fetch to capture requests
-      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
-        capturedRequests.push({
-          url,
-          method: options.method,
-          body: options.body,
-          headers: options.headers
-        });
-        
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ success: true }),
-          text: () => Promise.resolve('{"success": true}')
-        });
-      });
-
-      const requestData = {
-        items: ['05.30.16_MixedTest'],
-        updates: [
-          {
-            field: 'title',
-            value: 'Updated Title'
-          },
-          {
-            field: 'description',
-            value: 'New description for this recording'
-          },
-          {
-            field: 'creator',
-            value: 'updated@example.com'
-          }
-        ]
-      };
-
-      await request(app)
-        .post('/api/update-metadata-stream')
-        .send(requestData)
-        .expect(200);
-
-      expect(global.fetch as jest.Mock).toHaveBeenCalled();
-
-      const metadataApiCalls = capturedRequests.filter(req => 
-        req.url && req.url.includes('/metadata/')
-      );
-
-      // Verify API calls were made for mixed operations
-      expect(metadataApiCalls.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('Error Handling and Regression Protection', () => {
-    test('malformed requests are rejected with proper error messages', async () => {
-      const invalidRequestData = {
-        items: 'not-an-array', // Should be array
-        updates: 'not-an-array' // Should be array
-      };
-
-      const response = await request(app)
-        .post('/api/update-metadata-stream')
-        .send(invalidRequestData)
-        .expect(200);
-
-      // Should return error in SSE format
-      expect(response.text).toContain('error');
-      expect(response.text).toContain('Invalid request format');
-    });
-
-    test('empty updates array is handled gracefully', async () => {
-      const requestData = {
-        items: ['09.19.15_EmptyTest'],
-        updates: [] // Empty updates
-      };
-
-      const response = await request(app)
-        .post('/api/update-metadata-stream')
-        .send(requestData)
-        .expect(200);
-
-      // Should complete successfully even with no updates
-      expect(response.text).toContain('complete');
-    });
-
-    test('invalid identifiers are handled appropriately', async () => {
-      let capturedRequests: any[] = [];
-      
-      // Mock fetch to capture requests
-      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
-        capturedRequests.push({ url, body: options.body });
-        
-        // Mock error response for invalid identifier
-        const mockResponse = {
-          statusCode: 404,
-          headers: { 'content-type': 'application/json' },
-          on: jest.fn((event, handler) => {
-            if (event === 'data') handler('{"error": "Item not found"}');
-            if (event === 'end') handler();
+        if (metadataCallCount === 1) {
+          return Promise.resolve({
+            ok: false,
+            status: 400,
+            json: () => Promise.resolve({ success: false, error: 'path not found' })
           })
-        };
-        
-        const mockRequest = {
-          on: jest.fn(),
-          write: jest.fn(),
-          end: jest.fn(() => {
-            if (callback) callback(mockResponse);
-          })
-        };
-        
-        return mockRequest;
-      });
+        }
 
-      const requestData = {
-        items: ['invalid_identifier_format'],
-        updates: [
-          {
-            field: 'title',
-            value: 'Test Title'
-          }
-        ]
-      };
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+      })
+
+      // All fields have explicit operation: 'replace' — the fallback must still force 'add'
+      await request(app)
+        .post('/api/update-metadata-stream')
+        .send({
+          items: ['09.19.15_TestBand'],
+          updates: [
+            { field: 'band', value: 'Test Band', operation: 'replace' },
+            { field: 'venue', value: 'The Venue', operation: 'replace' }
+          ]
+        })
+        .expect(200)
+
+      expect(metadataCalls.length).toBeGreaterThanOrEqual(2)
+      // The add fallback must force all operations to 'add', not keep 'replace'
+      const addCall = metadataCalls.find(c => c.patch.every(p => p.op === 'add'))
+      expect(addCall).toBeDefined()
+    })
+
+    test('successful replace makes only one API call per item', async () => {
+      const metadataCalls: string[] = [] // track which identifiers were called
+
+      global.fetch = jest.fn().mockImplementation((url: string) => {
+        if (url.includes('/metadata/')) {
+          metadataCalls.push(url)
+        }
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+      })
+
+      await request(app)
+        .post('/api/update-metadata-stream')
+        .send({ items: ['09.19.15_TestBand'], updates: [{ field: 'band', value: 'Test Band' }] })
+        .expect(200)
+
+      // When replace succeeds there is no add fallback — exactly 1 call
+      const callsForItem = metadataCalls.filter(u => u.includes('09.19.15_TestBand'))
+      expect(callsForItem.length).toBe(1)
+    })
+  })
+
+  describe('Authorization', () => {
+    test('metadata updates use LOW authorization format', async () => {
+      let capturedAuth: string | undefined
+
+      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
+        if (url.includes('/metadata/')) {
+          capturedAuth = options.headers?.Authorization || options.headers?.authorization
+        }
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+      })
+
+      await request(app)
+        .post('/api/update-metadata-stream')
+        .send({ items: ['09.19.15_TestBand'], updates: [{ field: 'band', value: 'Test Band' }] })
+        .expect(200)
+
+      expect(capturedAuth).toBeDefined()
+      expect(capturedAuth).toMatch(/^LOW\s+/)
+      expect(capturedAuth).toContain('test-access-key:test-secret-key')
+    })
+  })
+
+  describe('Field Processing', () => {
+    test('date is standardized to YYYY-MM-DD before sending', async () => {
+      const metadataCalls: { patch: ReturnType<typeof parsePatch> }[] = []
+
+      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
+        if (url.includes('/metadata/')) {
+          metadataCalls.push({ patch: parsePatch(options.body.toString()) })
+        }
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+      })
+
+      await request(app)
+        .post('/api/update-metadata-stream')
+        .send({ items: ['01.05.12_DateTest'], updates: [{ field: 'date', value: '03/15/2015' }] })
+        .expect(200)
+
+      expect(metadataCalls.length).toBeGreaterThan(0)
+      const datePatch = metadataCalls[0].patch.find(p => p.path === '/date')
+      expect(datePatch?.value).toBe('2015-03-15')
+    })
+
+    test('youtube URL is standardized to youtu.be short format before sending', async () => {
+      const metadataCalls: { patch: ReturnType<typeof parsePatch> }[] = []
+
+      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
+        if (url.includes('/metadata/')) {
+          metadataCalls.push({ patch: parsePatch(options.body.toString()) })
+        }
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+      })
+
+      await request(app)
+        .post('/api/update-metadata-stream')
+        .send({
+          items: ['07.15.13_YouTubeTest'],
+          updates: [{ field: 'youtube', value: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }]
+        })
+        .expect(200)
+
+      expect(metadataCalls.length).toBeGreaterThan(0)
+      const youtubePatch = metadataCalls[0].patch.find(p => p.path === '/youtube')
+      expect(youtubePatch?.value).toBe('https://youtu.be/dQw4w9WgXcQ')
+    })
+
+    test('patch path uses /field format (not /metadata/field)', async () => {
+      const metadataCalls: { patch: ReturnType<typeof parsePatch> }[] = []
+
+      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
+        if (url.includes('/metadata/')) {
+          metadataCalls.push({ patch: parsePatch(options.body.toString()) })
+        }
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+      })
+
+      await request(app)
+        .post('/api/update-metadata-stream')
+        .send({ items: ['test_item'], updates: [{ field: 'title', value: 'My Title' }] })
+        .expect(200)
+
+      expect(metadataCalls.length).toBeGreaterThan(0)
+      const titlePatch = metadataCalls[0].patch.find(p => p.path === '/title')
+      expect(titlePatch).toBeDefined()
+      // Ensure path is /field, not /metadata/field
+      expect(titlePatch?.path).toBe('/title')
+      expect(titlePatch?.path).not.toContain('/metadata/')
+    })
+  })
+
+  describe('Bulk Operations', () => {
+    test('each item in a bulk update uses replace-first independently', async () => {
+      const metadataCallsByItem: Record<string, ReturnType<typeof parsePatch>[]> = {}
+
+      global.fetch = jest.fn().mockImplementation((url: string, options: any) => {
+        if (url.includes('/metadata/')) {
+          const match = url.match(/\/metadata\/([^/?]+)/)
+          const id = match?.[1] ?? 'unknown'
+          if (!metadataCallsByItem[id]) metadataCallsByItem[id] = []
+          metadataCallsByItem[id].push(parsePatch(options.body.toString()))
+        }
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+      })
+
+      await request(app)
+        .post('/api/update-metadata-stream')
+        .send({
+          items: ['09.19.15_Item1', '06.14.14_Item2', '01.05.12_Item3'],
+          updates: [{ field: 'band', value: 'Test Band' }]
+        })
+        .expect(200)
+
+      for (const id of ['09.19.15_Item1', '06.14.14_Item2', '01.05.12_Item3']) {
+        expect(metadataCallsByItem[id]).toBeDefined()
+        expect(metadataCallsByItem[id][0][0].op).toBe('replace') // First call is replace
+      }
+    })
+  })
+
+  describe('Edge Cases and Error Handling', () => {
+    test('empty updates array completes without making metadata API calls', async () => {
+      const metadataCalls: string[] = []
+
+      global.fetch = jest.fn().mockImplementation((url: string) => {
+        if (url.includes('/metadata/')) metadataCalls.push(url)
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) })
+      })
 
       const response = await request(app)
         .post('/api/update-metadata-stream')
-        .send(requestData)
-        .expect(200);
+        .send({ items: ['09.19.15_EmptyTest'], updates: [] })
+        .expect(200)
 
-      // Should handle the error gracefully in SSE response
-      expect(response.text).toBeDefined();
-    });
-  });
-});
+      expect(response.text).toContain('complete')
+      expect(metadataCalls.length).toBe(0)
+    })
+
+    test('malformed request body returns error in SSE stream', async () => {
+      const response = await request(app)
+        .post('/api/update-metadata-stream')
+        .send({ items: 'not-an-array', updates: 'not-an-array' })
+        .expect(200)
+
+      expect(response.text).toContain('error')
+      expect(response.text).toContain('Invalid request format')
+    })
+
+    test('SSE response includes start and complete events', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ success: true })
+      })
+
+      const response = await request(app)
+        .post('/api/update-metadata-stream')
+        .send({ items: ['09.19.15_TestBand'], updates: [{ field: 'band', value: 'Test Band' }] })
+        .expect(200)
+
+      const events = response.text
+        .split('\n')
+        .filter(l => l.startsWith('data: '))
+        .map(l => { try { return JSON.parse(l.slice(6)) } catch { return null } })
+        .filter(Boolean)
+
+      expect(events.find(e => e.type === 'start')).toBeDefined()
+      expect(events.find(e => e.type === 'complete')).toBeDefined()
+    })
+  })
+})

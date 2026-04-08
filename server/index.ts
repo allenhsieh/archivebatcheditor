@@ -244,7 +244,6 @@ async function makeArchiveApiCall<T>(apiCall: () => Promise<T>, context: string)
       
       if (attempt > 1) {
         console.log(`✅ ${context} succeeded on attempt ${attempt}`)
-        console.log(`✅ ${context} succeeded on attempt ${attempt}`)
       }
       
       return result
@@ -706,10 +705,11 @@ app.post('/api/update-metadata-stream', async (req, res) => {
           const metadataUrl = buildArchiveMetadataUrl(identifier)
           
           // Helper function to try a patch operation
-          const tryPatchOperation = async (operation: 'add' | 'replace') => {
+          // forceOperation: when true, ignores per-field operation settings and uses the operation parameter for all fields
+          const tryPatchOperation = async (operation: 'add' | 'replace', forceOperation = false) => {
             const formData = new URLSearchParams()
             formData.append('-target', target)
-            
+
             // Create JSON Patch operations for metadata updates
             const patches: JsonPatchOperation[] = []
             Object.entries(metadata).forEach(([key, value]) => {
@@ -721,11 +721,11 @@ app.post('/api/update-metadata-stream', async (req, res) => {
                 } else if (key === 'youtube') {
                   processedValue = standardizeYouTubeUrl(processedValue)
                 }
-                
-                // Use the specified operation from the update request if available, otherwise use the operation parameter
+
+                // Use the operation parameter when forced, otherwise use the per-field operation or fall back to the parameter
                 const update = updates.find(u => u.field === key)
-                const op = update?.operation || operation
-                
+                const op = forceOperation ? operation : (update?.operation || operation)
+
                 patches.push({
                   op,
                   path: `/${key}`,
@@ -733,10 +733,10 @@ app.post('/api/update-metadata-stream', async (req, res) => {
                 })
               }
             })
-            
+
             // Add the JSON patch to form data
             formData.append('-patch', JSON.stringify(patches))
-            
+
             const response = await fetch(metadataUrl, {
               method: 'POST',
               headers: {
@@ -745,42 +745,36 @@ app.post('/api/update-metadata-stream', async (req, res) => {
               },
               body: formData
             })
-            
+
             const result = await response.json()
-            
+
             if (!response.ok) {
               // Return error with parsed result for better error handling
               const error: ApiError = new Error(`Archive.org API error: ${response.status} ${response.statusText}`)
               error.response = { status: response.status, result }
               throw error
             }
-            
+
             return result
           }
-          
-          // Check if all operations are explicitly specified
-          const allOperationsSpecified = Object.keys(metadata).every(key => 
-            updates.find(u => u.field === key)?.operation
-          )
-          
-          if (allOperationsSpecified) {
-            // Use the operations as specified in the request
-            return await tryPatchOperation('add') // Default doesn't matter since operations are specified
-          } else {
-            // Use add-first-then-replace pattern for general metadata updates
-            try {
-              return await tryPatchOperation('add')
-            } catch (error: any) {
-              // If "add" fails because field already exists, try "replace"
-              const errorMsg = error.response?.result?.error || error.message || ''
-              if (errorMsg.includes('already exists') || errorMsg.includes('exists')) {
-                console.log(`🔄 Field exists, retrying with replace operation for ${identifier}`)
-                return await tryPatchOperation('replace')
-              }
-              
-              // Re-throw other errors
-              throw error
-            }
+
+          // Use replace-first-then-add pattern:
+          // - replace avoids creating duplicate tags when a field already exists
+          // - add is the fallback for fields that don't exist yet (replace would fail)
+          try {
+            return await tryPatchOperation('replace')
+          } catch (replaceError: any) {
+            const errorMsg = replaceError.response?.result?.error || replaceError.message || ''
+            console.log(`🔄 Replace failed for ${identifier} (${errorMsg}), retrying with add operation`)
+            sendProgress({
+              type: 'progress',
+              identifier,
+              current: i + 1,
+              total: items.length,
+              info: `🔄 Field not found, using add operation (${errorMsg})`
+            })
+            // Force 'add' for all fields so the fallback actually uses add, not the per-field 'replace' setting
+            return await tryPatchOperation('add', true)
           }
         }, `Metadata update for ${identifier}`)
         
@@ -889,7 +883,7 @@ app.post('/api/update-metadata', async (req, res) => {
       const response = await fetch(metadataUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${btoa(`${accessKey}:${secretKey}`)}`,
+          'Authorization': `LOW ${accessKey}:${secretKey}`,
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: formData
