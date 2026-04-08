@@ -247,16 +247,16 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       newUpdates.push({
         field: 'band',
         value: editableValues.band,
-        operation: 'add'
+        operation: 'replace'
       })
     }
-    
-    // Add venue if selected and has value  
+
+    // Add venue if selected and has value
     if (selectedFields.venue && editableValues.venue) {
       newUpdates.push({
         field: 'venue',
         value: editableValues.venue,
-        operation: 'add'
+        operation: 'replace'
       })
     }
     
@@ -1152,7 +1152,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                           updates: [{
                             field: 'youtube',
                             value: youtubeUrl,
-                            operation: 'add'
+                            operation: 'replace'
                           }]
                         })
                         

@@ -191,11 +191,14 @@ export const useArchive = () => {
               // Parse the JSON data sent from server
               const data = JSON.parse(line.substring(6))  // Remove 'data: ' prefix
               
-              // Handle different event types
+              // Handle different event types based on 'type' and presence of 'identifier'
               if (data.identifier) {
-                // This is a progress update for a specific item
-                if (data.error) {
-                  // Error for this item
+                // Per-item progress event
+                if (data.status === 'updating') {
+                  // Item is now being processed — show spinner
+                  setItemStatuses(prev => ({ ...prev, [data.identifier]: 'processing' }))
+                } else if (data.error) {
+                  // Item failed
                   setItemStatuses(prev => ({ ...prev, [data.identifier]: 'error' }))
                   const errorMessage = `[${data.progress}/${data.total}] ❌ Failed ${data.identifier}: ${data.error}`
                   console.error(errorMessage)
@@ -204,9 +207,6 @@ export const useArchive = () => {
                     message: errorMessage,
                     identifier: data.identifier
                   })
-                } else if (data.message?.includes('Processing')) {
-                  // Item is being processed
-                  setItemStatuses(prev => ({ ...prev, [data.identifier]: 'processing' }))
                 } else if (data.info) {
                   // Informational message mid-processing (e.g. replace→add fallback)
                   addLog({
@@ -215,7 +215,7 @@ export const useArchive = () => {
                     identifier: data.identifier
                   })
                 } else if (data.message) {
-                  // Success for this item
+                  // Item succeeded
                   const status: ItemStatus = data.updated === 0 ? 'skipped' : 'success'
                   setItemStatuses(prev => ({ ...prev, [data.identifier]: status }))
                   const successMessage = `[${data.progress}/${data.total}] ✅ Updated ${data.identifier}: ${data.message}`
@@ -226,28 +226,26 @@ export const useArchive = () => {
                     identifier: data.identifier
                   })
                 }
-              } else if (data.summary) {
-                // Final completion summary
-                const { successCount, totalItems, successRate } = data.summary
-                const summaryMessage = data.message || `🎉 Batch update completed! ${successCount}/${totalItems} items successful (${successRate}%)`
+              } else if (data.type === 'complete') {
+                // Final batch summary
+                const summaryMessage = `🎉 Batch update complete: ${data.successful}/${data.total} successful`
                 console.log(summaryMessage)
                 addLog({
-                  type: successCount === totalItems ? 'success' : 'info',
+                  type: data.failed === 0 ? 'success' : 'info',
                   message: summaryMessage
                 })
-                
-                if (successCount < totalItems) {
-                  const failureCount = totalItems - successCount
-                  const failureMessage = `📋 ${failureCount} item(s) failed - check individual results above for details`
-                  console.log(failureMessage)
+                if (data.failed > 0) {
                   addLog({
                     type: 'info',
-                    message: failureMessage
+                    message: `📋 ${data.failed} item(s) failed — check individual results above for details`
                   })
                 }
-              } else if (data.fatal) {
-                // Fatal error
-                throw new Error(data.message)
+              } else if (data.type === 'error') {
+                // Top-level error (validation failure, missing credentials, etc.)
+                const errMsg = `❌ ${data.error || 'Batch update failed'}`
+                console.error(errMsg)
+                addLog({ type: 'error', message: errMsg })
+                throw new Error(data.error)
               }
             } catch (parseError) {
               debugLog('Failed to parse SSE data:', line)

@@ -722,9 +722,13 @@ app.post('/api/update-metadata-stream', async (req, res) => {
                   processedValue = standardizeYouTubeUrl(processedValue)
                 }
 
-                // Use the operation parameter when forced, otherwise use the per-field operation or fall back to the parameter
+                // Array fields must always use 'add' to append — 'replace' would overwrite the whole array
+                // Scalar fields use replace-first logic (or the forced operation on fallback)
+                const ARRAY_FIELDS = new Set(['subject', 'collection'])
                 const update = updates.find(u => u.field === key)
-                const op = forceOperation ? operation : (update?.operation || operation)
+                const op = ARRAY_FIELDS.has(key) ? 'add'
+                  : forceOperation ? operation
+                  : (update?.operation || operation)
 
                 patches.push({
                   op,
