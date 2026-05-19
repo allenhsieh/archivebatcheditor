@@ -74,11 +74,25 @@ export interface JsonPatchOperation {
   value: string
 }
 
+// Archive.org metadata write API response — documented at https://archive.org/developers/md-write.html
+export interface ArchiveApiResult {
+  success: boolean
+  // Error response fields
+  error?: string
+  // Success response fields
+  task_id?: number
+  log?: string
+}
+
 // Enhanced error type for API responses
 export interface ApiError extends Error {
   response?: {
     status: number
-    result?: unknown
+    result?: ArchiveApiResult
   }
   status?: number
+}
+
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof Error && 'response' in error
 }

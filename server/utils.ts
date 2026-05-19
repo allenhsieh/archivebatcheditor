@@ -161,6 +161,17 @@ export function isRateLimitError(error: any): boolean {
 }
 
 /**
+ * Check if error indicates an expired or revoked OAuth token (invalid_grant).
+ * When true, no YouTube API calls will succeed until the user re-authenticates —
+ * retrying individual items is pointless.
+ */
+export function isYouTubeAuthError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  const msg = error.message.toLowerCase()
+  return msg.includes('invalid_grant') || msg.includes('token has been expired or revoked')
+}
+
+/**
  * Check if error indicates YouTube quota exhaustion
  */
 export function isYouTubeQuotaError(error: any): boolean {

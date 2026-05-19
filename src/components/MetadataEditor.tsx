@@ -80,6 +80,9 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
     needsUpdate: boolean
   }>>([])
   const [showDescriptionPreview, setShowDescriptionPreview] = useState(false)
+  const [extraTagsInput, setExtraTagsInput] = useState('')
+  const [includeVenueAsTag, setIncludeVenueAsTag] = useState(true)
+  const [tagsLoading, setTagsLoading] = useState(false)
 
   // Check YouTube authentication status on component load
   useEffect(() => {
@@ -158,6 +161,62 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
 
   const removeUpdate = (index: number) => {
     setUpdates(updates.filter((_, i) => i !== index))
+  }
+
+  const extractVideoId = (url: string | undefined | null): string | null => {
+    if (!url || typeof url !== 'string') return null
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/)
+    return match ? match[1] : null
+  }
+
+  // Resolve a YouTube video for an Archive.org item.
+  // Prefers the `youtube` field on Archive.org metadata; optionally falls back to /api/youtube-suggest.
+  // Returns { videoId, url, autoMatched } or null if no match can be found.
+  //
+  // `searchFallback` defaults to false so callers that only need to read an existing link
+  // (date sync, tag sync) don't burn YouTube search quota on items with no linked video.
+  // The "Add YouTube Links" button sets it to true.
+  const resolveVideoId = async (
+    identifier: string,
+    meta?: Record<string, unknown>,
+    searchFallback = false
+  ): Promise<{ videoId: string; url: string; autoMatched: boolean } | null> => {
+    const existing = meta?.youtube
+    const existingId = extractVideoId(typeof existing === 'string' ? existing : null)
+    if (existingId && typeof existing === 'string') {
+      return { videoId: existingId, url: existing, autoMatched: false }
+    }
+
+    if (!searchFallback) return null
+
+    // Fall back to a YouTube search using the Archive.org title/date
+    const item = items.find((i) => i.identifier === identifier)
+    const title = (meta?.title as string | undefined) ?? item?.title
+    const date = (meta?.date as string | undefined) ?? item?.date
+    if (!title) return null
+
+    try {
+      const response = await fetch('/api/youtube-suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{ identifier, title, ...(date ? { date } : {}) }]
+        })
+      })
+      if (!response.ok) return null
+      const data = await response.json()
+      const result = data.results?.[0] ?? data
+      if (result?.quotaExhausted) {
+        throw new Error('QUOTA_EXHAUSTED')
+      }
+      const matchUrl: string | undefined = result?.youtubeMatch?.url ?? result?.suggestions?.youtube
+      const matchId = extractVideoId(matchUrl)
+      if (!matchId || !matchUrl) return null
+      return { videoId: matchId, url: matchUrl, autoMatched: true }
+    } catch (error) {
+      if (error instanceof Error && error.message === 'QUOTA_EXHAUSTED') throw error
+      return null
+    }
   }
 
   const getYoutubeSuggestion = async (identifier: string) => {
@@ -295,62 +354,97 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
     })
   }
 
-  // Handler for YouTube recording date updates
+  // Normalize an Archive.org date string (YYYY-MM-DD, YYYY/MM/DD, etc.) to a YYYY-MM-DD string.
+  // Returns null if no valid date can be extracted.
+  const normalizeArchiveDate = (raw: unknown): string | null => {
+    if (typeof raw !== 'string') return null
+    const match = raw.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/)
+    if (!match) return null
+    const [, y, m, d] = match
+    const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+    const testDate = new Date(iso + 'T00:00:00.000Z')
+    if (isNaN(testDate.getTime())) return null
+    return iso
+  }
+
+  // Handler for YouTube recording date updates.
+  // If the date input is filled, every video gets that date.
+  // If empty, each video gets its own Archive.org `date` field.
   const handleUpdateRecordingDates = async () => {
-    if (!recordingDate || selectedItems.length === 0) {
-      return
-    }
+    if (selectedItems.length === 0) return
 
     try {
-      // Convert date to ISO 8601 format that YouTube expects
-      const isoDate = new Date(recordingDate + 'T00:00:00.000Z').toISOString()
-      
-      // First, we need to fetch YouTube video IDs from Archive.org metadata
-      const recordingStartMessage = `🎵 Looking up YouTube video IDs from Archive.org metadata...`
+      const sharedIsoDate = recordingDate
+        ? new Date(recordingDate + 'T00:00:00.000Z').toISOString()
+        : null
+
+      const recordingStartMessage = sharedIsoDate
+        ? `🎵 Applying ${recordingDate} to selected items...`
+        : `🎵 Applying each item's Archive.org date to its YouTube video...`
       console.log(recordingStartMessage)
       addLog({ type: 'info', message: recordingStartMessage })
 
-      // Fetch metadata for each selected item to get YouTube URLs
-      // Use our server's metadata endpoint
-      const updates = []
+      const updates: Array<{ archiveId: string; videoId: string; recordingDate: string }> = []
+      const autoMatches: Array<{ identifier: string; url: string }> = []
       for (const identifier of selectedItems) {
         try {
           const metadataResponse = await fetch(`/api/metadata/${identifier}`)
-          const metadata = await metadataResponse.json()
-          
-          const youtubeUrl = metadata.metadata?.youtube
-          if (youtubeUrl) {
-            // Extract video ID from YouTube URL
-            const videoIdMatch = youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/)
-            if (videoIdMatch) {
-              updates.push({
-                archiveId: identifier,
-                videoId: videoIdMatch[1],
-                recordingDate: isoDate
-              })
-              console.log(`🎵 Found YouTube video: ${identifier} → ${videoIdMatch[1]}`)
-            } else {
-              console.warn(`🎵 Invalid YouTube URL format for ${identifier}: ${youtubeUrl}`)
+          const meta = await metadataResponse.json()
+          const resolved = await resolveVideoId(identifier, meta)
+
+          if (!resolved) {
+            addLog({ type: 'skipped', message: 'No YouTube match found', identifier })
+            continue
+          }
+
+          let isoDate: string | null = sharedIsoDate
+          if (!isoDate) {
+            const perItem = normalizeArchiveDate(meta.date)
+            if (!perItem) {
               addLog({
-                type: 'error',
-                message: `Invalid YouTube URL format for ${identifier}`,
-                identifier: identifier
+                type: 'skipped',
+                message: `No valid date in Archive.org metadata (got: ${meta.date ?? 'nothing'})`,
+                identifier
               })
+              continue
             }
-          } else {
-            console.warn(`🎵 No YouTube URL found for ${identifier}`)
-            addLog({
-              type: 'error', 
-              message: `No YouTube URL found in metadata`,
-              identifier: identifier
-            })
+            isoDate = new Date(perItem + 'T00:00:00.000Z').toISOString()
+          }
+
+          updates.push({ archiveId: identifier, videoId: resolved.videoId, recordingDate: isoDate })
+          if (resolved.autoMatched) {
+            autoMatches.push({ identifier, url: resolved.url })
+            addLog({ type: 'info', message: `🔍 Auto-matched YouTube video: ${resolved.url}`, identifier })
           }
         } catch (error) {
-          console.error(`🎵 Failed to fetch metadata for ${identifier}:`, error)
+          if (error instanceof Error && error.message === 'QUOTA_EXHAUSTED') {
+            addLog({ type: 'error', message: '🚫 YouTube API quota exhausted — try again tomorrow' })
+            return
+          }
           addLog({
             type: 'error',
-            message: `Failed to fetch metadata: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            identifier: identifier
+            message: `Failed to resolve video: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            identifier
+          })
+        }
+      }
+
+      // Backfill the `youtube` field on Archive.org for auto-matched items so future runs are instant.
+      if (autoMatches.length > 0) {
+        try {
+          await Promise.all(
+            autoMatches.map(({ identifier, url }) =>
+              onUpdate({
+                items: [identifier],
+                updates: [{ field: 'youtube', value: url, operation: 'replace' }]
+              })
+            )
+          )
+          addLog({ type: 'info', message: `🔗 Backfilled ${autoMatches.length} YouTube link(s) on Archive.org` })
+        } catch (error) {
+          addLog({
+            type: 'error',
+            message: `Failed to backfill Archive.org YouTube links: ${error instanceof Error ? error.message : 'Unknown error'}`
           })
         }
       }
@@ -371,8 +465,10 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       if (updates.length > 20) {
         const confirmed = window.confirm(
           `You're about to update recording dates for ${updates.length} YouTube videos.\n\n` +
-          `Recording Date: ${recordingDate}\n\n` +
-          `This will update all ${updates.length} videos with this same date. Are you sure you want to continue?`
+          (recordingDate
+            ? `Recording Date (shared): ${recordingDate}\n\n`
+            : `Each video will use its own Archive.org date.\n\n`) +
+          `Are you sure you want to continue?`
         )
         if (!confirmed) {
           addLog({ type: 'info', message: '❌ Operation cancelled by user' })
@@ -486,10 +582,10 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
         try {
           // Get metadata from our server endpoint
           const metadataResponse = await fetch(`/api/metadata/${identifier}`)
-          const metadata = await metadataResponse.json()
-          
+          const meta = await metadataResponse.json()
+
           // Check if this item has a YouTube URL
-          const youtubeUrl = metadata.metadata?.youtube
+          const youtubeUrl = meta?.youtube
           if (!youtubeUrl) continue
 
           // Extract video ID from YouTube URL
@@ -498,10 +594,10 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
 
           // Try to extract date from multiple sources
           const sources = [
-            { text: metadata.metadata?.title || '', type: 'title' },
-            { text: metadata.metadata?.description || '', type: 'description' },
+            { text: meta?.title || '', type: 'title' },
+            { text: meta?.description || '', type: 'description' },
             { text: identifier, type: 'identifier' },
-            { text: metadata.metadata?.date || '', type: 'archive_date' }
+            { text: meta?.date || '', type: 'archive_date' }
           ]
 
           let detectedDate = ''
@@ -547,7 +643,7 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
           videoMappings.push({
             archiveId: identifier,
             videoId: videoIdMatch[1],
-            title: metadata.metadata?.title || identifier,
+            title: meta?.title || identifier,
             detectedDate: detectedDate || '',
             finalDate: finalDate
           })
@@ -710,14 +806,14 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
       for (const identifier of selectedItems) {
         try {
           const metadataResponse = await fetch(`/api/metadata/${identifier}`)
-          const metadata = await metadataResponse.json()
-          
-          const youtubeUrl = metadata.metadata?.youtube
+          const meta = await metadataResponse.json()
+
+          const youtubeUrl = meta?.youtube
           if (youtubeUrl) {
             const videoIdMatch = youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/)
             if (videoIdMatch) {
               // Extract band name from Archive.org metadata
-              const bandName = metadata.metadata?.band || metadata.metadata?.creator || 'Unknown Artist'
+              const bandName = meta?.band || meta?.creator || 'Unknown Artist'
               videoMappings.push({
                 archiveId: identifier,
                 videoId: videoIdMatch[1],
@@ -927,6 +1023,170 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
         type: 'error',
         message: `YouTube description update failed: ${errorMessage}`
       })
+    }
+  }
+
+  // Sync YouTube tags from Archive.org metadata (subject field, optionally venue, plus extras)
+  const handleUpdateTags = async () => {
+    if (selectedItems.length === 0) return
+
+    setTagsLoading(true)
+    try {
+      const parsedExtras = extraTagsInput
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
+
+      addLog({ type: 'info', message: `🏷️ Resolving YouTube video IDs and tags for ${selectedItems.length} items...` })
+
+      const updates: Array<{ archiveId: string; videoId: string; tags: string[] }> = []
+      const autoMatches: Array<{ identifier: string; url: string }> = []
+
+      for (const identifier of selectedItems) {
+        try {
+          const metadataResponse = await fetch(`/api/metadata/${identifier}`)
+          const meta = await metadataResponse.json()
+
+          const resolved = await resolveVideoId(identifier, meta)
+          if (!resolved) {
+            addLog({ type: 'skipped', message: 'No YouTube match found', identifier })
+            continue
+          }
+          if (resolved.autoMatched) {
+            autoMatches.push({ identifier, url: resolved.url })
+            addLog({ type: 'info', message: `🔍 Auto-matched YouTube video: ${resolved.url}`, identifier })
+          }
+
+          // Archive.org `subject` is either a string or array of strings
+          const subjectRaw = meta.subject
+          const subjectTags: string[] = Array.isArray(subjectRaw)
+            ? subjectRaw.flatMap((s: string) => s.split(';').map((t) => t.trim()))
+            : typeof subjectRaw === 'string'
+              ? subjectRaw.split(/[,;]/).map((t) => t.trim())
+              : []
+
+          const venueTag = includeVenueAsTag && typeof meta.venue === 'string' ? [meta.venue.trim()] : []
+
+          // Dedupe case-insensitively while preserving the first occurrence
+          const combined: string[] = []
+          const seen = new Set<string>()
+          for (const tag of [...subjectTags, ...venueTag, ...parsedExtras]) {
+            if (!tag) continue
+            const key = tag.toLowerCase()
+            if (seen.has(key)) continue
+            seen.add(key)
+            combined.push(tag)
+          }
+
+          if (combined.length === 0) {
+            addLog({ type: 'skipped', message: 'No tags to apply (empty subject/venue/extras)', identifier })
+            continue
+          }
+
+          // YouTube 500-char serialized limit — trim from the end until we fit
+          while (combined.join(', ').length > 500 && combined.length > 1) {
+            combined.pop()
+          }
+
+          updates.push({ archiveId: identifier, videoId: resolved.videoId, tags: combined })
+        } catch (error) {
+          addLog({
+            type: 'error',
+            message: `Failed to resolve metadata: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            identifier
+          })
+        }
+      }
+
+      if (updates.length === 0) {
+        addLog({ type: 'info', message: '❌ No videos to update' })
+        return
+      }
+
+      if (autoMatches.length > 0) {
+        try {
+          await Promise.all(
+            autoMatches.map(({ identifier, url }) =>
+              onUpdate({
+                items: [identifier],
+                updates: [{ field: 'youtube', value: url, operation: 'replace' }]
+              })
+            )
+          )
+          addLog({ type: 'info', message: `🔗 Backfilled ${autoMatches.length} YouTube link(s) on Archive.org` })
+        } catch (error) {
+          addLog({
+            type: 'error',
+            message: `Failed to backfill Archive.org YouTube links: ${error instanceof Error ? error.message : 'Unknown error'}`
+          })
+        }
+      }
+
+      if (updates.length > 20) {
+        const confirmed = window.confirm(
+          `About to merge tags into ${updates.length} YouTube videos.\n\n` +
+          `Existing tags are preserved; new tags are added and deduped. Continue?`
+        )
+        if (!confirmed) {
+          addLog({ type: 'info', message: '❌ Tag update cancelled' })
+          return
+        }
+      }
+
+      const response = await fetch('/api/youtube/update-tags-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates })
+      })
+
+      if (!response.ok || !response.body) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue
+            try {
+              const data = JSON.parse(line.substring(6))
+              if (data.type === 'progress' && data.videoId && data.status === 'success') {
+                addLog({ type: 'success', message: `YouTube tags updated`, identifier: data.archiveId })
+              } else if (data.type === 'progress' && data.videoId && data.status === 'error') {
+                addLog({ type: 'error', message: `YouTube tags update failed: ${data.error}`, identifier: data.archiveId })
+              } else if (data.type === 'error') {
+                addLog({ type: 'error', message: `YouTube tags update failed: ${data.error}` })
+              } else if (data.type === 'complete') {
+                addLog({
+                  type: 'info',
+                  message: `✅ Tag update complete: ${data.successful} succeeded, ${data.failed} failed`
+                })
+              }
+            } catch {
+              // ignore partial/non-JSON lines
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+    } catch (error) {
+      addLog({
+        type: 'error',
+        message: `YouTube tags update failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      })
+    } finally {
+      setTagsLoading(false)
     }
   }
 
@@ -1338,32 +1598,69 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
             <button
               type="button"
               className="button"
-              onClick={() => {
-                // Process each item individually with its own YouTube URL
+              onClick={async () => {
+                // Auto-discovers matches for any selected item that doesn't already have one,
+                // then writes the `youtube` field to Archive.org for every resolved match.
                 let addedCount = 0
-                
-                selectedItems.forEach(identifier => {
-                  const editableValues = editableFields[identifier]
-                  if (editableValues?.youtube) {
-                    // Apply YouTube URL only to this specific item
-                    onUpdate({
-                      items: [identifier], // Only this item
-                      updates: [{
-                        field: 'youtube',
-                        value: editableValues.youtube,
-                        operation: 'replace'
-                      }]
+                let skippedCount = 0
+
+                for (const identifier of selectedItems) {
+                  const existing = editableFields[identifier]?.youtube
+                  let urlToApply = existing
+
+                  if (!urlToApply) {
+                    try {
+                      addLog({ type: 'info', message: `🔍 Searching YouTube for ${identifier}...`, identifier })
+                      const resolved = await resolveVideoId(identifier, undefined, true)
+                      if (resolved) {
+                        urlToApply = resolved.url
+                        // Keep the UI state in sync so the preview card reflects the match
+                        setEditableFields((prev) => ({
+                          ...prev,
+                          [identifier]: { ...(prev[identifier] ?? {}), youtube: resolved.url }
+                        }))
+                      }
+                    } catch (error) {
+                      if (error instanceof Error && error.message === 'QUOTA_EXHAUSTED') {
+                        addLog({ type: 'error', message: '🚫 YouTube API quota exhausted — stopping' })
+                        break
+                      }
+                      addLog({
+                        type: 'error',
+                        message: `YouTube search failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                        identifier
+                      })
+                    }
+                  }
+
+                  if (!urlToApply) {
+                    addLog({ type: 'skipped', message: 'No YouTube match found', identifier })
+                    skippedCount++
+                    continue
+                  }
+
+                  try {
+                    await onUpdate({
+                      items: [identifier],
+                      updates: [{ field: 'youtube', value: urlToApply, operation: 'replace' }]
                     })
                     addedCount++
+                  } catch (error) {
+                    addLog({
+                      type: 'error',
+                      message: `Failed to update Archive.org: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                      identifier
+                    })
                   }
-                })
-                
-                if (addedCount === 0) {
-                  alert('❌ No YouTube matches found. Click "Get YouTube Matches for All" first.')
                 }
+
+                addLog({
+                  type: 'info',
+                  message: `🔗 YouTube links added: ${addedCount} succeeded, ${skippedCount} skipped`
+                })
               }}
               style={{ padding: '10px 20px' }}
-              disabled={!Object.values(editableFields).some(fields => fields?.youtube)}
+              disabled={loading || selectedItems.length === 0}
             >
               🔗 Add YouTube Links
             </button>
@@ -1980,9 +2277,9 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
               color: '#333'
             }}>
               <strong>📅 Recording Date:</strong> When the video content was actually recorded (not published)<br/>
-              <strong>Format:</strong> YYYY-MM-DD (e.g., 2024-01-04)<br/>
-              <strong>Note:</strong> This is different from the YouTube publish date, which cannot be changed.<br/>
-              <strong>Auto-detect:</strong> Dates will be inferred from titles/metadata when possible
+              <strong>Leave blank:</strong> Each video gets its own date from the Archive.org item's <code>date</code> field<br/>
+              <strong>Fill it in (YYYY-MM-DD):</strong> Every selected video gets that same date instead<br/>
+              <strong>Note:</strong> This is different from the YouTube publish date, which cannot be changed
             </div>
 
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
@@ -2013,13 +2310,20 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
               
               <button
                 onClick={handleUpdateRecordingDates}
-                disabled={youtubeDateLoading || !recordingDate || !youtubeAuthStatus.authenticated}
+                disabled={youtubeDateLoading || !youtubeAuthStatus.authenticated || selectedItems.length === 0}
                 className="button primary"
-                style={{ 
-                  opacity: (!recordingDate || youtubeDateLoading || !youtubeAuthStatus.authenticated) ? 0.6 : 1 
+                style={{
+                  opacity: (youtubeDateLoading || !youtubeAuthStatus.authenticated || selectedItems.length === 0) ? 0.6 : 1
                 }}
+                title={recordingDate
+                  ? `Apply ${recordingDate} to every selected video`
+                  : `Apply each item's Archive.org date to its YouTube video`}
               >
-                {youtubeDateLoading ? 'Updating...' : `Update Recording Dates for ${selectedItems.length} Items`}
+                {youtubeDateLoading
+                  ? 'Updating...'
+                  : recordingDate
+                    ? `Apply ${recordingDate} to ${selectedItems.length} Items`
+                    : `Apply Archive Dates to ${selectedItems.length} Items`}
               </button>
             </div>
 
@@ -2136,6 +2440,78 @@ export const MetadataEditor: React.FC<MetadataEditorProps> = ({
                 color: '#856404'
               }}>
                 ⚠️ <strong>Large batch warning:</strong> You have {selectedItems.length} items selected. Only items with YouTube metadata will be processed. The operation will show a preview first.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* YouTube Tags Sync Section */}
+      {selectedItems.length > 0 && (
+        <div className="section">
+          <h3>🏷️ YouTube Tags Sync</h3>
+
+          <div style={{ marginBottom: '15px' }}>
+            <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}>
+              Replace YouTube video tags with Archive.org <code>subject</code> values, optionally plus venue and extras.
+            </p>
+
+            <div style={{
+              marginBottom: '15px',
+              padding: '10px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '6px',
+              fontSize: '13px',
+              color: '#333'
+            }}>
+              <strong>Source:</strong> Archive.org <code>subject</code> field (array or comma/semicolon-separated string)<br/>
+              <strong>Behavior:</strong> Merges with existing YouTube tags (case-insensitive dedupe, existing tags kept first)<br/>
+              <strong>Limit:</strong> YouTube caps tags at 500 characters total — excess tags are trimmed from the end after merge
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '10px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                <input
+                  type="checkbox"
+                  checked={includeVenueAsTag}
+                  onChange={(e) => setIncludeVenueAsTag(e.target.checked)}
+                />
+                Include Archive.org <code>venue</code> as a tag
+              </label>
+
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  value={extraTagsInput}
+                  onChange={(e) => setExtraTagsInput(e.target.value)}
+                  placeholder="Extra tags, comma-separated (optional)"
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    border: '1px solid #ddd',
+                    fontSize: '14px',
+                    minWidth: '300px',
+                    flex: 1
+                  }}
+                />
+
+                <button
+                  onClick={handleUpdateTags}
+                  disabled={tagsLoading || !youtubeAuthStatus.authenticated}
+                  className="button primary"
+                  style={{
+                    opacity: (tagsLoading || !youtubeAuthStatus.authenticated) ? 0.6 : 1,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {tagsLoading ? 'Updating...' : `Sync Tags for ${selectedItems.length} Items`}
+                </button>
+              </div>
+            </div>
+
+            {!youtubeAuthStatus.authenticated && !youtubeAuthStatus.loading && (
+              <div style={{ fontSize: '12px', color: '#856404' }}>
+                ⚠️ YouTube authentication required — connect via the Recording Date section above.
               </div>
             )}
           </div>

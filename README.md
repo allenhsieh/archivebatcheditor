@@ -86,9 +86,19 @@ You need these to connect to Archive.org (and optionally YouTube):
 3. Use [commentpicker.com/youtube-channel-id.php](https://commentpicker.com/youtube-channel-id.php)
 4. Paste your handle, get your Channel ID (starts with `UC...`)
 
+**Step 2E: OAuth 2.0 Credentials (only if you want to bulk-edit YouTube videos)**
+
+The API key from Step 2C only allows **reading** YouTube data. To bulk-update recording dates or tags on your own videos, you also need an OAuth client:
+
+1. In the same Google Cloud project, go to **"Credentials"** → **"+ Create Credentials"** → **"OAuth client ID"**
+2. If prompted, configure the OAuth consent screen (choose **"External"**, add yourself as a test user)
+3. Application type: **"Web application"**
+4. Authorized redirect URI: `http://localhost:3001/auth/youtube/callback`
+5. Copy the **Client ID** and **Client Secret** — you'll paste them into `.env` in Step 4
+
 ---
 
-**💡 Pro Tip:** YouTube integration is completely optional! The app works great for metadata editing without it.
+**💡 Pro Tip:** YouTube integration is completely optional! The app works great for metadata editing without it. The OAuth step (2E) is only needed if you plan to push updates back to YouTube.
 
 ## 💻 Step 3: Download & Install
 
@@ -132,6 +142,11 @@ ARCHIVE_EMAIL=paste_your_email_here
 # 🎥 YouTube integration (OPTIONAL - get from step 2)
 YOUTUBE_API_KEY=paste_your_youtube_api_key_here
 YOUTUBE_CHANNEL_ID=paste_your_channel_id_here
+
+# 🔑 YouTube OAuth (ONLY if you did step 2E — required for bulk-editing YouTube videos)
+YOUTUBE_CLIENT_ID=paste_your_oauth_client_id_here
+YOUTUBE_CLIENT_SECRET=paste_your_oauth_client_secret_here
+YOUTUBE_REDIRECT_URI=http://localhost:3001/auth/youtube/callback
 
 # ⚙️ Server settings (leave these as-is)
 PORT=3001
@@ -249,6 +264,48 @@ npm run dev
 - 🏛️ **Venue name** (like "The Fillmore")  
 - 📅 **Date** from video descriptions  
 - 🔗 **YouTube URL** for cross-referencing
+
+---
+
+### 🎬 Step 4: Bulk-Edit YouTube Videos (Optional)
+
+**Push recording dates and tags back to your own YouTube videos** — pairing with Archive.org items that already have YouTube URLs.
+
+**One-time setup: Authorize the app**
+
+1. Make sure you completed **Step 2E** (OAuth credentials) and filled out `YOUTUBE_CLIENT_ID` / `YOUTUBE_CLIENT_SECRET` / `YOUTUBE_REDIRECT_URI` in `.env`
+2. Start the app (both `npm run server:dev` and `npm run dev`)
+3. Open [http://localhost:3001/auth/youtube](http://localhost:3001/auth/youtube) in your browser
+4. Sign in with the Google account that owns the YouTube channel, click **Allow**
+5. You should see "YouTube OAuth Successful! Tokens saved." — a file called `.youtube-tokens.json` is now saved locally (gitignored)
+
+You only need to do this once. If you later see "YouTube not authenticated", revoke at [myaccount.google.com/permissions](https://myaccount.google.com/permissions) and repeat.
+
+**📅 Bulk-update recording dates**
+
+Use the **🎵 YouTube Recording Date Editor** section:
+1. Select Archive.org items (they must already have a `youtube` metadata field)
+2. Pick a date, or click **🔍 Auto-Detect Date** to infer from titles/metadata
+3. Click **Update Recording Dates for N Items** — progress streams live
+
+This writes to `recordingDetails.recordingDate` on each video. (The "location" half of YouTube Studio's "Recording date and location" is not writable via the public API — deprecated since 2017 — so the app doesn't touch it.)
+
+**🏷️ Bulk-sync tags from Archive.org subjects**
+
+Use the **🏷️ YouTube Tags Sync** section:
+1. Select items
+2. Optionally check **Include Archive.org `venue` as a tag**
+3. Optionally add extra tags (comma-separated)
+4. Click **Sync Tags for N Items**
+
+The app pulls each item's `subject` field, optionally adds `venue`, **merges with the video's existing tags** (case-insensitive dedupe), and trims to YouTube's 500-character limit.
+
+**⚠️ Quota notes**
+
+- Each recording-date update costs ~50 YouTube API quota units; each tag update costs ~51 (list + update)
+- The default daily quota is 10,000 units → about **200 writes/day**
+- Each batch is capped at 100 items to stay well under the limit
+- If quota exhausts mid-run, you'll see errors in the log — retry tomorrow
 
 ---
 

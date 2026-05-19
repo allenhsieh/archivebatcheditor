@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "type-check": "tsc --noEmit",
     "server": "node --env-file=.env --import tsx server/index.ts",
-    "server:dev": "nodemon --exec \"node --env-file=.env --import tsx server/index.ts\"",
+    "server:dev": "nodemon --ext ts,js,mjs,cjs,json --watch server --exec \"node --env-file=.env --import tsx server/index.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"

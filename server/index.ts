@@ -4,8 +4,11 @@ import cors from 'cors'        // CORS - allows our web app to talk to our serve
 import helmet from 'helmet'    // Helmet - adds security headers to protect against common attacks
 import { z } from 'zod'        // Zod - validates that data sent to our API has the right format
 import multer from 'multer'    // Multer - handles file uploads
-import { OAuth2Client } from 'google-auth-library'  // Google OAuth 2.0 authentication
-import { 
+import { OAuth2Client, Credentials } from 'google-auth-library'  // Google OAuth 2.0 authentication
+import { google } from 'googleapis'  // YouTube Data API v3 client
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import {
   standardizeDate, 
   extractBandFromTitle, 
   extractVenueFromTitle, 
@@ -13,6 +16,7 @@ import {
   delay,
   isRateLimitError,
   isYouTubeQuotaError,
+  isYouTubeAuthError,
   buildArchiveSearchUrl,
   buildArchiveMetadataUrl,
   buildYouTubeSearchUrl,
@@ -21,6 +25,7 @@ import {
   generateFlyerFilename
 } from './utils.js'
 import type { JsonPatchOperation, ApiError } from '../src/types.js'
+import { isApiError } from '../src/types.js'
 
 // Create our Express server app
 const app = express()
@@ -89,10 +94,23 @@ const youtubeUpdateDescriptionsStreamSchema = z.object({
   })).min(1).max(100)
 })
 
+// Frontend at src/components/MetadataEditor.tsx resolves archiveId → videoId before POSTing,
+// so this endpoint trusts the mapping and doesn't re-fetch Archive.org metadata.
 const youtubeUpdateRecordingDatesStreamSchema = z.object({
-  items: z.array(z.object({
-    identifier: z.string(),
-    recordingdate: z.string()
+  updates: z.array(z.object({
+    archiveId: z.string(),
+    videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
+    recordingDate: z.string().datetime()
+  })).min(1).max(100)
+})
+
+// snippet.tags has a 500-char total budget (spaces + commas between items count).
+// We cap inputs here to fail fast rather than let the API reject the whole batch.
+const youtubeUpdateTagsStreamSchema = z.object({
+  updates: z.array(z.object({
+    archiveId: z.string(),
+    videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
+    tags: z.array(z.string().min(1)).max(50)
   })).min(1).max(100)
 })
 
@@ -212,22 +230,384 @@ function createOAuth2Client() {
   )
 }
 
-/**
- * Get authenticated YouTube client using stored tokens
- */
-async function getAuthenticatedYouTubeClient() {
+// YouTube OAuth tokens are persisted to a gitignored JSON file at the repo root.
+// Refresh tokens are only issued on first consent, so we merge on save to preserve it.
+const YOUTUBE_TOKEN_FILE = path.resolve(process.cwd(), '.youtube-tokens.json')
+
+// ─── YouTube channel video cache ───────────────────────────────────────────────
+// Fetches all videos from the channel's uploads playlist via playlistItems API.
+// Cost: ~1 quota unit per 50 videos (~13 units for 638 videos) vs 100 units per
+// search query. Cached to disk; refreshed on demand or when older than 24 hours.
+
+interface CachedVideo {
+  videoId: string
+  title: string
+  publishedAt: string
+  url: string
+}
+
+interface ChannelCache {
+  fetchedAt: string
+  channelId: string
+  videos: CachedVideo[]
+}
+
+const YOUTUBE_CHANNEL_CACHE_FILE = path.resolve(process.cwd(), '.youtube-channel-cache.json')
+const CHANNEL_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+async function loadChannelCache(): Promise<ChannelCache | null> {
   try {
-    createOAuth2Client()
-    
-    // For this simplified version, we'll need to implement token management differently
-    // Since we removed the database, tokens would need to be managed another way
-    // For now, we'll throw an error indicating this needs configuration
-    throw new Error('YouTube OAuth token management requires database - not implemented')
-    
-  } catch (error) {
-    console.error('Failed to get authenticated YouTube client:', error)
-    throw error
+    const raw = await fs.readFile(YOUTUBE_CHANNEL_CACHE_FILE, 'utf8')
+    return JSON.parse(raw) as ChannelCache
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw err
   }
+}
+
+async function saveChannelCache(cache: ChannelCache): Promise<void> {
+  await fs.writeFile(YOUTUBE_CHANNEL_CACHE_FILE, JSON.stringify(cache, null, 2), { mode: 0o600 })
+}
+
+async function fetchAndCacheChannelVideos(): Promise<ChannelCache> {
+  const config = getYouTubeCredentials()
+  if (!config) throw new Error('YouTube API credentials not configured')
+
+  // Uploads playlist ID is channel ID with UC→UU prefix swap
+  const uploadsPlaylistId = config.channelId.replace(/^UC/, 'UU')
+  const videos: CachedVideo[] = []
+  let pageToken: string | undefined
+
+  console.log(`📺 Fetching all videos from channel ${config.channelId}...`)
+
+  do {
+    const params = new URLSearchParams({
+      part: 'snippet',
+      playlistId: uploadsPlaylistId,
+      maxResults: '50',
+      key: config.apiKey,
+      ...(pageToken ? { pageToken } : {})
+    })
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?${params}`
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      const body = await response.text()
+      throw new Error(`YouTube playlistItems error ${response.status}: ${body}`)
+    }
+
+    const data = await response.json() as {
+      items: Array<{ snippet: { resourceId: { videoId: string }; title: string; publishedAt: string } }>
+      nextPageToken?: string
+    }
+
+    for (const item of data.items) {
+      const videoId = item.snippet.resourceId.videoId
+      videos.push({
+        videoId,
+        title: item.snippet.title,
+        publishedAt: item.snippet.publishedAt,
+        url: createYouTubeUrl(videoId)
+      })
+    }
+
+    pageToken = data.nextPageToken
+    console.log(`  ...fetched ${videos.length} videos so far`)
+  } while (pageToken)
+
+  const cache: ChannelCache = { fetchedAt: new Date().toISOString(), channelId: config.channelId, videos }
+  await saveChannelCache(cache)
+  console.log(`✅ Channel cache saved: ${videos.length} videos`)
+  return cache
+}
+
+async function getChannelCache(): Promise<ChannelCache | null> {
+  const existing = await loadChannelCache()
+  if (existing && Date.now() - new Date(existing.fetchedAt).getTime() < CHANNEL_CACHE_TTL_MS) {
+    return existing
+  }
+  return null
+}
+
+function scoreVideoAgainstQuery(video: CachedVideo, title: string, date?: string): number {
+  const videoTitle = video.title.toLowerCase()
+  const searchTitle = title.toLowerCase()
+  let score = 0
+
+  if (videoTitle === searchTitle) {
+    score += 100
+  } else if (videoTitle.includes(searchTitle) || searchTitle.includes(videoTitle)) {
+    score += 50
+  }
+
+  const videoWords = videoTitle.split(/\s+/).filter((w) => w.length > 2)
+  const searchWords = searchTitle.split(/\s+/).filter((w) => w.length > 2)
+  const commonWords = videoWords.filter((w) => searchWords.some((s) => w.includes(s) || s.includes(w)))
+  score += commonWords.length * 10
+
+  if (date && video.publishedAt) {
+    const daysDiff = Math.abs(
+      (new Date(video.publishedAt).getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24)
+    )
+    if (daysDiff <= YOUTUBE_DATE_MATCH_CLOSE_DAYS) score += 20
+    else if (daysDiff <= YOUTUBE_DATE_MATCH_MEDIUM_DAYS) score += 10
+    else if (daysDiff <= YOUTUBE_DATE_MATCH_FAR_DAYS) score += 5
+  }
+
+  return score
+}
+
+function searchChannelCache(cache: ChannelCache, title: string, date?: string) {
+  const scored = cache.videos
+    .map((v) => ({ ...v, score: scoreVideoAgainstQuery(v, title, date) }))
+    .filter((v) => v.score > 0)
+    .sort((a, b) => b.score - a.score)
+
+  if (scored.length === 0) return null
+
+  const best = scored[0]
+  const extractedBand = extractBandFromTitle(best.title)
+  const extractedVenue = extractVenueFromTitle(best.title)
+  const extractedDate = extractDateFromTitle(best.title)
+
+  return {
+    url: best.url,
+    title: best.title,
+    publishedAt: best.publishedAt,
+    score: best.score,
+    matchReason: `Cache match — score ${best.score}`,
+    extractedBand,
+    extractedVenue,
+    extractedDate,
+    allMatches: scored.slice(0, 5).map((v) => ({ url: v.url, title: v.title, score: v.score, publishedAt: v.publishedAt }))
+  }
+}
+
+async function loadStoredYouTubeTokens(): Promise<Credentials | null> {
+  try {
+    const raw = await fs.readFile(YOUTUBE_TOKEN_FILE, 'utf8')
+    return JSON.parse(raw) as Credentials
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw err
+  }
+}
+
+async function saveYouTubeTokens(tokens: Credentials): Promise<void> {
+  const existing = (await loadStoredYouTubeTokens()) ?? {}
+  const merged: Credentials = { ...existing, ...tokens }
+  await fs.writeFile(YOUTUBE_TOKEN_FILE, JSON.stringify(merged, null, 2), { mode: 0o600 })
+}
+
+async function getAuthenticatedYouTubeClient() {
+  const tokens = await loadStoredYouTubeTokens()
+  if (!tokens?.refresh_token) {
+    throw new Error('YouTube not authenticated — visit /auth/youtube to authorize')
+  }
+
+  const oauth2Client = createOAuth2Client()
+  oauth2Client.setCredentials(tokens)
+  oauth2Client.on('tokens', (rotated) => {
+    saveYouTubeTokens(rotated).catch((e) => console.error('Failed to persist rotated YouTube tokens:', e))
+  })
+
+  return google.youtube({ version: 'v3', auth: oauth2Client })
+}
+
+// ─── YouTube quota-retry queue ─────────────────────────────────────────────────
+// Items that failed with `quotaExceeded` get persisted here and retried on server
+// startup (and via POST /api/youtube/retry-queue/drain). Keyed by (kind, videoId),
+// so re-queuing an already-queued item just updates the payload.
+
+type RetryKind = 'recording-date' | 'tags'
+
+interface RetryItem {
+  kind: RetryKind
+  archiveId: string
+  videoId: string
+  payload: { recordingDate?: string; tags?: string[] }
+  queuedAt: string
+  attempts: number
+  lastError?: string
+}
+
+const YOUTUBE_RETRY_FILE = path.resolve(process.cwd(), '.youtube-retry-queue.json')
+
+async function loadRetryQueue(): Promise<RetryItem[]> {
+  try {
+    const raw = await fs.readFile(YOUTUBE_RETRY_FILE, 'utf8')
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed?.items) ? (parsed.items as RetryItem[]) : []
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return []
+    console.error('Failed to load retry queue:', err)
+    return []
+  }
+}
+
+async function saveRetryQueue(items: RetryItem[]): Promise<void> {
+  await fs.writeFile(
+    YOUTUBE_RETRY_FILE,
+    JSON.stringify({ items, updatedAt: new Date().toISOString() }, null, 2),
+    { mode: 0o600 }
+  )
+}
+
+async function enqueueForRetry(item: Omit<RetryItem, 'queuedAt' | 'attempts'>, lastError?: string): Promise<void> {
+  const queue = await loadRetryQueue()
+  const idx = queue.findIndex((q) => q.kind === item.kind && q.videoId === item.videoId)
+  if (idx >= 0) {
+    queue[idx] = {
+      ...queue[idx],
+      archiveId: item.archiveId,
+      payload: item.payload,
+      attempts: queue[idx].attempts + 1,
+      lastError
+    }
+  } else {
+    queue.push({
+      ...item,
+      queuedAt: new Date().toISOString(),
+      attempts: 1,
+      lastError
+    })
+  }
+  await saveRetryQueue(queue)
+}
+
+async function removeFromRetryQueue(kind: RetryKind, videoId: string): Promise<void> {
+  const queue = await loadRetryQueue()
+  const next = queue.filter((q) => !(q.kind === kind && q.videoId === videoId))
+  if (next.length !== queue.length) await saveRetryQueue(next)
+}
+
+// Run one retry item against the live YouTube API. Mirrors the logic in the
+// streaming endpoints (tag merge re-fetches existing snippet).
+// Returns:
+//  - { ok: true } on success
+//  - { ok: false, quotaExceeded: true } if we hit quota (caller should stop draining)
+//  - { ok: false, error } for any other failure
+async function applyRetryItem(
+  youtube: ReturnType<typeof google.youtube>,
+  item: RetryItem
+): Promise<{ ok: true } | { ok: false; quotaExceeded?: boolean; authExpired?: boolean; error?: string }> {
+  try {
+    if (item.kind === 'recording-date') {
+      const recordingDate = item.payload.recordingDate
+      if (!recordingDate) return { ok: false, error: 'Missing recordingDate in queued item' }
+      await youtube.videos.update({
+        part: ['recordingDetails'],
+        requestBody: { id: item.videoId, recordingDetails: { recordingDate } }
+      })
+      return { ok: true }
+    }
+
+    if (item.kind === 'tags') {
+      const tags = item.payload.tags ?? []
+      const listRes = await youtube.videos.list({ part: ['snippet'], id: [item.videoId] })
+      const existing = listRes.data.items?.[0]?.snippet
+      if (!existing) return { ok: false, error: 'Video not found or not owned by authenticated account' }
+
+      const mergedTags: string[] = []
+      const seen = new Set<string>()
+      for (const tag of [...(existing.tags ?? []), ...tags]) {
+        const clean = tag.trim()
+        if (!clean) continue
+        const key = clean.toLowerCase()
+        if (seen.has(key)) continue
+        seen.add(key)
+        mergedTags.push(clean)
+      }
+      while (mergedTags.join(', ').length > 500 && mergedTags.length > 1) mergedTags.pop()
+
+      await youtube.videos.update({
+        part: ['snippet'],
+        requestBody: {
+          id: item.videoId,
+          snippet: {
+            title: existing.title ?? '',
+            categoryId: existing.categoryId ?? '10',
+            description: existing.description ?? '',
+            defaultLanguage: existing.defaultLanguage ?? undefined,
+            tags: mergedTags
+          }
+        }
+      })
+      return { ok: true }
+    }
+
+    return { ok: false, error: `Unknown retry kind: ${item.kind}` }
+  } catch (error) {
+    if (isYouTubeAuthError(error)) return { ok: false, authExpired: true }
+    if (isYouTubeQuotaError(error)) return { ok: false, quotaExceeded: true }
+    const errAny = error as { errors?: Array<{ message?: string }>; message?: string }
+    return { ok: false, error: errAny?.errors?.[0]?.message ?? errAny?.message ?? 'Unknown error' }
+  }
+}
+
+interface DrainSummary {
+  attempted: number
+  succeeded: number
+  failed: number
+  remaining: number
+  quotaHit: boolean
+  authExpired: boolean
+  details: Array<{ archiveId: string; videoId: string; kind: RetryKind; status: 'success' | 'error' | 'quota'; error?: string }>
+}
+
+async function drainRetryQueue(
+  onItem?: (progress: { current: number; total: number; item: RetryItem; result: Awaited<ReturnType<typeof applyRetryItem>> }) => void
+): Promise<DrainSummary> {
+  const queue = await loadRetryQueue()
+  const summary: DrainSummary = { attempted: 0, succeeded: 0, failed: 0, remaining: queue.length, quotaHit: false, authExpired: false, details: [] }
+  if (queue.length === 0) return summary
+
+  let youtube: ReturnType<typeof google.youtube>
+  try {
+    youtube = await getAuthenticatedYouTubeClient()
+  } catch (err) {
+    console.warn('Retry queue: YouTube not authenticated, skipping drain:', err instanceof Error ? err.message : err)
+    return summary
+  }
+
+  const kept: RetryItem[] = []
+  for (let i = 0; i < queue.length; i++) {
+    const item = queue[i]
+    if (summary.quotaHit || summary.authExpired) {
+      kept.push(item)
+      continue
+    }
+    summary.attempted++
+    const result = await applyRetryItem(youtube, item)
+    onItem?.({ current: i + 1, total: queue.length, item, result })
+
+    if (result.ok) {
+      summary.succeeded++
+      summary.details.push({ archiveId: item.archiveId, videoId: item.videoId, kind: item.kind, status: 'success' })
+      console.log(`  ✅ [${item.kind}] ${item.archiveId} (yt:${item.videoId})`)
+    } else if (result.authExpired) {
+      summary.authExpired = true
+      kept.push(item)
+      console.warn(`  🔑 [${item.kind}] ${item.archiveId} — invalid_grant: OAuth token expired or revoked. Re-authenticate via /auth/youtube to resume drain.`)
+    } else if (result.quotaExceeded) {
+      summary.quotaHit = true
+      kept.push(item)
+      summary.details.push({ archiveId: item.archiveId, videoId: item.videoId, kind: item.kind, status: 'quota' })
+      console.log(`  ⏸️  [${item.kind}] ${item.archiveId} — quota still exhausted, stopping drain`)
+    } else {
+      summary.failed++
+      kept.push({ ...item, attempts: item.attempts + 1, lastError: result.error })
+      summary.details.push({ archiveId: item.archiveId, videoId: item.videoId, kind: item.kind, status: 'error', error: result.error })
+      console.warn(`  ❌ [${item.kind}] ${item.archiveId} (yt:${item.videoId}) attempt #${item.attempts + 1}: ${result.error ?? 'unknown error'}`)
+    }
+
+    // Same pacing as the streaming endpoints
+    await delay(200)
+  }
+
+  summary.remaining = kept.length
+  await saveRetryQueue(kept)
+  return summary
 }
 
 // Utility functions are now imported from ./utils.js
@@ -248,9 +628,14 @@ async function makeArchiveApiCall<T>(apiCall: () => Promise<T>, context: string)
       
       return result
     } catch (error) {
-      lastError = error as Error
+      if (error instanceof Error) lastError = error
+      const archiveError = isApiError(error) ? (error.response?.result?.error ?? '') : ''
+      if (archiveError === 'no changes to _meta.xml') {
+        console.log(`✅ ${context}: no changes needed (already up to date)`)
+        return { success: true, noChanges: true } as unknown as T
+      }
       console.warn(`⚠️  ${context} failed on attempt ${attempt}:`, error instanceof Error ? error.message : error)
-      
+
       if (attempt < 3) {
         if (isRateLimitError(error)) {
           console.log(`🕒 Rate limited, waiting ${attempt * 2} seconds before retry...`)
@@ -262,19 +647,36 @@ async function makeArchiveApiCall<T>(apiCall: () => Promise<T>, context: string)
       }
     }
   }
-  
+
   console.error(`❌ ${context} failed after 3 attempts, giving up`)
   throw lastError
 }
 
 /**
- * Search YouTube for matching video using title and date
- * Now calls API directly without caching
+ * Search YouTube for a matching video by title and date.
+ * Checks the local channel cache first (free, no quota). Only falls back to the
+ * YouTube Data API search (100 quota units) when the cache is missing or stale.
+ * Refresh the cache via POST /api/youtube/channel-cache/refresh (~13 quota units total).
  */
 async function searchYouTubeForMatch(title: string, date?: string, identifier?: string) {
   try {
     console.log(`🔍 YOUTUBE SEARCH: title="${title}", date="${date}", identifier="${identifier}"`)
-    
+
+    const cache = await getChannelCache()
+    if (cache) {
+      console.log(`📦 Using channel cache (${cache.videos.length} videos, fetched ${cache.fetchedAt})`)
+      const match = searchChannelCache(cache, title, date)
+      if (match) {
+        console.log(`✅ Cache hit: "${match.title}" (score: ${match.score})`)
+        return match
+      }
+      console.log(`❌ No cache match for "${title}" — not falling back to API search`)
+      return null
+    }
+
+    console.log(`⚠️  No channel cache found — falling back to YouTube API search (costs 100 quota units)`)
+    console.log(`   Run POST /api/youtube/channel-cache/refresh to build cache (~13 units for all videos)`)
+
     const youtubeConfig = getYouTubeCredentials()
     if (!youtubeConfig) {
       console.log('🚫 YouTube API not configured, skipping search')
@@ -298,7 +700,7 @@ async function searchYouTubeForMatch(title: string, date?: string, identifier?: 
     
     // Build YouTube search URL using utility function
     const searchUrl = buildYouTubeSearchUrl(apiKey, channelId, searchQuery)
-    console.log(`🌐 YouTube API request: ${searchUrl}`)
+    console.log(`🌐 YouTube API request: ${searchUrl.replace(apiKey, '[REDACTED]')}`)
     
     const response = await fetch(searchUrl)
     if (!response.ok) {
@@ -769,6 +1171,10 @@ app.post('/api/update-metadata-stream', async (req, res) => {
             return await tryPatchOperation('replace')
           } catch (replaceError: any) {
             const errorMsg = replaceError.response?.result?.error || replaceError.message || ''
+            if (errorMsg.includes('no changes to _meta.xml')) {
+              console.log(`✅ No changes needed for ${identifier} (already up to date)`)
+              return { success: true, noChanges: true }
+            }
             console.log(`🔄 Replace failed for ${identifier} (${errorMsg}), retrying with add operation`)
             sendProgress({
               type: 'progress',
@@ -808,7 +1214,7 @@ app.post('/api/update-metadata-stream', async (req, res) => {
       } catch (error) {
         console.error(`❌ Failed to update ${identifier}:`, error)
 
-        const archiveDetail = ((error as ApiError).response?.result as any)?.error
+        const archiveDetail = isApiError(error) ? error.response?.result?.error : undefined
         const errorMessage = archiveDetail
           ? `${error instanceof Error ? error.message : 'Unknown error'}: ${archiveDetail}`
           : error instanceof Error ? error.message : 'Unknown error'
@@ -1553,24 +1959,25 @@ app.get('/auth/youtube/callback', async (req, res) => {
     
     const oauth2Client = createOAuth2Client()
     const { tokens } = await oauth2Client.getToken(code)
-    
-    // Note: Token storage would need to be implemented
-    // using environment variables, external database, or file system
-    console.log('YouTube OAuth successful - tokens received:', {
-      access_token: tokens.access_token ? 'present' : 'missing',
-      refresh_token: tokens.refresh_token ? 'present' : 'missing',
-      expires_at: tokens.expiry_date
-    })
-    
-    res.send(`
-      <html>
-        <body>
-          <h2>YouTube OAuth Successful!</h2>
-          <p>You can now close this window.</p>
-          <p><strong>Note:</strong> Token storage needs to be implemented.</p>
-        </body>
-      </html>
-    `)
+
+    if (!tokens.refresh_token) {
+      // Google only issues a refresh token on first consent. If we get here without one,
+      // the user previously granted access — they need to revoke at
+      // https://myaccount.google.com/permissions and re-run the flow.
+      return res.status(400).send(
+        'OAuth succeeded but no refresh token was returned. Revoke the app at ' +
+        'https://myaccount.google.com/permissions and retry /auth/youtube.'
+      )
+    }
+
+    await saveYouTubeTokens(tokens)
+    console.log('YouTube OAuth successful — tokens saved to .youtube-tokens.json')
+
+    // In dev, Express (3001) and Vite (3000) run on different ports, so a plain "/"
+    // redirect lands on Express — not the frontend. FRONTEND_URL bridges the gap.
+    // In production both are served from the same origin so FRONTEND_URL is unset and "/" works.
+    const frontendUrl = process.env.FRONTEND_URL ?? ''
+    res.redirect(`${frontendUrl}/?youtube_auth=success`)
   } catch (error) {
     console.error('YouTube OAuth callback error:', error)
     res.status(500).send(`OAuth Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -1578,25 +1985,52 @@ app.get('/auth/youtube/callback', async (req, res) => {
 })
 
 // Check YouTube OAuth status
-app.get('/auth/youtube/status', (_req, res) => {
+app.get('/auth/youtube/status', async (_req, res) => {
   try {
     const config = getYouTubeOAuthCredentials()
     if (!config) {
-      return res.json({ authenticated: false, error: 'OAuth not configured' })
+      return res.json({ authenticated: false, configured: false, error: 'OAuth not configured' })
     }
-    
-    // Without database, we can't check stored tokens
-    res.json({ 
-      authenticated: false, 
-      error: 'Token storage not implemented',
+
+    const tokens = await loadStoredYouTubeTokens()
+    res.json({
+      authenticated: !!tokens?.refresh_token,
       configured: true
     })
   } catch (error) {
     console.error('YouTube OAuth status error:', error)
-    res.json({ 
-      authenticated: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.json({
+      authenticated: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     })
+  }
+})
+
+// Channel cache status + refresh
+app.get('/api/youtube/channel-cache/status', async (_req, res) => {
+  try {
+    const cache = await loadChannelCache()
+    if (!cache) return res.json({ cached: false })
+    const ageMs = Date.now() - new Date(cache.fetchedAt).getTime()
+    res.json({
+      cached: true,
+      videoCount: cache.videos.length,
+      fetchedAt: cache.fetchedAt,
+      ageHours: Math.round(ageMs / 1000 / 60 / 60 * 10) / 10,
+      stale: ageMs > CHANNEL_CACHE_TTL_MS
+    })
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' })
+  }
+})
+
+app.post('/api/youtube/channel-cache/refresh', async (_req, res) => {
+  try {
+    const cache = await fetchAndCacheChannelVideos()
+    res.json({ success: true, videoCount: cache.videos.length, fetchedAt: cache.fetchedAt })
+  } catch (error) {
+    console.error('Channel cache refresh error:', error)
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' })
   }
 })
 
@@ -1604,103 +2038,296 @@ app.get('/auth/youtube/status', (_req, res) => {
 // This endpoint updates YouTube video recording dates using Server-Sent Events
 app.post('/api/youtube/update-recording-dates-stream', async (req, res) => {
   try {
-    const { items } = youtubeUpdateRecordingDatesStreamSchema.parse(req.body)
-    
-    console.log(`🎬 Starting YouTube recording date updates for ${items.length} items`)
-    
-    // Set up Server-Sent Events
+    const { updates } = youtubeUpdateRecordingDatesStreamSchema.parse(req.body)
+
+    console.log(`🎬 Starting YouTube recording date updates for ${updates.length} videos`)
+
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')
-    res.setHeader('Connection', 'keep-alive') 
+    res.setHeader('Connection', 'keep-alive')
     res.setHeader('Access-Control-Allow-Origin', '*')
-    
+
     const sendProgress = (data: ProgressData) => {
       res.write(`data: ${JSON.stringify(data)}\n\n`)
     }
-    
-    sendProgress({ type: 'start', total: items.length })
-    
+
+    sendProgress({ type: 'start', total: updates.length })
+
     try {
-      await getAuthenticatedYouTubeClient()
-      const results = []
-      
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i]
-        
+      const youtube = await getAuthenticatedYouTubeClient()
+      const results: Array<{ archiveId: string; videoId: string; success: boolean; error?: string }> = []
+
+      for (let i = 0; i < updates.length; i++) {
+        const { archiveId, videoId, recordingDate } = updates[i]
+
+        sendProgress({
+          type: 'progress',
+          current: i + 1,
+          total: updates.length,
+          archiveId,
+          videoId,
+          status: 'updating'
+        })
+
         try {
+          await youtube.videos.update({
+            part: ['recordingDetails'],
+            requestBody: {
+              id: videoId,
+              recordingDetails: { recordingDate }
+            }
+          })
+
+          results.push({ archiveId, videoId, success: true })
+          // Item succeeded — drop any prior queued retry for it.
+          await removeFromRetryQueue('recording-date', videoId).catch((e) =>
+            console.warn('Failed to remove from retry queue:', e)
+          )
           sendProgress({
             type: 'progress',
             current: i + 1,
-            total: items.length,
-            identifier: item.identifier,
-            status: 'updating'
+            total: updates.length,
+            archiveId,
+            videoId,
+            status: 'success'
           })
-          
-          // Note: This would require implementing YouTube API calls
-          // For now, we'll simulate the process
-          console.log(`🎬 Would update recording date for ${item.identifier} to ${item.recordingdate}`)
-          
-          results.push({
-            identifier: item.identifier,
-            success: false,
-            error: 'YouTube API integration not fully implemented'
-          })
-          
-          sendProgress({
-            type: 'progress',
-            current: i + 1,
-            total: items.length,
-            identifier: item.identifier,
-            status: 'error',
-            error: 'Not implemented'
-          })
-          
         } catch (error) {
-          results.push({
-            identifier: item.identifier,
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          })
-          
+          const errAny = error as { errors?: Array<{ message?: string }>; message?: string }
+          const errorMessage = errAny?.errors?.[0]?.message ?? errAny?.message ?? 'Unknown error'
+          console.error(`🎬 ❌ ${archiveId} (${videoId}):`, errorMessage)
+
+          // On quota errors, persist for retry on next startup / manual drain.
+          if (isYouTubeQuotaError(error)) {
+            await enqueueForRetry(
+              { kind: 'recording-date', archiveId, videoId, payload: { recordingDate } },
+              errorMessage
+            ).catch((e) => console.warn('Failed to enqueue for retry:', e))
+          }
+
+          results.push({ archiveId, videoId, success: false, error: errorMessage })
           sendProgress({
             type: 'progress',
             current: i + 1,
-            total: items.length,
-            identifier: item.identifier,
+            total: updates.length,
+            archiveId,
+            videoId,
             status: 'error',
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: errorMessage
           })
         }
+
+        // Gentle pacing between writes (videos.update = 50 quota units each; daily default is 10k)
+        await delay(200)
       }
-      
-      const successful = results.filter(r => r.success).length
+
+      const successful = results.filter((r) => r.success).length
       sendProgress({
         type: 'complete',
-        total: items.length,
+        total: updates.length,
         successful,
-        failed: items.length - successful,
+        failed: updates.length - successful,
         results
       })
-      
     } catch (authError) {
       sendProgress({
         type: 'error',
         error: authError instanceof Error ? authError.message : 'Authentication failed'
       })
     }
-    
+
     res.end()
-    
   } catch (error) {
     console.error('YouTube recording dates update error:', error)
-    
+
     if (error instanceof z.ZodError) {
       res.write(`data: ${JSON.stringify({ type: 'error', error: 'Invalid request format' })}\n\n`)
     } else {
       res.write(`data: ${JSON.stringify({ type: 'error', error: 'Update failed' })}\n\n`)
     }
-    
+
     res.end()
+  }
+})
+
+// API ENDPOINT: POST /api/youtube/update-tags-stream
+// Merges incoming tags with each video's existing snippet.tags (case-insensitive dedupe,
+// existing tags kept first). Snippet is required-all-or-nothing on write, so we fetch first
+// to preserve title/categoryId/description anyway — reusing that read for the merge is free.
+app.post('/api/youtube/update-tags-stream', async (req, res) => {
+  try {
+    const { updates } = youtubeUpdateTagsStreamSchema.parse(req.body)
+
+    // YouTube enforces 500 chars total on the serialized tag list. Reject locally for a clearer error.
+    for (const u of updates) {
+      const serialized = u.tags.join(', ')
+      if (serialized.length > 500) {
+        return res.status(400).json({
+          error: `Tags for ${u.archiveId} exceed 500-char total (got ${serialized.length})`
+        })
+      }
+    }
+
+    console.log(`🏷️  Starting YouTube tag updates for ${updates.length} videos`)
+
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
+    res.setHeader('Access-Control-Allow-Origin', '*')
+
+    const sendProgress = (data: ProgressData) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`)
+    }
+
+    sendProgress({ type: 'start', total: updates.length })
+
+    try {
+      const youtube = await getAuthenticatedYouTubeClient()
+      const results: Array<{ archiveId: string; videoId: string; success: boolean; error?: string }> = []
+
+      for (let i = 0; i < updates.length; i++) {
+        const { archiveId, videoId, tags } = updates[i]
+
+        sendProgress({
+          type: 'progress',
+          current: i + 1,
+          total: updates.length,
+          archiveId,
+          videoId,
+          status: 'updating'
+        })
+
+        try {
+          const listRes = await youtube.videos.list({ part: ['snippet'], id: [videoId] })
+          const existing = listRes.data.items?.[0]?.snippet
+          if (!existing) {
+            throw new Error('Video not found or not owned by authenticated account')
+          }
+
+          // Merge existing + incoming, dedupe case-insensitively, existing tags first.
+          // Then trim from the end to fit YouTube's 500-char serialized limit.
+          const mergedTags: string[] = []
+          const seen = new Set<string>()
+          for (const tag of [...(existing.tags ?? []), ...tags]) {
+            const clean = tag.trim()
+            if (!clean) continue
+            const key = clean.toLowerCase()
+            if (seen.has(key)) continue
+            seen.add(key)
+            mergedTags.push(clean)
+          }
+          while (mergedTags.join(', ').length > 500 && mergedTags.length > 1) {
+            mergedTags.pop()
+          }
+
+          await youtube.videos.update({
+            part: ['snippet'],
+            requestBody: {
+              id: videoId,
+              snippet: {
+                title: existing.title ?? '',
+                categoryId: existing.categoryId ?? '10',
+                description: existing.description ?? '',
+                defaultLanguage: existing.defaultLanguage ?? undefined,
+                tags: mergedTags
+              }
+            }
+          })
+
+          results.push({ archiveId, videoId, success: true })
+          await removeFromRetryQueue('tags', videoId).catch((e) =>
+            console.warn('Failed to remove from retry queue:', e)
+          )
+          sendProgress({
+            type: 'progress',
+            current: i + 1,
+            total: updates.length,
+            archiveId,
+            videoId,
+            status: 'success'
+          })
+        } catch (error) {
+          const errAny = error as { errors?: Array<{ message?: string }>; message?: string }
+          const errorMessage = errAny?.errors?.[0]?.message ?? errAny?.message ?? 'Unknown error'
+          console.error(`🏷️  ❌ ${archiveId} (${videoId}):`, errorMessage)
+
+          if (isYouTubeQuotaError(error)) {
+            await enqueueForRetry(
+              { kind: 'tags', archiveId, videoId, payload: { tags } },
+              errorMessage
+            ).catch((e) => console.warn('Failed to enqueue for retry:', e))
+          }
+
+          results.push({ archiveId, videoId, success: false, error: errorMessage })
+          sendProgress({
+            type: 'progress',
+            current: i + 1,
+            total: updates.length,
+            archiveId,
+            videoId,
+            status: 'error',
+            error: errorMessage
+          })
+        }
+
+        // Tags writes cost 1 (list) + 50 (update) = 51 units each
+        await delay(200)
+      }
+
+      const successful = results.filter((r) => r.success).length
+      sendProgress({
+        type: 'complete',
+        total: updates.length,
+        successful,
+        failed: updates.length - successful,
+        results
+      })
+    } catch (authError) {
+      sendProgress({
+        type: 'error',
+        error: authError instanceof Error ? authError.message : 'Authentication failed'
+      })
+    }
+
+    res.end()
+  } catch (error) {
+    console.error('YouTube tags update error:', error)
+
+    if (error instanceof z.ZodError) {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Invalid request format' })}\n\n`)
+    } else {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Update failed' })}\n\n`)
+    }
+
+    res.end()
+  }
+})
+
+// API ENDPOINT: GET /api/youtube/retry-queue
+// Returns the current queue of items that failed due to quota exhaustion.
+app.get('/api/youtube/retry-queue', async (_req, res) => {
+  try {
+    const items = await loadRetryQueue()
+    res.json({ count: items.length, items })
+  } catch (error) {
+    console.error('Failed to load retry queue:', error)
+    res.status(500).json({ error: 'Failed to load retry queue' })
+  }
+})
+
+// API ENDPOINT: POST /api/youtube/retry-queue/drain
+// Attempts each queued item against YouTube. Stops as soon as another quota error
+// hits; successful items are removed from the queue.
+app.post('/api/youtube/retry-queue/drain', async (_req, res) => {
+  try {
+    const summary = await drainRetryQueue()
+    console.log(
+      `♻️  Retry drain: attempted=${summary.attempted} ok=${summary.succeeded} failed=${summary.failed} ` +
+      `remaining=${summary.remaining} quotaHit=${summary.quotaHit}`
+    )
+    res.json(summary)
+  } catch (error) {
+    console.error('Retry drain failed:', error)
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Drain failed' })
   }
 })
 
@@ -1882,10 +2509,9 @@ app.get('/api/metadata/:identifier', async (req, res) => {
     
     console.log(`✅ Fetched fresh metadata for ${identifier}`)
     
-    res.json({
-      identifier,
-      metadata: response,
-    })
+    // Archive.org returns { files, metadata: {...fields}, ... }. Return the inner metadata
+    // object directly so callers read `response.<field>` instead of `response.metadata.metadata.<field>`.
+    res.json(response?.metadata ?? response ?? {})
     
   } catch (error) {
     console.error(`Metadata fetch error for ${req.params.identifier}:`, error)
@@ -1923,7 +2549,45 @@ if (process.env.NODE_ENV !== 'test' && process.argv[1]?.includes('server/index.t
     } else {
       console.log('YouTube integration not configured (optional)')
     }
-    
+
+    // Try to drain any pending retry items (won't block startup — runs in background).
+    // Items left from the last quota exhaustion will retry automatically if quota is free.
+    loadRetryQueue()
+      .then(async (queue) => {
+        if (queue.length === 0) return
+        console.log(`♻️  Retry queue: ${queue.length} item(s) pending, attempting drain...`)
+        const summary = await drainRetryQueue()
+        if (summary.authExpired) {
+          console.warn(
+            `♻️  Drain aborted: OAuth token expired or revoked (invalid_grant). Re-authenticate via /auth/youtube. ${summary.remaining} item(s) preserved in queue.`
+          )
+        } else if (summary.quotaHit) {
+          console.log(
+            `♻️  Drain paused: quota still exhausted. ${summary.succeeded} succeeded, ${summary.remaining} remaining.`
+          )
+        } else if (summary.failed > 0) {
+          const errorGroups = summary.details
+            .filter((d) => d.status === 'error' && d.error)
+            .reduce<Record<string, number>>((acc, d) => {
+              const key = d.error!
+              acc[key] = (acc[key] ?? 0) + 1
+              return acc
+            }, {})
+          const errorSummary = Object.entries(errorGroups)
+            .map(([msg, count]) => `"${msg}" ×${count}`)
+            .join(', ')
+          console.log(
+            `♻️  Drain done: ${summary.succeeded} succeeded, ${summary.failed} failed, ${summary.remaining} remaining.` +
+            (errorSummary ? ` Errors: ${errorSummary}` : '')
+          )
+        } else {
+          console.log(
+            `♻️  Drain done: ${summary.succeeded} succeeded, 0 failed, ${summary.remaining} remaining.`
+          )
+        }
+      })
+      .catch((err) => console.warn('Retry queue drain error on startup:', err))
+
     console.log('🚀 Server ready - all cache functionality removed, direct API calls enabled')
   })
 }

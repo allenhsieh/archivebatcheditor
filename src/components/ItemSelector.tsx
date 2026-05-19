@@ -27,6 +27,8 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({
   const [itemsPerPage, setItemsPerPage] = useState(50)
   const [compactView, setCompactView] = useState(false)
   const [filterSelected, setFilterSelected] = useState<'all' | 'selected' | 'unselected'>('all')
+  // Anchor index (in filteredItems) for shift+click range selection
+  const [anchorIdx, setAnchorIdx] = useState<number | null>(null)
 
   // Helper function to get status indicator for an item
   const getStatusIndicator = (identifier: string) => {
@@ -81,6 +83,31 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({
   }, [searchQuery, filterSelected, itemsPerPage])
   if (items.length === 0) {
     return null
+  }
+
+  // Shift+click selects the range between the anchor and the clicked row,
+  // matching the selection state of the anchor row (select or unselect).
+  const handleRowClick = (
+    identifier: string,
+    filteredIndex: number,
+    event: React.MouseEvent
+  ) => {
+    if (event.shiftKey && anchorIdx !== null && anchorIdx !== filteredIndex) {
+      const start = Math.min(anchorIdx, filteredIndex)
+      const end = Math.max(anchorIdx, filteredIndex)
+      const anchorItem = filteredItems[anchorIdx]
+      const shouldSelect = anchorItem ? selectedItems.includes(anchorItem.identifier) : true
+      for (let i = start; i <= end; i++) {
+        const id = filteredItems[i]?.identifier
+        if (!id) continue
+        const isSelected = selectedItems.includes(id)
+        if (shouldSelect && !isSelected) onToggleItem(id)
+        else if (!shouldSelect && isSelected) onToggleItem(id)
+      }
+      return
+    }
+    setAnchorIdx(filteredIndex)
+    onToggleItem(identifier)
   }
 
   // Helper functions for bulk selection
@@ -251,19 +278,25 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({
 
       {/* Items Grid */}
       <div className={compactView ? "item-grid-compact" : "item-grid"}>
-        {paginatedItems.map(item => (
+        {paginatedItems.map((item, pageIdx) => {
+          const filteredIndex = startIndex + pageIdx
+          return (
           <div
             key={item.identifier}
             className={`${compactView ? 'item-card-compact' : 'item-card'} ${selectedItems.includes(item.identifier) ? 'selected' : ''}`}
-            onClick={() => onToggleItem(item.identifier)}
-            style={{ cursor: 'pointer' }}
+            onClick={(e) => handleRowClick(item.identifier, filteredIndex, e)}
+            style={{ cursor: 'pointer', userSelect: 'none' }}
+            title="Tip: shift+click to select a range"
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: compactView ? '8px' : '10px' }}>
               <input
                 type="checkbox"
                 checked={selectedItems.includes(item.identifier)}
-                onChange={() => onToggleItem(item.identifier)}
-                onClick={(e) => e.stopPropagation()}
+                onChange={() => { /* row onClick owns selection */ }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleRowClick(item.identifier, filteredIndex, e)
+                }}
               />
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -320,7 +353,8 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({
               </div>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Bottom Pagination */}

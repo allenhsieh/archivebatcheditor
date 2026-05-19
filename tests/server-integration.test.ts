@@ -257,4 +257,72 @@ describe('Server Integration E2E Tests (Real Server)', () => {
       }
     });
   });
+
+  describe('YouTube OAuth Routes', () => {
+    test('GET /auth/youtube/status returns configured:false when env vars missing', async () => {
+      const saved = {
+        id: process.env.YOUTUBE_CLIENT_ID,
+        secret: process.env.YOUTUBE_CLIENT_SECRET,
+        uri: process.env.YOUTUBE_REDIRECT_URI,
+      }
+      delete process.env.YOUTUBE_CLIENT_ID
+      delete process.env.YOUTUBE_CLIENT_SECRET
+      delete process.env.YOUTUBE_REDIRECT_URI
+
+      const res = await request(app).get('/auth/youtube/status').expect(200)
+      expect(res.body.configured).toBe(false)
+      expect(res.body.authenticated).toBe(false)
+
+      process.env.YOUTUBE_CLIENT_ID = saved.id
+      process.env.YOUTUBE_CLIENT_SECRET = saved.secret
+      process.env.YOUTUBE_REDIRECT_URI = saved.uri
+    })
+
+    test('GET /auth/youtube/callback without code returns 400', async () => {
+      await request(app).get('/auth/youtube/callback').expect(400)
+    })
+
+    // Regression: callback must redirect to FRONTEND_URL, not the Express origin.
+    // In dev the frontend runs on a different port (3000) from Express (3001), so a
+    // plain "/" redirect lands on Express and returns "Cannot GET /". FRONTEND_URL
+    // lets the callback cross the port boundary back to the Vite dev server.
+    test('GET /auth/youtube/callback error param returns 400 with message', async () => {
+      const res = await request(app)
+        .get('/auth/youtube/callback?error=access_denied')
+        .expect(400)
+      expect(res.text).toContain('access_denied')
+    })
+  })
+
+  describe('Archive.org "no changes" treated as success', () => {
+    // Regression: Archive.org returns 400 "no changes to _meta.xml" when a patch
+    // makes no actual modifications (values already match). This must not be treated
+    // as an error or trigger retries — it means the item is already up to date.
+    test('POST /api/update-metadata-stream succeeds when Archive.org returns no-changes 400', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: () => Promise.resolve({ success: false, error: 'no changes to _meta.xml' }),
+      })
+
+      const res = await request(app)
+        .post('/api/update-metadata-stream')
+        .send({
+          items: ['test-item'],
+          updates: [{ field: 'title', value: 'Same Title' }],
+        })
+        .expect(200)
+
+      // SSE stream must complete without an error status event
+      const events = res.text
+        .split('\n')
+        .filter((l: string) => l.startsWith('data: '))
+        .map((l: string) => { try { return JSON.parse(l.slice(6)) } catch { return null } })
+        .filter(Boolean)
+
+      expect(events.some((e: any) => e.type === 'complete')).toBe(true)
+      expect(events.some((e: any) => e.status === 'error')).toBe(false)
+    })
+  })
 });

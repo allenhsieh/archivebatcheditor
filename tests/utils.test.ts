@@ -5,13 +5,14 @@
  * CRITICAL: Tests the real implementation, not duplicated code
  */
 
-import { 
-  standardizeDate, 
-  extractBandFromTitle, 
-  extractVenueFromTitle, 
+import {
+  standardizeDate,
+  extractBandFromTitle,
+  extractVenueFromTitle,
   extractDateFromTitle,
   isRateLimitError,
   isYouTubeQuotaError,
+  isYouTubeAuthError,
   buildArchiveSearchUrl,
   buildArchiveMetadataUrl,
   buildYouTubeSearchUrl,
@@ -197,6 +198,28 @@ describe('Error Detection Functions', () => {
       expect(isRateLimitError({ status: 404 })).toBe(false)
       expect(isRateLimitError({ message: 'Not found' })).toBe(false)
       expect(isRateLimitError({})).toBe(false)
+    })
+  })
+
+  describe('isYouTubeAuthError', () => {
+    test('detects invalid_grant from Error message', () => {
+      expect(isYouTubeAuthError(new Error('invalid_grant'))).toBe(true)
+      expect(isYouTubeAuthError(new Error('Request failed: invalid_grant'))).toBe(true)
+    })
+
+    test('detects expired/revoked token message', () => {
+      expect(isYouTubeAuthError(new Error('Token has been expired or revoked.'))).toBe(true)
+    })
+
+    test('is case-insensitive', () => {
+      expect(isYouTubeAuthError(new Error('INVALID_GRANT'))).toBe(true)
+    })
+
+    test('returns false for non-auth errors', () => {
+      expect(isYouTubeAuthError(new Error('quota exceeded'))).toBe(false)
+      expect(isYouTubeAuthError(new Error('Network error'))).toBe(false)
+      expect(isYouTubeAuthError('invalid_grant')).toBe(false) // not an Error instance
+      expect(isYouTubeAuthError(null)).toBe(false)
     })
   })
 

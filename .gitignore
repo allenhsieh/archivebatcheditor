@@ -65,3 +65,12 @@ jspm_packages/
 # SQLite cache database (contains API response cache)
 cache.db
 cache.db-*
+
+# YouTube OAuth refresh token storage
+.youtube-tokens.json
+
+# YouTube quota-retry queue (items pending retry after quota exhaustion)
+.youtube-retry-queue.json
+
+# YouTube channel video cache (rebuild via POST /api/youtube/channel-cache/refresh)
+.youtube-channel-cache.json
